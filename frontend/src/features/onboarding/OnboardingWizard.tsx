@@ -19,6 +19,7 @@ import { CompletedStep } from './steps/CompletedStep';
 import { useCreateAccount } from '@/hooks/useAccounts';
 import { useCreateExpense } from '@/hooks/useExpenses';
 import { useAccountStore } from '@/stores/account.store';
+import { analytics } from '@/lib/analytics';
 
 import type { AccountData, ExpenseData } from './types';
 
@@ -52,15 +53,23 @@ export const OnboardingWizard = () => {
 
   const [createdAccountId, setCreatedAccountId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [onboardingStartTime] = useState(Date.now());
+
+  // Track onboarding start
+  useEffect(() => {
+    analytics.onboardingStarted();
+  }, []);
 
   // ============================================================================
   // STEP 1: Welcome
   // ============================================================================
   const handleStart = () => {
+    analytics.onboardingStepCompleted(1);
     goToNextStep();
   };
 
   const handleSkip = () => {
+    analytics.onboardingSkipped(1);
     completeOnboarding();
     navigate('/dashboard');
   };
@@ -96,6 +105,10 @@ export const OnboardingWizard = () => {
 
       // Mostrar éxito
       toast.success(t('completed.success.accountCreated'));
+
+      // Track first account created
+      analytics.firstAccountCreated(data.currency, 'personal');
+      analytics.onboardingStepCompleted(2);
 
       // Ir al siguiente paso
       goToNextStep();
@@ -146,6 +159,10 @@ export const OnboardingWizard = () => {
       // Mostrar éxito
       toast.success(t('completed.success.expenseCreated'));
 
+      // Track first expense created
+      analytics.firstExpenseCreated(data.amount, accountData.currency);
+      analytics.onboardingStepCompleted(3);
+
       // Ir al paso final
       goToNextStep();
     } catch (error) {
@@ -157,6 +174,7 @@ export const OnboardingWizard = () => {
   };
 
   const handleSkipExpense = () => {
+    analytics.onboardingStepCompleted(3);
     goToNextStep();
   };
 
@@ -164,6 +182,13 @@ export const OnboardingWizard = () => {
   // STEP 4: Completed
   // ============================================================================
   const handleStartTour = () => {
+    // Calculate time spent
+    const timeSpentSeconds = Math.floor((Date.now() - onboardingStartTime) / 1000);
+    
+    // Track completion
+    analytics.onboardingCompleted(timeSpentSeconds);
+    analytics.tourStarted();
+
     // Request feature tour
     localStorage.setItem('tourRequested', 'true');
     completeOnboarding();

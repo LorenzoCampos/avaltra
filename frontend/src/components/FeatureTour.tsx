@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
+import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS } from 'react-joyride';
 import { useTranslation } from 'react-i18next';
+import { analytics } from '@/lib/analytics';
 
 export const FeatureTour = () => {
   const { t } = useTranslation('tour');
@@ -55,9 +56,22 @@ export const FeatureTour = () => {
   ];
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status } = data;
+    const { status, action, index, type } = data;
     
+    // Track step views
+    if (type === EVENTS.STEP_AFTER && action === ACTIONS.NEXT) {
+      const step = steps[index];
+      analytics.tourStepViewed(index + 1, step.target as string);
+    }
+    
+    // Track completion or skip
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+      if (status === STATUS.FINISHED) {
+        analytics.tourCompleted();
+      } else {
+        analytics.tourSkipped(index + 1);
+      }
+      
       localStorage.setItem('tourCompleted', 'true');
       localStorage.removeItem('tourRequested');
       setRunTour(false);

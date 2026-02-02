@@ -19,8 +19,8 @@ COPY . .
 # Descargar dependencias adicionales (si go.mod cambió)
 RUN go mod download && go mod tidy
 
-# Compilar binario optimizado
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o /app/bin/server ./cmd/server/main.go
+# Compilar binario (optimizations removed to reduce build memory usage)
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/bin/server ./cmd/server/main.go
 
 # ============================================================================
 # STAGE 2: Production

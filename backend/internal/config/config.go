@@ -32,7 +32,7 @@ func Load() (*Config, error) {
 	config := &Config{
 		Port:             getEnv("PORT", "8080"),     // Si no existe PORT, usa "8080" por defecto
 		DatabaseURL:      getEnv("DATABASE_URL", ""), // Sin valor por defecto
-		FrontendURL:      getEnv("FRONTEND_URL", "http://localhost:5173"),
+		FrontendURL:      getEnv("FRONTEND_URL", "http://192.168.0.46:5173"),
 		JWTSecret:        getEnv("JWT_SECRET", ""),
 		JWTAccessExpiry:  getEnv("JWT_ACCESS_EXPIRY", "15m"),
 		JWTRefreshExpiry: getEnv("JWT_REFRESH_EXPIRY", "7d"),

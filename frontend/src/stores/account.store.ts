@@ -7,7 +7,7 @@ interface AccountState {
   activeAccount: Account | null;
   
   // Actions
-  setActiveAccount: (account: Account) => void;
+  setActiveAccount: (accountId: string | null, account: Account | null) => void;
   clearActiveAccount: () => void;
 }
 
@@ -17,12 +17,16 @@ export const useAccountStore = create<AccountState>()(
       activeAccountId: null,
       activeAccount: null,
 
-      setActiveAccount: (account) => {
-        // También guardar en localStorage para interceptors
-        localStorage.setItem('active_account_id', account.id);
+      setActiveAccount: (accountId, account) => {
+        // Also save to localStorage for interceptors
+        if (accountId) {
+          localStorage.setItem('active_account_id', accountId);
+        } else {
+          localStorage.removeItem('active_account_id');
+        }
         
         set({
-          activeAccountId: account.id,
+          activeAccountId: accountId,
           activeAccount: account,
         });
       },

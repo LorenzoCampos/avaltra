@@ -1,38 +1,56 @@
-import type { Currency, AccountType } from './api';
+import type { Currency, AccountType as ApiAccountType } from './api';
 
-export interface Account {
-  id: string;
-  user_id: string;
+// Account types from API
+export type AccountType = ApiAccountType; // "personal" | "family"
+
+// Family member for account creation
+export interface CreateAccountMember {
   name: string;
-  type: AccountType;
-  currency: Currency;
-  created_at: string;
-  updated_at: string;
+  email?: string;
 }
 
-export interface CreateAccountRequest {
-  name: string;
-  type: AccountType;
-  currency: Currency;
-}
-
-export interface UpdateAccountRequest {
-  name?: string;
-  currency?: Currency;
-}
-
+// Family member (as returned by API in Account details)
 export interface FamilyMember {
   id: string;
-  account_id: string;
   name: string;
-  is_active: boolean;
+  email: string | null;
+  isActive: boolean;
+}
+
+// Base Account interface (as returned by API)
+export interface Account {
+  id: string;
+  name: string;
+  type: AccountType;
+  currency: Currency;
+  user_id: string;
   created_at: string;
+  updated_at: string;
+  members?: FamilyMember[];
+  memberCount?: number; // For listing accounts
 }
 
-export interface CreateFamilyMemberRequest {
+// Request body for creating a new account (Personal)
+export interface CreatePersonalAccountRequest {
   name: string;
+  type: 'personal';
+  currency: Currency;
 }
 
-export interface UpdateFamilyMemberRequest {
+// Request body for creating a new account (Family)
+export interface CreateFamilyAccountRequest {
+  name: string;
+  type: 'family';
+  currency: Currency;
+  members: CreateAccountMember[];
+}
+
+// Union type for account creation requests
+export type CreateAccountRequest = CreatePersonalAccountRequest | CreateFamilyAccountRequest;
+
+// Request body for updating an existing account
+export interface UpdateAccountRequest {
+  id: string;
   name?: string;
+  currency?: Currency;
 }

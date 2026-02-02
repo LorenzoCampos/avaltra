@@ -1,0 +1,55 @@
+{
+  "title": "Reportes y Análisis",
+  "page": {
+    "title": "📊 Reportes y Análisis",
+    "subtitle": "Analizá tus datos financieros con gráficos detallados e información útil",
+    "exportButton": "Exportar a CSV",
+    "noAccount": "No Hay Cuenta Seleccionada",
+    "noAccountDescription": "Necesitás crear o seleccionar una cuenta primero",
+    "errorTitle": "Error al Cargar Reportes",
+    "errorGeneric": "Error al cargar los reportes",
+    "retryButton": "Reintentar"
+  },
+  "filters": {
+    "title": "📅 Rango de Fechas",
+    "thisMonth": "Este Mes",
+    "lastMonth": "Mes Pasado",
+    "last3Months": "Últimos 3 Meses",
+    "last6Months": "Últimos 6 Meses",
+    "thisYear": "Este Año",
+    "lastYear": "Año Pasado",
+    "customRange": "Rango Personalizado",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "selectedPeriod": "Período seleccionado:",
+    "to": "a"
+  },
+  "metrics": {
+    "title": "Resumen Financiero",
+    "totalIncome": "Total de Ingresos",
+    "totalExpenses": "Total de Egresos",
+    "netBalance": "Balance Neto",
+    "warningNegative": "⚠️ Tus egresos superan tus ingresos en este período. Considerá revisar tus gastos.",
+    "successPositive": "✅ ¡Bien hecho! Tuviste un superávit del",
+    "ofYourIncome": "de tus ingresos."
+  },
+  "charts": {
+    "expensesByCategory": "Egresos por Categoría",
+    "incomeByCategory": "Ingresos por Categoría",
+    "monthlyComparison": "Comparación Mensual",
+    "balanceEvolution": "Evolución del Balance",
+    "noExpenseData": "No hay datos de egresos disponibles",
+    "noIncomeData": "No hay datos de ingresos disponibles",
+    "income": "Ingresos",
+    "expenses": "Egresos",
+    "balance": "Balance",
+    "avgMonthlyIncome": "Promedio Mensual de Ingresos",
+    "avgMonthlyExpenses": "Promedio Mensual de Egresos",
+    "avgMonthlyBalance": "Promedio Mensual de Balance",
+    "trendUpward": "Tu balance tiene tendencia al alza. ¡Seguí así!",
+    "trendDownward": "Tu balance está en declive. Considerá revisar tus gastos.",
+    "startingBalance": "Balance Inicial",
+    "currentBalance": "Balance Actual",
+    "netChange": "Cambio Neto"
+  }
+}

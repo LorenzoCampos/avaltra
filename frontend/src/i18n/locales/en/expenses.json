@@ -1,0 +1,93 @@
+{
+  "form": {
+    "titleCreate": "Create New Expense",
+    "titleEdit": "Edit Expense",
+    "backToList": "Back to Expenses List",
+    "description": "Description",
+    "descriptionPlaceholder": "e.g. Groceries, Rent, Coffee",
+    "amount": "Amount",
+    "amountPlaceholder": "e.g. 50.00",
+    "currencyLabel": "Currency",
+    "currency": {
+      "ars": "Argentine Peso (ARS)",
+      "usd": "US Dollar (USD)",
+      "eur": "Euro (EUR)"
+    },
+    "date": "Date",
+    "category": "Category (Optional)",
+    "familyMember": "Family Member (Optional)",
+    "noMember": "No Member",
+    "loadingCategories": "Loading categories...",
+    "loadingMembers": "Loading family members...",
+    "submitCreate": "Create Expense",
+    "submitEdit": "Update Expense",
+    "created": "created",
+    "updated": "updated",
+    "multiCurrency": {
+      "title": "Multi-Currency Transaction",
+      "description": "Since you're spending in {{expenseCurrency}} but your account is in {{accountCurrency}}, you can specify the exact amount debited from your account (including taxes/fees).",
+      "amountLabel": "Amount Actually Debited ({{currency}})",
+      "amountPlaceholder": "e.g. How many {{currency}} were actually charged",
+      "helper": "Optional: The system will calculate the effective exchange rate automatically",
+      "exampleLabel": "Example",
+      "exampleText": "If you spent USD 20 on Netflix and were charged ARS 31,500 (including 75% \"dólar tarjeta\" tax), enter 31500 here. The system will calculate the effective rate: 1575 ARS/USD."
+    },
+    "success": {
+      "create": "Expense created successfully!",
+      "update": "Expense updated successfully!",
+      "redirecting": "Redirecting to expenses list...",
+      "redirectingIn": "Redirecting to expenses list in {{seconds}} second{{seconds, plural, one {} other {s}}}..."
+    },
+    "error": {
+      "save": "Failed to save expense",
+      "tryAgain": "Please try again",
+      "loading": "Error loading expense",
+      "unknown": "Unknown error"
+    }
+  },
+
+  "tabs": {
+    "expenses": "💸 Expenses",
+    "recurring": "🔁 Recurring Templates"
+  },
+  
+  "list": {
+    "title": "Expenses",
+    "account": "Account",
+    "addButton": "Add Expense",
+    "allExpenses": "All Expenses",
+    "filteredExpenses": "Filtered Expenses ({{filtered}} of {{total}})",
+    "filteredShort": "Filtered ({{filtered}}/{{total}})",
+    "noMatch": "No expenses match your filters",
+    "clearFilters": "Clear filters",
+    "confirmDelete": "Are you sure you want to delete \"{{description}}\"?",
+    "noAccount": {
+      "title": "No Active Account",
+      "description": "Please select or create an account first",
+      "button": "Go to Accounts"
+    },
+    "empty": {
+      "title": "No Expenses Yet",
+      "description": "Start tracking your expenses by adding one",
+      "button": "Add Your First Expense"
+    },
+    "error": {
+      "title": "Error Loading Expenses",
+      "loadFailed": "Failed to load expenses"
+    },
+    "table": {
+      "date": "Date",
+      "description": "Description",
+      "category": "Category",
+      "member": "Member",
+      "amount": "Amount",
+      "actions": "Actions",
+      "na": "N/A"
+    },
+    "actions": {
+      "edit": "Edit",
+      "duplicate": "Duplicate",
+      "delete": "Delete"
+    }
+  }
+}

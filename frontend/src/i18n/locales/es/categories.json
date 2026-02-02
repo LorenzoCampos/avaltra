@@ -1,0 +1,52 @@
+{
+  "title": "Categorías",
+  "list": {
+    "title": "Categorías",
+    "addButton": "+ Agregar Categoría",
+    "addExpenseButton": "+ Agregar Categoría de Egreso",
+    "addIncomeButton": "+ Agregar Categoría de Ingreso",
+    "addFirstButton": "Agregá tu Primera Categoría",
+    "errorTitle": "Error al Cargar Categorías",
+    "errorGeneric": "Error al cargar las categorías",
+    "tabExpenses": "💸 Categorías de Egresos",
+    "tabIncomes": "💰 Categorías de Ingresos",
+    "sectionCustom": "Categorías Personalizadas",
+    "sectionSystem": "Categorías del Sistema",
+    "systemDescription": "Categorías predefinidas disponibles para todos los usuarios. No pueden editarse ni eliminarse.",
+    "systemBadge": "🔒 SISTEMA",
+    "noCategories": "No Hay Categorías Todavía",
+    "noCategoriesDescription": "Empezá a organizar tus {{type}} agregando categorías",
+    "deleteConfirm": "¿Estás seguro de que querés eliminar la categoría \"{{name}}\"?",
+    "deleteSystemError": "No se pueden eliminar las categorías del sistema"
+  },
+  "form": {
+    "titleCreateExpense": "Crear Categoría de Egreso",
+    "titleCreateIncome": "Crear Categoría de Ingreso",
+    "titleEditExpense": "Editar Categoría de Egreso",
+    "titleEditIncome": "Editar Categoría de Ingreso",
+    "backButton": "← Volver a Categorías",
+    "nameLabel": "Nombre de la Categoría",
+    "namePlaceholder": "ej. Transporte, Comestibles, Salario",
+    "nameTip": "💡 Consejo: Revisá la lista de Categorías del Sistema para evitar duplicar nombres existentes",
+    "iconLabel": "Ícono (Opcional)",
+    "iconPlaceholder": "ej. 🚗, 🍕, 💼",
+    "iconHelper": "Usá un emoji para representar esta categoría",
+    "colorLabel": "Color (Opcional)",
+    "colorPlaceholder": "ej. #FF5733",
+    "colorHelper": "Código de color hexadecimal para identificación visual",
+    "quickColors": "Colores rápidos:",
+    "previewTitle": "Vista Previa",
+    "previewDefaultIcon": "📁",
+    "previewDefaultName": "Nombre de Categoría",
+    "submitCreate": "Crear Categoría",
+    "submitUpdate": "Actualizar Categoría",
+    "successCreate": "¡Categoría creada con éxito!",
+    "successUpdate": "¡Categoría actualizada con éxito!",
+    "successRedirect": "Redirigiendo a la lista de categorías...",
+    "successRedirectCountdown": "Redirigiendo en {{count}} segundo{{plural}}..."
+  },
+  "types": {
+    "expenses": "egresos",
+    "incomes": "ingresos"
+  }
+}

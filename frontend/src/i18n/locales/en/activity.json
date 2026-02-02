@@ -1,0 +1,35 @@
+{
+  "title": "Activity",
+  "subtitle": "Complete timeline of your incomes, expenses and savings movements",
+  "account": "Account",
+  "noAccount": {
+    "title": "No Active Account",
+    "description": "Please select or create an account first",
+    "button": "Go to Accounts"
+  },
+  "export": {
+    "noData": "No data to export",
+    "csvSuccess": "CSV exported successfully",
+    "pdfSuccess": "PDF exported successfully"
+  },
+  "summary": {
+    "income": "Income",
+    "expenses": "Expenses",
+    "saved": "Saved",
+    "balance": "Balance"
+  },
+  "types": {
+    "income": "Income",
+    "expense": "Expense",
+    "savings_deposit": "Savings Deposit",
+    "savings_withdrawal": "Savings Withdrawal"
+  },
+  "empty": "No activity yet",
+  "noResults": "No activities match your filters",
+  "clearFilters": "Clear filters",
+  "error": {
+    "title": "Error loading activity",
+    "unknown": "Unknown error"
+  },
+  "loading": "Loading activity..."
+}

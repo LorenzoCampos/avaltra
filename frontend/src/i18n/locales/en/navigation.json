@@ -1,0 +1,43 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "expenses": "Expenses",
+    "incomes": "Incomes",
+    "activity": "Activity",
+    "goals": "Goals",
+    "recurring": "Recurring",
+    "settings": "Settings",
+    "accounts": "Accounts",
+    "categories": "Categories",
+    "reports": "Reports"
+  },
+  "bottomNav": {
+    "home": "Home",
+    "activity": "Activity",
+    "expenses": "Expenses",
+    "incomes": "Incomes",
+    "more": "More"
+  },
+  "moreMenu": {
+    "accounts": {
+      "label": "Accounts",
+      "description": "Manage your accounts"
+    },
+    "categories": {
+      "label": "Categories",
+      "description": "Expense & income categories"
+    },
+    "reports": {
+      "label": "Reports",
+      "description": "Financial analytics"
+    },
+    "savings": {
+      "label": "Savings",
+      "description": "Savings goals"
+    },
+    "settings": {
+      "label": "Settings",
+      "description": "Account preferences"
+    }
+  }
+}

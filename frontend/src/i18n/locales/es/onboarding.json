@@ -1,0 +1,66 @@
+{
+  "welcome": {
+    "title": "¡Bienvenido a Bolsillo Claro!",
+    "subtitle": "Te vamos a ayudar a configurar tu cuenta en 3 simples pasos para que puedas empezar a controlar tus finanzas",
+    "start": "Comenzar",
+    "skip": "Saltar",
+    "skipWarning": "¿Estás seguro? Vas a tener que configurar todo manualmente después"
+  },
+  "createAccount": {
+    "title": "Creá tu Primera Cuenta",
+    "subtitle": "Paso 1 de 3",
+    "hint": "Una 'cuenta' es donde organizás tu plata. Por ejemplo: 'Mis Finanzas Personales' o 'Presupuesto Familiar'",
+    "nameLabel": "Nombre de la Cuenta",
+    "namePlaceholder": "ej. Mi Cuenta Personal",
+    "currencyLabel": "Moneda Principal",
+    "currencyHint": "Esta será la moneda principal de tu cuenta. Podés registrar gastos en otras monedas también",
+    "back": "Volver",
+    "next": "Siguiente",
+    "validation": {
+      "nameRequired": "El nombre de la cuenta es requerido",
+      "nameMinLength": "El nombre debe tener al menos 3 caracteres"
+    }
+  },
+  "firstExpense": {
+    "title": "¿Querés agregar tu primer gasto?",
+    "subtitle": "Paso 2 de 3 (Opcional)",
+    "hint": "Ejemplo: Si gastaste $500 en el supermercado, podés registrarlo acá para llevar control",
+    "optional": "Este paso es opcional. Podés hacerlo después desde el Dashboard",
+    "descriptionLabel": "Descripción",
+    "descriptionPlaceholder": "ej. Supermercado Día",
+    "amountLabel": "Monto",
+    "amountPlaceholder": "ej. 500",
+    "back": "Volver",
+    "skip": "Lo haré después",
+    "add": "Agregar",
+    "validation": {
+      "descriptionRequired": "La descripción es requerida",
+      "amountRequired": "El monto es requerido",
+      "amountPositive": "El monto debe ser mayor a 0"
+    }
+  },
+  "completed": {
+    "title": "¡Listo! Ya podés usar Bolsillo Claro",
+    "subtitle": "Todo configurado",
+    "checklist": {
+      "account": "Tu cuenta está configurada",
+      "transactions": "Podés agregar gastos e ingresos",
+      "reports": "Vas a ver reportes de tu plata"
+    },
+    "tips": {
+      "title": "💡 Consejos para empezar:",
+      "tip1": "Registrá tus gastos diarios para ver en qué gastás",
+      "tip2": "Usá categorías para organizar mejor tus gastos",
+      "tip3": "Revisá los reportes para entender tus finanzas"
+    },
+    "dashboard": "Ir al Dashboard",
+    "tour": "Ver Tour Rápido",
+    "success": {
+      "accountCreated": "Cuenta creada exitosamente",
+      "expenseCreated": "Primer gasto registrado"
+    }
+  },
+  "progress": {
+    "step": "Paso {{current}} de {{total}}"
+  }
+}

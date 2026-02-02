@@ -1,0 +1,63 @@
+{
+  "title": "Settings",
+  "subtitle": "Manage your account settings and preferences",
+  "tabs": {
+    "profile": "Profile",
+    "security": "Security",
+    "preferences": "Preferences",
+    "danger": "Danger Zone"
+  },
+  "profile": {
+    "title": "Profile Information",
+    "email": "Email",
+    "emailHelper": "Your email cannot be changed",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "memberSince": "Member Since",
+    "save": "Save Changes",
+    "saving": "Saving..."
+  },
+  "security": {
+    "title": "Change Password",
+    "currentPassword": "Current Password",
+    "currentPasswordPlaceholder": "Enter your current password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter new password (min 8 characters)",
+    "confirmPassword": "Confirm New Password",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordsMismatch": "Passwords do not match",
+    "submit": "Change Password",
+    "submitting": "Changing..."
+  },
+  "preferences": {
+    "title": "Preferences",
+    "language": "Language / Idioma",
+    "languageHelper": "Select your preferred language for the interface",
+    "defaultAccount": "Default Account",
+    "defaultAccountNone": "None (select manually each time)",
+    "defaultAccountHelper": "This account will be pre-selected when creating new transactions",
+    "save": "Save Preferences",
+    "saving": "Saving..."
+  },
+  "danger": {
+    "title": "Danger Zone",
+    "deleteAccount": "Delete Account",
+    "warning": "Once you delete your account, there is no going back. This will permanently delete:",
+    "deleteItems": {
+      "accounts": "All your accounts and transactions",
+      "categories": "All your categories (custom and system)",
+      "recurring": "All your recurring expenses and incomes",
+      "goals": "All your savings goals and history",
+      "profile": "Your profile and settings"
+    },
+    "confirmButton": "I want to delete my account",
+    "passwordLabel": "Enter your password to confirm",
+    "passwordPlaceholder": "Your password",
+    "confirmationLabel": "Type DELETE to confirm",
+    "confirmationPlaceholder": "DELETE",
+    "cancel": "Cancel",
+    "delete": "Delete My Account Forever",
+    "deleting": "Deleting..."
+  }
+}

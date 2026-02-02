@@ -1,0 +1,146 @@
+{
+  "buttons": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "close": "Cerrar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "confirm": "Confirmar",
+    "clear": "Limpiar",
+    "duplicate": "Duplicar",
+    "logout": "Cerrar Sesión",
+    "addExpense": "Agregar Gasto",
+    "addIncome": "Agregar Ingreso",
+    "goToAccounts": "Ir a Cuentas",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "activate": "Activar",
+    "deactivate": "Desactivar"
+  },
+  "actions": {
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "deleting": "Eliminando...",
+    "success": "Éxito",
+    "error": "Error",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "filters": "Filtros",
+    "export": "Exportar"
+  },
+  "common": {
+    "account": "Cuenta",
+    "description": "Descripción",
+    "amount": "Monto",
+    "date": "Fecha",
+    "category": "Categoría",
+    "noCategory": "Sin Categoría",
+    "name": "Nombre",
+    "email": "Email",
+    "password": "Contraseña",
+    "currency": "Moneda",
+    "balance": "Saldo",
+    "total": "Total",
+    "noData": "No hay datos disponibles",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "filters": {
+    "searchPlaceholder": "Buscar por descripción...",
+    "filtersButton": "Filtros",
+    "clearAll": "Limpiar",
+    "clearAllTitle": "Limpiar todos los filtros",
+    "fromDate": "Desde Fecha",
+    "toDate": "Hasta Fecha",
+    "minAmount": "Monto Mínimo",
+    "maxAmount": "Monto Máximo",
+    "minAmountPlaceholder": "ej. 100",
+    "maxAmountPlaceholder": "ej. 10000",
+    "categories": "Categorías",
+    "familyMembers": "Miembros Familiares",
+    "activeFilters": "{{count}} filtro{{count, plural, one {} other {s}}} activo{{count, plural, one {} other {s}}}",
+    "all": "Todos",
+    "allFrequencies": "Todas las Frecuencias"
+  },
+  "labels": {
+    "account": "Cuenta",
+    "description": "Descripción",
+    "amount": "Monto",
+    "date": "Fecha",
+    "category": "Categoría",
+    "frequency": "Frecuencia",
+    "occurrences": "Ocurrencias",
+    "actions": "Acciones"
+  },
+  "form": {
+    "noCategory": "Sin Categoría",
+    "noMember": "Sin Miembro"
+  },
+  "currencies": {
+    "ars": "Peso Argentino (ARS)",
+    "usd": "Dólar Estadounidense (USD)",
+    "eur": "Euro (EUR)"
+  },
+  "validation": {
+    "required": "Este campo es requerido",
+    "amountPositive": "El monto debe ser mayor a 0",
+    "intervalPositive": "El intervalo debe ser al menos 1",
+    "dayOfMonthRequired": "El día del mes es requerido para recurrencia mensual/anual",
+    "dayOfWeekRequired": "El día de la semana es requerido para recurrencia semanal"
+  },
+  "messages": {
+    "success": "{{entity}} {{action}} exitosamente",
+    "created": "creado",
+    "updated": "actualizado",
+    "deleted": "eliminado",
+    "activated": "activado",
+    "deactivated": "desactivado",
+    "successfully": "exitosamente",
+    "redirecting": "Redirigiendo a la lista...",
+    "redirectingIn": "Redirigiendo en {{seconds}} segundo{{seconds, plural, one {} other {s}}}...",
+    "confirmDelete": "¿Estás seguro que querés eliminar «{{entity}}»?"
+  },
+  "errors": {
+    "noActiveAccount": "Sin Cuenta Activa",
+    "selectAccountFirst": "Por favor seleccioná o creá una cuenta primero",
+    "loadFailed": "Error al cargar",
+    "errorLoading": "Error al Cargar {{entity}}"
+  },
+  "summary": {
+    "activeTemplates": "Plantillas Activas",
+    "estimatedMonthly": "Estimado Mensual"
+  },
+  "empty": {
+    "noInactive": "Sin {{entity}} Inactivos",
+    "noInactiveDescription": "No tenés {{entity}} desactivados"
+  },
+  "multiCurrency": {
+    "title": "Transacción Multi-Moneda",
+    "expenseDescription": "Como estás gastando en {{currency}} pero tu cuenta está en {{accountCurrency}}, podés especificar el monto exacto debitado de tu cuenta (incluyendo impuestos/tasas).",
+    "incomeDescription": "Como estás recibiendo en {{currency}} pero tu cuenta está en {{accountCurrency}}, podés especificar el monto exacto acreditado a tu cuenta.",
+    "amountDebited": "Monto Realmente Debitado ({{currency}})",
+    "amountCredited": "Monto Realmente Acreditado ({{currency}})",
+    "amountDebitedPlaceholder": "ej. Cuántos {{currency}} se cobran realmente",
+    "amountCreditedPlaceholder": "ej. Cuántos {{currency}} se acreditan realmente",
+    "helperText": "Opcional: El sistema calculará la tasa de cambio efectiva automáticamente",
+    "expenseExample": "Ejemplo: Si gastás USD 20 en Netflix y te cobran ARS 31,500 (incluyendo 75% de impuesto «dólar tarjeta»), ingresá 31500 acá. El sistema calculará la tasa efectiva: 1575 ARS/USD.",
+    "incomeExample": "Ejemplo: Si recibís USD 500 por trabajo freelance y te acreditan ARS 787,500 (después de comisiones/impuestos), ingresá 787500 acá. El sistema calculará la tasa efectiva: 1575 ARS/USD."
+  },
+  "recurrence": {
+    "settings": "Configuración de Recurrencia",
+    "dayOfMonthHelper": "Para meses con menos días, se usará el último día del mes",
+    "yearlyTip": "💡 Consejo: Para recurrencia anual, el mes se toma de la fecha de inicio debajo. Ejemplo: Fecha inicio = 15 de Enero → Se repite cada 15 de Enero.",
+    "occurrencesHelper": "Alternativa a fecha fin - limitar número total de ocurrencias",
+    "everyDay_one": "Cada {{count}} día",
+    "everyDay_other": "Cada {{count}} días",
+    "everyWeek_one": "Cada {{count}} semana los {{day}}",
+    "everyWeek_other": "Cada {{count}} semanas los {{day}}",
+    "everyMonth_one": "Cada {{count}} mes el día {{day}}",
+    "everyMonth_other": "Cada {{count}} meses el día {{day}}",
+    "everyYear_one": "Cada {{count}} año el día {{day}}",
+    "everyYear_other": "Cada {{count}} años el día {{day}}"
+  }
+}

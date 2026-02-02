@@ -1,0 +1,43 @@
+{
+  "menu": {
+    "dashboard": "Panel",
+    "expenses": "Gastos",
+    "incomes": "Ingresos",
+    "activity": "Actividad",
+    "goals": "Metas",
+    "recurring": "Recurrentes",
+    "settings": "Configuración",
+    "accounts": "Cuentas",
+    "categories": "Categorías",
+    "reports": "Reportes"
+  },
+  "bottomNav": {
+    "home": "Inicio",
+    "activity": "Actividad",
+    "expenses": "Gastos",
+    "incomes": "Ingresos",
+    "more": "Más"
+  },
+  "moreMenu": {
+    "accounts": {
+      "label": "Cuentas",
+      "description": "Administrá tus cuentas"
+    },
+    "categories": {
+      "label": "Categorías",
+      "description": "Categorías de gastos e ingresos"
+    },
+    "reports": {
+      "label": "Reportes",
+      "description": "Análisis financiero"
+    },
+    "savings": {
+      "label": "Ahorros",
+      "description": "Metas de ahorro"
+    },
+    "settings": {
+      "label": "Configuración",
+      "description": "Preferencias de cuenta"
+    }
+  }
+}

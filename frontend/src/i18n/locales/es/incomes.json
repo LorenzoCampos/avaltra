@@ -1,0 +1,93 @@
+{
+  "form": {
+    "titleCreate": "Crear Nuevo Ingreso",
+    "titleEdit": "Editar Ingreso",
+    "backToList": "Volver a Lista de Ingresos",
+    "description": "Descripción",
+    "descriptionPlaceholder": "ej. Salario, Freelance, Bono",
+    "amount": "Monto",
+    "amountPlaceholder": "ej. 50000.00",
+    "currencyLabel": "Moneda",
+    "currency": {
+      "ars": "Peso Argentino (ARS)",
+      "usd": "Dólar Estadounidense (USD)",
+      "eur": "Euro (EUR)"
+    },
+    "date": "Fecha",
+    "category": "Categoría (Opcional)",
+    "familyMember": "Miembro Familiar (Opcional)",
+    "noMember": "Sin Miembro",
+    "loadingCategories": "Cargando categorías...",
+    "loadingMembers": "Cargando miembros...",
+    "submitCreate": "Crear Ingreso",
+    "submitEdit": "Actualizar Ingreso",
+    "created": "creado",
+    "updated": "actualizado",
+    "multiCurrency": {
+      "title": "Transacción Multi-Moneda",
+      "description": "Como estás recibiendo en {{incomeCurrency}} pero tu cuenta está en {{accountCurrency}}, podés especificar el monto exacto acreditado en tu cuenta (después de conversiones/comisiones).",
+      "amountLabel": "Monto Realmente Acreditado ({{currency}})",
+      "amountPlaceholder": "ej. Cuántos {{currency}} fueron realmente acreditados",
+      "helper": "Opcional: El sistema calculará la tasa de cambio efectiva automáticamente",
+      "exampleLabel": "Ejemplo",
+      "exampleText": "Si recibiste USD 100 de trabajo freelance y te acreditaron ARS 157.500 (a tasa 1575 ARS/USD), ingresá 157500 acá. El sistema calculará la tasa efectiva automáticamente."
+    },
+    "success": {
+      "create": "¡Ingreso creado exitosamente!",
+      "update": "¡Ingreso actualizado exitosamente!",
+      "redirecting": "Redirigiendo a lista de ingresos...",
+      "redirectingIn": "Redirigiendo a lista de ingresos en {{seconds}} segundo{{seconds, plural, one {} other {s}}}..."
+    },
+    "error": {
+      "save": "Error al guardar el ingreso",
+      "tryAgain": "Por favor intentá de nuevo",
+      "loading": "Error al cargar el ingreso",
+      "unknown": "Error desconocido"
+    }
+  },
+
+  "tabs": {
+    "incomes": "💰 Ingresos",
+    "recurring": "🔁 Plantillas Recurrentes"
+  },
+  
+  "list": {
+    "title": "Ingresos",
+    "account": "Cuenta",
+    "addButton": "Agregar Ingreso",
+    "allIncomes": "Todos los Ingresos",
+    "filteredIncomes": "Ingresos Filtrados ({{filtered}} de {{total}})",
+    "filteredShort": "Filtrados ({{filtered}}/{{total}})",
+    "noMatch": "No hay ingresos que coincidan con tus filtros",
+    "clearFilters": "Limpiar filtros",
+    "confirmDelete": "¿Estás seguro que querés eliminar \"{{description}}\"?",
+    "noAccount": {
+      "title": "Sin Cuenta Activa",
+      "description": "Por favor seleccioná o creá una cuenta primero",
+      "button": "Ir a Cuentas"
+    },
+    "empty": {
+      "title": "Sin Ingresos Todavía",
+      "description": "Empezá a rastrear tus ingresos agregando uno",
+      "button": "Agregá tu Primer Ingreso"
+    },
+    "error": {
+      "title": "Error al Cargar Ingresos",
+      "loadFailed": "Falló la carga de ingresos"
+    },
+    "table": {
+      "date": "Fecha",
+      "description": "Descripción",
+      "category": "Categoría",
+      "member": "Miembro",
+      "amount": "Monto",
+      "actions": "Acciones",
+      "na": "N/A"
+    },
+    "actions": {
+      "edit": "Editar",
+      "duplicate": "Duplicar",
+      "delete": "Eliminar"
+    }
+  }
+}

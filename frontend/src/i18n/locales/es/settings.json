@@ -1,0 +1,63 @@
+{
+  "title": "Configuración",
+  "subtitle": "Gestioná la configuración y preferencias de tu cuenta",
+  "tabs": {
+    "profile": "Perfil",
+    "security": "Seguridad",
+    "preferences": "Preferencias",
+    "danger": "Zona de Peligro"
+  },
+  "profile": {
+    "title": "Información del Perfil",
+    "email": "Email",
+    "emailHelper": "Tu email no puede ser cambiado",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "memberSince": "Miembro Desde",
+    "save": "Guardar Cambios",
+    "saving": "Guardando..."
+  },
+  "security": {
+    "title": "Cambiar Contraseña",
+    "currentPassword": "Contraseña Actual",
+    "currentPasswordPlaceholder": "Ingresá tu contraseña actual",
+    "newPassword": "Nueva Contraseña",
+    "newPasswordPlaceholder": "Ingresá nueva contraseña (mín 8 caracteres)",
+    "confirmPassword": "Confirmar Nueva Contraseña",
+    "confirmPasswordPlaceholder": "Confirmá la nueva contraseña",
+    "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
+    "passwordsMismatch": "Las contraseñas no coinciden",
+    "submit": "Cambiar Contraseña",
+    "submitting": "Cambiando..."
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "language": "Idioma / Language",
+    "languageHelper": "Seleccioná tu idioma preferido para la interfaz",
+    "defaultAccount": "Cuenta Predeterminada",
+    "defaultAccountNone": "Ninguna (seleccionar manualmente cada vez)",
+    "defaultAccountHelper": "Esta cuenta será pre-seleccionada al crear nuevas transacciones",
+    "save": "Guardar Preferencias",
+    "saving": "Guardando..."
+  },
+  "danger": {
+    "title": "Zona de Peligro",
+    "deleteAccount": "Eliminar Cuenta",
+    "warning": "Una vez que eliminés tu cuenta, no hay vuelta atrás. Esto eliminará permanentemente:",
+    "deleteItems": {
+      "accounts": "Todas tus cuentas y transacciones",
+      "categories": "Todas tus categorías (personalizadas y del sistema)",
+      "recurring": "Todos tus gastos e ingresos recurrentes",
+      "goals": "Todas tus metas de ahorro e historial",
+      "profile": "Tu perfil y configuración"
+    },
+    "confirmButton": "Quiero eliminar mi cuenta",
+    "passwordLabel": "Ingresá tu contraseña para confirmar",
+    "passwordPlaceholder": "Tu contraseña",
+    "confirmationLabel": "Escribí DELETE para confirmar",
+    "confirmationPlaceholder": "DELETE",
+    "cancel": "Cancelar",
+    "delete": "Eliminar Mi Cuenta Para Siempre",
+    "deleting": "Eliminando..."
+  }
+}

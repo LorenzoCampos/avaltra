@@ -1,0 +1,93 @@
+{
+  "form": {
+    "titleCreate": "Crear Nuevo Gasto",
+    "titleEdit": "Editar Gasto",
+    "backToList": "Volver a Lista de Gastos",
+    "description": "Descripción",
+    "descriptionPlaceholder": "ej. Supermercado, Alquiler, Café",
+    "amount": "Monto",
+    "amountPlaceholder": "ej. 50.00",
+    "currencyLabel": "Moneda",
+    "currency": {
+      "ars": "Peso Argentino (ARS)",
+      "usd": "Dólar Estadounidense (USD)",
+      "eur": "Euro (EUR)"
+    },
+    "date": "Fecha",
+    "category": "Categoría (Opcional)",
+    "familyMember": "Miembro Familiar (Opcional)",
+    "noMember": "Sin Miembro",
+    "loadingCategories": "Cargando categorías...",
+    "loadingMembers": "Cargando miembros...",
+    "submitCreate": "Crear Gasto",
+    "submitEdit": "Actualizar Gasto",
+    "created": "creado",
+    "updated": "actualizado",
+    "multiCurrency": {
+      "title": "Transacción Multi-Moneda",
+      "description": "Como estás gastando en {{expenseCurrency}} pero tu cuenta está en {{accountCurrency}}, podés especificar el monto exacto debitado de tu cuenta (incluyendo impuestos/comisiones).",
+      "amountLabel": "Monto Realmente Debitado ({{currency}})",
+      "amountPlaceholder": "ej. Cuántos {{currency}} fueron realmente cargados",
+      "helper": "Opcional: El sistema calculará la tasa de cambio efectiva automáticamente",
+      "exampleLabel": "Ejemplo",
+      "exampleText": "Si gastaste USD 20 en Netflix y te cobraron ARS 31.500 (incluyendo el 75% del \"dólar tarjeta\"), ingresá 31500 acá. El sistema calculará la tasa efectiva: 1575 ARS/USD."
+    },
+    "success": {
+      "create": "¡Gasto creado exitosamente!",
+      "update": "¡Gasto actualizado exitosamente!",
+      "redirecting": "Redirigiendo a lista de gastos...",
+      "redirectingIn": "Redirigiendo a lista de gastos en {{seconds}} segundo{{seconds, plural, one {} other {s}}}..."
+    },
+    "error": {
+      "save": "Error al guardar el gasto",
+      "tryAgain": "Por favor intentá de nuevo",
+      "loading": "Error al cargar el gasto",
+      "unknown": "Error desconocido"
+    }
+  },
+
+  "tabs": {
+    "expenses": "💸 Gastos",
+    "recurring": "🔁 Plantillas Recurrentes"
+  },
+  
+  "list": {
+    "title": "Gastos",
+    "account": "Cuenta",
+    "addButton": "Agregar Gasto",
+    "allExpenses": "Todos los Gastos",
+    "filteredExpenses": "Gastos Filtrados ({{filtered}} de {{total}})",
+    "filteredShort": "Filtrados ({{filtered}}/{{total}})",
+    "noMatch": "No hay gastos que coincidan con tus filtros",
+    "clearFilters": "Limpiar filtros",
+    "confirmDelete": "¿Estás seguro que querés eliminar \"{{description}}\"?",
+    "noAccount": {
+      "title": "Sin Cuenta Activa",
+      "description": "Por favor seleccioná o creá una cuenta primero",
+      "button": "Ir a Cuentas"
+    },
+    "empty": {
+      "title": "Sin Gastos Todavía",
+      "description": "Empezá a rastrear tus gastos agregando uno",
+      "button": "Agregá tu Primer Gasto"
+    },
+    "error": {
+      "title": "Error al Cargar Gastos",
+      "loadFailed": "Falló la carga de gastos"
+    },
+    "table": {
+      "date": "Fecha",
+      "description": "Descripción",
+      "category": "Categoría",
+      "member": "Miembro",
+      "amount": "Monto",
+      "actions": "Acciones",
+      "na": "N/A"
+    },
+    "actions": {
+      "edit": "Editar",
+      "duplicate": "Duplicar",
+      "delete": "Eliminar"
+    }
+  }
+}

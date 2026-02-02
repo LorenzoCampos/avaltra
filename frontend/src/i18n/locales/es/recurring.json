@@ -1,0 +1,108 @@
+{
+  "expenses": {
+    "title": "Gastos Recurrentes",
+    "add": "Agregar Gasto Recurrente",
+    "edit": "Editar Gasto Recurrente",
+    "form": {
+      "titleCreate": "Crear Gasto Recurrente",
+      "titleEdit": "Editar Gasto Recurrente",
+      "backToList": "Volver a Gastos Recurrentes",
+      "description": "Descripción",
+      "descriptionPlaceholder": "ej. Alquiler, Netflix, Gimnasio",
+      "amount": "Monto",
+      "currency": "Moneda",
+      "category": "Categoría (Opcional)",
+      "familyMember": "Miembro Familiar (Opcional)",
+      "frequency": "Frecuencia",
+      "interval": "Intervalo",
+      "intervalHelper": "Cada cuántos {{frequency}} se repite",
+      "dayOfMonth": "Día del Mes",
+      "dayOfWeek": "Día de la Semana",
+      "startDate": "Fecha de Inicio",
+      "endDate": "Fecha de Fin (Opcional)",
+      "endDateHelper": "Dejá vacío para que sea indefinido",
+      "totalOccurrences": "Total de Ocurrencias (Opcional)",
+      "isActive": "Activo",
+      "isActiveHelper": "Si está inactivo, no se generarán transacciones automáticamente",
+      "submit": "Guardar Gasto Recurrente"
+    },
+    "list": {
+      "title": "Gastos Recurrentes",
+      "empty": "No hay gastos recurrentes todavía",
+      "emptyDescription": "Los gastos recurrentes se generan automáticamente según la frecuencia configurada",
+      "addFirst": "Agregar Primer Gasto Recurrente"
+    },
+    "frequency": {
+      "daily": "Diario",
+      "weekly": "Semanal",
+      "monthly": "Mensual",
+      "yearly": "Anual"
+    },
+    "daysOfWeek": {
+      "0": "Domingo",
+      "1": "Lunes",
+      "2": "Martes",
+      "3": "Miércoles",
+      "4": "Jueves",
+      "5": "Viernes",
+      "6": "Sábado"
+    }
+  },
+  "incomes": {
+    "title": "Ingresos Recurrentes",
+    "add": "Agregar Ingreso Recurrente",
+    "edit": "Editar Ingreso Recurrente",
+    "form": {
+      "titleCreate": "Crear Ingreso Recurrente",
+      "titleEdit": "Editar Ingreso Recurrente",
+      "backToList": "Volver a Ingresos Recurrentes",
+      "description": "Descripción",
+      "descriptionPlaceholder": "ej. Salario, Freelance Mensual",
+      "amount": "Monto",
+      "currency": "Moneda",
+      "category": "Categoría (Opcional)",
+      "familyMember": "Miembro Familiar (Opcional)",
+      "frequency": "Frecuencia",
+      "interval": "Intervalo",
+      "intervalHelper": "Cada cuántos {{frequency}} se repite",
+      "dayOfMonth": "Día del Mes",
+      "dayOfWeek": "Día de la Semana",
+      "startDate": "Fecha de Inicio",
+      "endDate": "Fecha de Fin (Opcional)",
+      "endDateHelper": "Dejá vacío para que sea indefinido",
+      "totalOccurrences": "Total de Ocurrencias (Opcional)",
+      "isActive": "Activo",
+      "isActiveHelper": "Si está inactivo, no se generarán transacciones automáticamente",
+      "submit": "Guardar Ingreso Recurrente"
+    },
+    "list": {
+      "title": "Ingresos Recurrentes",
+      "empty": "No hay ingresos recurrentes todavía",
+      "emptyDescription": "Los ingresos recurrentes se generan automáticamente según la frecuencia configurada",
+      "addFirst": "Agregar Primer Ingreso Recurrente"
+    },
+    "frequency": {
+      "daily": "Diario",
+      "weekly": "Semanal",
+      "monthly": "Mensual",
+      "yearly": "Anual"
+    },
+    "daysOfWeek": {
+      "0": "Domingo",
+      "1": "Lunes",
+      "2": "Martes",
+      "3": "Miércoles",
+      "4": "Jueves",
+      "5": "Viernes",
+      "6": "Sábado"
+    }
+  },
+  "common": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "nextOccurrence": "Próxima Ocurrencia",
+    "lastProcessed": "Última Procesada",
+    "generatedTransactions": "Transacciones Generadas",
+    "status": "Estado"
+  }
+}

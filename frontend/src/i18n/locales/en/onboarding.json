@@ -1,0 +1,66 @@
+{
+  "welcome": {
+    "title": "Welcome to Bolsillo Claro!",
+    "subtitle": "We'll help you set up your account in 3 simple steps so you can start managing your finances",
+    "start": "Get Started",
+    "skip": "Skip",
+    "skipWarning": "Are you sure? You'll need to set everything up manually later"
+  },
+  "createAccount": {
+    "title": "Create Your First Account",
+    "subtitle": "Step 1 of 3",
+    "hint": "An 'account' is where you organize your money. For example: 'My Personal Finances' or 'Family Budget'",
+    "nameLabel": "Account Name",
+    "namePlaceholder": "e.g. My Personal Account",
+    "currencyLabel": "Primary Currency",
+    "currencyHint": "This will be your account's main currency. You can still record expenses in other currencies",
+    "back": "Back",
+    "next": "Next",
+    "validation": {
+      "nameRequired": "Account name is required",
+      "nameMinLength": "Name must be at least 3 characters"
+    }
+  },
+  "firstExpense": {
+    "title": "Want to add your first expense?",
+    "subtitle": "Step 2 of 3 (Optional)",
+    "hint": "Example: If you spent $500 at the supermarket, you can log it here to keep track",
+    "optional": "This step is optional. You can do it later from the Dashboard",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "e.g. Grocery Store",
+    "amountLabel": "Amount",
+    "amountPlaceholder": "e.g. 500",
+    "back": "Back",
+    "skip": "I'll do it later",
+    "add": "Add",
+    "validation": {
+      "descriptionRequired": "Description is required",
+      "amountRequired": "Amount is required",
+      "amountPositive": "Amount must be greater than 0"
+    }
+  },
+  "completed": {
+    "title": "All Set! You're Ready to Use Bolsillo Claro",
+    "subtitle": "Everything is configured",
+    "checklist": {
+      "account": "Your account is set up",
+      "transactions": "You can add expenses and incomes",
+      "reports": "You'll see reports of your finances"
+    },
+    "tips": {
+      "title": "💡 Tips to get started:",
+      "tip1": "Log your daily expenses to see where you spend",
+      "tip2": "Use categories to better organize your expenses",
+      "tip3": "Check reports to understand your finances"
+    },
+    "dashboard": "Go to Dashboard",
+    "tour": "Take Quick Tour",
+    "success": {
+      "accountCreated": "Account created successfully",
+      "expenseCreated": "First expense logged"
+    }
+  },
+  "progress": {
+    "step": "Step {{current}} of {{total}}"
+  }
+}

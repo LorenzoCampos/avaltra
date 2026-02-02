@@ -1,0 +1,108 @@
+{
+  "expenses": {
+    "title": "Recurring Expenses",
+    "add": "Add Recurring Expense",
+    "edit": "Edit Recurring Expense",
+    "form": {
+      "titleCreate": "Create Recurring Expense",
+      "titleEdit": "Edit Recurring Expense",
+      "backToList": "Back to Recurring Expenses",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g. Rent, Netflix, Gym",
+      "amount": "Amount",
+      "currency": "Currency",
+      "category": "Category (Optional)",
+      "familyMember": "Family Member (Optional)",
+      "frequency": "Frequency",
+      "interval": "Interval",
+      "intervalHelper": "Every how many {{frequency}} it repeats",
+      "dayOfMonth": "Day of Month",
+      "dayOfWeek": "Day of Week",
+      "startDate": "Start Date",
+      "endDate": "End Date (Optional)",
+      "endDateHelper": "Leave empty for indefinite",
+      "totalOccurrences": "Total Occurrences (Optional)",
+      "isActive": "Active",
+      "isActiveHelper": "If inactive, no transactions will be generated automatically",
+      "submit": "Save Recurring Expense"
+    },
+    "list": {
+      "title": "Recurring Expenses",
+      "empty": "No recurring expenses yet",
+      "emptyDescription": "Recurring expenses are generated automatically based on the configured frequency",
+      "addFirst": "Add First Recurring Expense"
+    },
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "daysOfWeek": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    }
+  },
+  "incomes": {
+    "title": "Recurring Incomes",
+    "add": "Add Recurring Income",
+    "edit": "Edit Recurring Income",
+    "form": {
+      "titleCreate": "Create Recurring Income",
+      "titleEdit": "Edit Recurring Income",
+      "backToList": "Back to Recurring Incomes",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g. Salary, Monthly Freelance",
+      "amount": "Amount",
+      "currency": "Currency",
+      "category": "Category (Optional)",
+      "familyMember": "Family Member (Optional)",
+      "frequency": "Frequency",
+      "interval": "Interval",
+      "intervalHelper": "Every how many {{frequency}} it repeats",
+      "dayOfMonth": "Day of Month",
+      "dayOfWeek": "Day of Week",
+      "startDate": "Start Date",
+      "endDate": "End Date (Optional)",
+      "endDateHelper": "Leave empty for indefinite",
+      "totalOccurrences": "Total Occurrences (Optional)",
+      "isActive": "Active",
+      "isActiveHelper": "If inactive, no transactions will be generated automatically",
+      "submit": "Save Recurring Income"
+    },
+    "list": {
+      "title": "Recurring Incomes",
+      "empty": "No recurring incomes yet",
+      "emptyDescription": "Recurring incomes are generated automatically based on the configured frequency",
+      "addFirst": "Add First Recurring Income"
+    },
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "daysOfWeek": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    }
+  },
+  "common": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "nextOccurrence": "Next Occurrence",
+    "lastProcessed": "Last Processed",
+    "generatedTransactions": "Generated Transactions",
+    "status": "Status"
+  }
+}

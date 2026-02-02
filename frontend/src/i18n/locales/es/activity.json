@@ -1,0 +1,35 @@
+{
+  "title": "Actividad",
+  "subtitle": "Timeline completo de tus ingresos, gastos y movimientos de ahorro",
+  "account": "Cuenta",
+  "noAccount": {
+    "title": "Sin Cuenta Activa",
+    "description": "Por favor seleccioná o creá una cuenta primero",
+    "button": "Ir a Cuentas"
+  },
+  "export": {
+    "noData": "No hay datos para exportar",
+    "csvSuccess": "CSV exportado exitosamente",
+    "pdfSuccess": "PDF exportado exitosamente"
+  },
+  "summary": {
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "saved": "Ahorrado",
+    "balance": "Balance"
+  },
+  "types": {
+    "income": "Ingreso",
+    "expense": "Gasto",
+    "savings_deposit": "Depósito en Ahorro",
+    "savings_withdrawal": "Retiro de Ahorro"
+  },
+  "empty": "No hay actividad todavía",
+  "noResults": "No hay actividades que coincidan con tus filtros",
+  "clearFilters": "Limpiar filtros",
+  "error": {
+    "title": "Error al cargar la actividad",
+    "unknown": "Error desconocido"
+  },
+  "loading": "Cargando actividad..."
+}

@@ -1,0 +1,53 @@
+{
+  "welcome": "Welcome back, {{name}}!",
+  "getStarted": "Let's get started with your finances",
+  "overview": "Here's an overview of your finances for {{period}}",
+  "loading": "Loading your financial data...",
+  
+  "noAccount": {
+    "title": "No Account Selected",
+    "description": "You need to create or select an account first",
+    "button": "Go to Accounts"
+  },
+  
+  "error": {
+    "title": "Error Loading Dashboard",
+    "message": "Failed to load dashboard",
+    "retry": "Retry"
+  },
+  
+  "cards": {
+    "availableBalance": {
+      "title": "Available Balance",
+      "subtitle": "Money you can spend"
+    },
+    "expenses": {
+      "title": "This Month's Expenses",
+      "subtitle": "{{count}} transactions"
+    },
+    "income": {
+      "title": "This Month's Income",
+      "subtitle": "Total earned"
+    }
+  },
+  
+  "reportsCta": {
+    "title": "📊 Want to see your finances in detail?",
+    "description": "Analyze your finances with interactive charts, monthly comparisons and personalized reports",
+    "button": "View Full Reports →"
+  },
+  
+  "expensesByCategory": "Expenses by Category",
+  "topExpenses": "Top Expenses This Month",
+  "recentTransactions": "Recent Transactions",
+  
+  "emptyState": {
+    "title": "Getting Started",
+    "welcome": "👋 Welcome to Bolsillo Claro! Here's what you can do next:",
+    "tips": {
+      "trackTransactions": "Start tracking your expenses and incomes",
+      "setSavings": "Set up savings goals to reach your financial targets",
+      "inviteFamily": "Invite family members to shared accounts"
+    }
+  }
+}

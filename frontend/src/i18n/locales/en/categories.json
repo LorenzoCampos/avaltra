@@ -1,0 +1,52 @@
+{
+  "title": "Categories",
+  "list": {
+    "title": "Categories",
+    "addButton": "+ Add Category",
+    "addExpenseButton": "+ Add Expense Category",
+    "addIncomeButton": "+ Add Income Category",
+    "addFirstButton": "Add Your First Category",
+    "errorTitle": "Error Loading Categories",
+    "errorGeneric": "Failed to load categories",
+    "tabExpenses": "💸 Expense Categories",
+    "tabIncomes": "💰 Income Categories",
+    "sectionCustom": "Custom Categories",
+    "sectionSystem": "System Categories",
+    "systemDescription": "Built-in categories available for all users. Cannot be edited or deleted.",
+    "systemBadge": "🔒 SYSTEM",
+    "noCategories": "No Categories Yet",
+    "noCategoriesDescription": "Start organizing your {{type}} by adding categories",
+    "deleteConfirm": "Are you sure you want to delete the category \"{{name}}\"?",
+    "deleteSystemError": "Cannot delete system categories"
+  },
+  "form": {
+    "titleCreateExpense": "Create Expense Category",
+    "titleCreateIncome": "Create Income Category",
+    "titleEditExpense": "Edit Expense Category",
+    "titleEditIncome": "Edit Income Category",
+    "backButton": "← Back to Categories",
+    "nameLabel": "Category Name",
+    "namePlaceholder": "e.g. Transportation, Groceries, Salary",
+    "nameTip": "💡 Tip: Check the System Categories list to avoid duplicating existing names",
+    "iconLabel": "Icon (Optional)",
+    "iconPlaceholder": "e.g. 🚗, 🍕, 💼",
+    "iconHelper": "Use a single emoji to represent this category",
+    "colorLabel": "Color (Optional)",
+    "colorPlaceholder": "e.g. #FF5733",
+    "colorHelper": "Hex color code for visual identification",
+    "quickColors": "Quick colors:",
+    "previewTitle": "Preview",
+    "previewDefaultIcon": "📁",
+    "previewDefaultName": "Category Name",
+    "submitCreate": "Create Category",
+    "submitUpdate": "Update Category",
+    "successCreate": "Category created successfully!",
+    "successUpdate": "Category updated successfully!",
+    "successRedirect": "Redirecting to categories list...",
+    "successRedirectCountdown": "Redirecting in {{count}} second{{plural}}..."
+  },
+  "types": {
+    "expenses": "expenses",
+    "incomes": "incomes"
+  }
+}

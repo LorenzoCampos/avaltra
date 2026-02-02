@@ -1,0 +1,55 @@
+{
+  "title": "Reports & Analytics",
+  "page": {
+    "title": "📊 Reports & Analytics",
+    "subtitle": "Analyze your financial data with detailed charts and insights",
+    "exportButton": "Export to CSV",
+    "noAccount": "No Account Selected",
+    "noAccountDescription": "You need to create or select an account first",
+    "errorTitle": "Error Loading Reports",
+    "errorGeneric": "Failed to load reports",
+    "retryButton": "Retry"
+  },
+  "filters": {
+    "title": "📅 Date Range",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "last3Months": "Last 3 Months",
+    "last6Months": "Last 6 Months",
+    "thisYear": "This Year",
+    "lastYear": "Last Year",
+    "customRange": "Custom Range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "selectedPeriod": "Selected period:",
+    "to": "to"
+  },
+  "metrics": {
+    "title": "Financial Summary",
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "netBalance": "Net Balance",
+    "warningNegative": "⚠️ Your expenses exceed your income for this period. Consider reviewing your spending.",
+    "successPositive": "✅ Well done! You had a surplus of",
+    "ofYourIncome": "of your income."
+  },
+  "charts": {
+    "expensesByCategory": "Expenses by Category",
+    "incomeByCategory": "Income by Category",
+    "monthlyComparison": "Monthly Comparison",
+    "balanceEvolution": "Balance Evolution",
+    "noExpenseData": "No expense data available",
+    "noIncomeData": "No income data available",
+    "income": "Income",
+    "expenses": "Expenses",
+    "balance": "Balance",
+    "avgMonthlyIncome": "Avg. Monthly Income",
+    "avgMonthlyExpenses": "Avg. Monthly Expenses",
+    "avgMonthlyBalance": "Avg. Monthly Balance",
+    "trendUpward": "Your balance is trending upward. Keep it up!",
+    "trendDownward": "Your balance is declining. Consider reviewing your expenses.",
+    "startingBalance": "Starting Balance",
+    "currentBalance": "Current Balance",
+    "netChange": "Net Change"
+  }
+}

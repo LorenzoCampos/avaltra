@@ -1,0 +1,53 @@
+{
+  "welcome": "¡Bienvenido de vuelta, {{name}}!",
+  "getStarted": "Empecemos con tus finanzas",
+  "overview": "Acá tenés un resumen de tus finanzas para {{period}}",
+  "loading": "Cargando tus datos financieros...",
+  
+  "noAccount": {
+    "title": "Sin Cuenta Seleccionada",
+    "description": "Necesitás crear o seleccionar una cuenta primero",
+    "button": "Ir a Cuentas"
+  },
+  
+  "error": {
+    "title": "Error al Cargar el Panel",
+    "message": "Falló la carga del panel",
+    "retry": "Reintentar"
+  },
+  
+  "cards": {
+    "availableBalance": {
+      "title": "Saldo Disponible",
+      "subtitle": "Dinero que podés gastar"
+    },
+    "expenses": {
+      "title": "Gastos del Mes",
+      "subtitle": "{{count}} transacciones"
+    },
+    "income": {
+      "title": "Ingresos del Mes",
+      "subtitle": "Total ganado"
+    }
+  },
+  
+  "reportsCta": {
+    "title": "📊 ¿Querés ver tu economía en detalle?",
+    "description": "Analizá tus finanzas con gráficos interactivos, comparaciones mensuales y reportes personalizados",
+    "button": "Ver Reportes Completos →"
+  },
+  
+  "expensesByCategory": "Gastos por Categoría",
+  "topExpenses": "Mayores Gastos del Mes",
+  "recentTransactions": "Transacciones Recientes",
+  
+  "emptyState": {
+    "title": "Primeros Pasos",
+    "welcome": "👋 ¡Bienvenido a Bolsillo Claro! Acá tenés qué podés hacer:",
+    "tips": {
+      "trackTransactions": "Empezá a rastrear tus gastos e ingresos",
+      "setSavings": "Configurá metas de ahorro para alcanzar tus objetivos financieros",
+      "inviteFamily": "Invitá a miembros de la familia a cuentas compartidas"
+    }
+  }
+}

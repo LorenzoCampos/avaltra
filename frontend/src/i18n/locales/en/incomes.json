@@ -1,0 +1,93 @@
+{
+  "form": {
+    "titleCreate": "Create New Income",
+    "titleEdit": "Edit Income",
+    "backToList": "Back to Incomes List",
+    "description": "Description",
+    "descriptionPlaceholder": "e.g. Salary, Freelance, Bonus",
+    "amount": "Amount",
+    "amountPlaceholder": "e.g. 50000.00",
+    "currencyLabel": "Currency",
+    "currency": {
+      "ars": "Argentine Peso (ARS)",
+      "usd": "US Dollar (USD)",
+      "eur": "Euro (EUR)"
+    },
+    "date": "Date",
+    "category": "Category (Optional)",
+    "familyMember": "Family Member (Optional)",
+    "noMember": "No Member",
+    "loadingCategories": "Loading categories...",
+    "loadingMembers": "Loading family members...",
+    "submitCreate": "Create Income",
+    "submitEdit": "Update Income",
+    "created": "created",
+    "updated": "updated",
+    "multiCurrency": {
+      "title": "Multi-Currency Transaction",
+      "description": "Since you're receiving in {{incomeCurrency}} but your account is in {{accountCurrency}}, you can specify the exact amount credited to your account (after conversions/fees).",
+      "amountLabel": "Amount Actually Credited ({{currency}})",
+      "amountPlaceholder": "e.g. How many {{currency}} were actually credited",
+      "helper": "Optional: The system will calculate the effective exchange rate automatically",
+      "exampleLabel": "Example",
+      "exampleText": "If you received USD 100 from freelance work and were credited ARS 157,500 (at 1575 ARS/USD rate), enter 157500 here. The system will calculate the effective rate automatically."
+    },
+    "success": {
+      "create": "Income created successfully!",
+      "update": "Income updated successfully!",
+      "redirecting": "Redirecting to incomes list...",
+      "redirectingIn": "Redirecting to incomes list in {{seconds}} second{{seconds, plural, one {} other {s}}}..."
+    },
+    "error": {
+      "save": "Failed to save income",
+      "tryAgain": "Please try again",
+      "loading": "Error loading income",
+      "unknown": "Unknown error"
+    }
+  },
+
+  "tabs": {
+    "incomes": "💰 Incomes",
+    "recurring": "🔁 Recurring Templates"
+  },
+  
+  "list": {
+    "title": "Incomes",
+    "account": "Account",
+    "addButton": "Add Income",
+    "allIncomes": "All Incomes",
+    "filteredIncomes": "Filtered Incomes ({{filtered}} of {{total}})",
+    "filteredShort": "Filtered ({{filtered}}/{{total}})",
+    "noMatch": "No incomes match your filters",
+    "clearFilters": "Clear filters",
+    "confirmDelete": "Are you sure you want to delete \"{{description}}\"?",
+    "noAccount": {
+      "title": "No Active Account",
+      "description": "Please select or create an account first",
+      "button": "Go to Accounts"
+    },
+    "empty": {
+      "title": "No Incomes Yet",
+      "description": "Start tracking your incomes by adding one",
+      "button": "Add Your First Income"
+    },
+    "error": {
+      "title": "Error Loading Incomes",
+      "loadFailed": "Failed to load incomes"
+    },
+    "table": {
+      "date": "Date",
+      "description": "Description",
+      "category": "Category",
+      "member": "Member",
+      "amount": "Amount",
+      "actions": "Actions",
+      "na": "N/A"
+    },
+    "actions": {
+      "edit": "Edit",
+      "duplicate": "Duplicate",
+      "delete": "Delete"
+    }
+  }
+}

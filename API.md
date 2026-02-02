@@ -1,8 +1,8 @@
 # 📚 Bolsillo Claro - API Documentation
 
 **Base URL:** `https://api.fakerbostero.online/bolsillo/api`  
-**Versión:** 2.5  
-**Última actualización:** 2026-01-21
+**Versión:** 2.6  
+**Última actualización:** 2026-01-23
 
 ---
 
@@ -17,6 +17,12 @@ POST   /auth/login
 POST   /auth/refresh
 
 # With JWT only
+GET    /users/me
+PUT    /users/me
+PUT    /users/me/password
+PUT    /users/me/default-account
+DELETE /users/me
+
 GET    /accounts
 POST   /accounts
 GET    /accounts/:id
@@ -37,6 +43,7 @@ PUT    /incomes/:id
 DELETE /incomes/:id
 
 GET    /dashboard/summary
+GET    /activity
 GET    /expense-categories
 POST   /expense-categories
 GET    /income-categories
@@ -193,6 +200,258 @@ Renovar tokens usando el refresh token (evita re-login).
 - Guardar el nuevo refresh_token y descartar el anterior
 - Llamar a este endpoint cuando el access_token expira (HTTP 401)
 - Implementar retry automático en el frontend para renovar tokens
+
+---
+
+## 👤 User Settings
+
+Endpoints para gestionar el perfil y preferencias del usuario autenticado.
+
+### GET /users/me
+
+Obtener perfil del usuario autenticado.
+
+**Headers:** `Authorization`
+
+**Response (200):**
+```json
+{
+  "id": "uuid",
+  "email": "user@example.com",
+  "name": "Juan Pérez",
+  "default_account_id": "uuid-account",
+  "created_at": "2026-01-01T10:00:00Z"
+}
+```
+
+**Campos de la respuesta:**
+- `id` - UUID del usuario
+- `email` - Email del usuario (usado para login)
+- `name` - Nombre completo del usuario
+- `default_account_id` - UUID de la cuenta predeterminada (null si no tiene configurada)
+- `created_at` - Timestamp de cuándo se creó la cuenta
+
+**Errors:**
+- `401` - Usuario no autenticado
+- `404` - Usuario no encontrado
+
+---
+
+### PUT /users/me
+
+Actualizar nombre del usuario. **IMPORTANTE:** El email NO se puede cambiar.
+
+**Headers:** `Authorization`
+
+**Request:**
+```json
+{
+  "name": "Juan Carlos Pérez"
+}
+```
+
+**Campos actualizables:**
+- `name` - Nombre completo del usuario (1-255 caracteres, requerido)
+
+**Campos NO modificables:**
+- `email` - El email NO se puede cambiar una vez creada la cuenta
+- `id` - Identificador único (inmutable)
+- `created_at` - Timestamp de creación (inmutable)
+
+**Validaciones:**
+- `name` es requerido y no puede estar vacío
+- `name` debe tener entre 1 y 255 caracteres
+- Se eliminan espacios en blanco al inicio y final automáticamente
+
+**Response (200):**
+```json
+{
+  "message": "Perfil actualizado exitosamente",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "Juan Carlos Pérez",
+    "default_account_id": "uuid-account",
+    "created_at": "2026-01-01T10:00:00Z"
+  }
+}
+```
+
+**Errors:**
+- `400` - Datos inválidos (nombre vacío, demasiado largo, etc.)
+- `401` - Usuario no autenticado
+- `500` - Error actualizando perfil
+
+---
+
+### PUT /users/me/password
+
+Cambiar contraseña del usuario. Requiere la contraseña actual para confirmar la identidad.
+
+**Headers:** `Authorization`
+
+**Request:**
+```json
+{
+  "current_password": "password_actual",
+  "new_password": "nueva_password_segura"
+}
+```
+
+**Campos requeridos:**
+- `current_password` - Contraseña actual del usuario (para verificar identidad)
+- `new_password` - Nueva contraseña (mínimo 8 caracteres)
+
+**Validaciones:**
+- `current_password` debe ser correcta (se verifica contra el hash en DB)
+- `new_password` debe tener mínimo 8 caracteres
+- La nueva contraseña se hashea con bcrypt antes de almacenarla
+
+**Response (200):**
+```json
+{
+  "message": "Contraseña actualizada exitosamente"
+}
+```
+
+**Errors:**
+- `400` - Datos inválidos (nueva contraseña muy corta, campos faltantes, etc.)
+- `401` - Contraseña actual incorrecta o usuario no autenticado
+- `404` - Usuario no encontrado
+- `500` - Error actualizando contraseña
+
+**Seguridad:**
+- La contraseña actual se verifica antes de permitir el cambio
+- La nueva contraseña se hashea con bcrypt (cost=10)
+- Las contraseñas NUNCA se almacenan en texto plano
+- Se registra el evento en logs (sin incluir contraseñas)
+
+**Best Practices:**
+- Cambiar contraseña regularmente
+- Usar contraseñas fuertes (combinación de letras, números y símbolos)
+- No reutilizar contraseñas de otros servicios
+
+---
+
+### PUT /users/me/default-account
+
+Establecer cuenta predeterminada del usuario. Esta cuenta se seleccionará automáticamente al hacer login.
+
+**Headers:** `Authorization`
+
+**Request (Establecer cuenta default):**
+```json
+{
+  "account_id": "uuid-de-la-cuenta"
+}
+```
+
+**Request (Limpiar cuenta default):**
+```json
+{
+  "account_id": null
+}
+```
+
+**Campos:**
+- `account_id` - UUID de la cuenta a establecer como predeterminada
+  - Puede ser `null` o string vacío para limpiar la cuenta default
+  - Si se proporciona un UUID, debe ser una cuenta que pertenezca al usuario
+
+**Validaciones:**
+- Si se proporciona `account_id` (no null/vacío), debe existir y pertenecer al usuario
+- El usuario debe tener al menos una cuenta para poder establecer una como default
+
+**Response (200 - Cuenta establecida):**
+```json
+{
+  "message": "Cuenta predeterminada actualizada exitosamente",
+  "default_account_id": "uuid-de-la-cuenta"
+}
+```
+
+**Response (200 - Cuenta limpiada):**
+```json
+{
+  "message": "Cuenta predeterminada eliminada exitosamente",
+  "default_account_id": null
+}
+```
+
+**Errors:**
+- `400` - La cuenta no existe o no pertenece al usuario
+- `401` - Usuario no autenticado
+- `500` - Error actualizando cuenta predeterminada
+
+**Uso:**
+- Permite seleccionar qué cuenta se activa automáticamente al iniciar sesión
+- Si no se configura (null), el usuario deberá seleccionar cuenta manualmente cada vez
+- Se puede cambiar en cualquier momento
+
+---
+
+### DELETE /users/me
+
+Eliminar cuenta de usuario y TODOS sus datos asociados. **DANGER ZONE:** Esta acción NO se puede deshacer.
+
+**Headers:** `Authorization`
+
+**Request:**
+```json
+{
+  "password": "password_del_usuario",
+  "confirmation": "DELETE"
+}
+```
+
+**Campos requeridos:**
+- `password` - Contraseña del usuario (para verificar identidad)
+- `confirmation` - Debe ser exactamente la palabra `"DELETE"` (case-sensitive)
+
+**Validaciones:**
+- `password` debe ser correcta (se verifica contra el hash en DB)
+- `confirmation` debe ser exactamente `"DELETE"` (no se aceptan variaciones)
+- Ambos campos son obligatorios
+
+**Response (200):**
+```json
+{
+  "message": "Tu cuenta y todos tus datos han sido eliminados exitosamente"
+}
+```
+
+**Errors:**
+- `400` - Datos inválidos o confirmación incorrecta
+  - Si `confirmation` no es exactamente `"DELETE"`: `"Para confirmar, debes escribir exactamente 'DELETE'"`
+- `401` - Contraseña incorrecta o usuario no autenticado
+- `404` - Usuario no encontrado
+- `500` - Error eliminando cuenta
+
+**⚠️ ADVERTENCIA - ESTA ACCIÓN ES IRREVERSIBLE:**
+
+Al eliminar tu cuenta, se eliminan permanentemente:
+- ✗ Perfil de usuario y credenciales
+- ✗ TODAS las cuentas (personales y familiares)
+- ✗ TODOS los gastos e ingresos
+- ✗ TODOS los gastos e ingresos recurrentes
+- ✗ TODAS las metas de ahorro y sus transacciones
+- ✗ TODAS las categorías personalizadas
+- ✗ TODOS los miembros familiares
+
+**Comportamiento técnico:**
+- Se elimina el registro del usuario de la tabla `users`
+- Las foreign keys con `ON DELETE CASCADE` eliminan automáticamente todos los datos relacionados
+- La operación es atómica (todo se elimina o nada)
+- Se registra el evento en logs antes de la eliminación (email, timestamp, IP)
+
+**Seguridad:**
+- Requiere contraseña para confirmar identidad
+- Requiere escribir "DELETE" para evitar eliminaciones accidentales
+- Una vez eliminada, la cuenta NO se puede recuperar
+- El email queda disponible para registrar una nueva cuenta
+
+**Alternativa sugerida:**
+Si solo querés dejar de usar una cuenta específica (pero no eliminar TODO), considerá usar `DELETE /accounts/:id` en su lugar para eliminar solo esa cuenta.
 
 ---
 
@@ -1815,6 +2074,185 @@ available_balance = total_income - total_expenses - total_assigned_to_goals
 - Todos los montos en moneda primaria (conversión automática vía `amount_in_primary_currency`)
 - `top_expenses`: Máximo 5 gastos más grandes del mes (incluye info de categoría si existe)
 - `recent_transactions`: Máximo 10 transacciones (expenses + incomes mezclados, ordenados por `created_at DESC`)
+
+---
+
+## 📋 Activity Timeline
+
+### GET /activity
+
+Obtener timeline unificado de TODAS las transacciones (ingresos, gastos, depósitos a metas, retiros de metas) en orden cronológico. Este endpoint reemplaza la necesidad de consultar `/expenses`, `/incomes`, y transacciones de savings goals por separado.
+
+**Headers:** `Authorization`, `X-Account-ID`
+
+**Query Params:**
+- `month` (opcional): `YYYY-MM` - Atajo para filtrar por mes completo
+  - Ejemplo: `?month=2026-01` → filtra desde 2026-01-01 hasta 2026-01-31
+  - Si no se proporciona `month` ni `date_from`/`date_to`, **default: mes actual**
+- `date_from` (opcional): `YYYY-MM-DD` - Fecha inicio del rango
+  - Ejemplo: `?date_from=2026-01-15` → transacciones desde 2026-01-15 en adelante
+- `date_to` (opcional): `YYYY-MM-DD` - Fecha fin del rango
+  - Ejemplo: `?date_to=2026-01-20` → transacciones hasta 2026-01-20
+- `page` (opcional): Número de página (default: 1)
+- `limit` (opcional): Items por página (default: 50, max: 100)
+
+**Notas sobre filtros de fecha:**
+- Si se proporciona `month`, se ignoran `date_from` y `date_to`
+- Si no se proporciona ningún filtro, **default: mes actual**
+- `date_from` y `date_to` se pueden usar juntos o por separado
+
+**Ejemplos de uso:**
+```bash
+# Timeline del mes actual (default)
+GET /activity
+
+# Timeline de enero 2026
+GET /activity?month=2026-01
+
+# Timeline desde el 15 de enero hasta el 20
+GET /activity?date_from=2026-01-15&date_to=2026-01-20
+
+# Solo desde el 15 en adelante (sin límite superior)
+GET /activity?date_from=2026-01-15
+
+# Paginación: página 2, 20 items por página
+GET /activity?month=2026-01&page=2&limit=20
+```
+
+**Response (200):**
+```json
+{
+  "activities": [
+    {
+      "id": "uuid",
+      "type": "income",
+      "description": "Salario enero",
+      "amount": 500000.00,
+      "currency": "ARS",
+      "category_name": "Salario",
+      "goal_name": null,
+      "goal_id": null,
+      "date": "2026-01-01",
+      "created_at": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "uuid",
+      "type": "expense",
+      "description": "Supermercado Carrefour",
+      "amount": 25000.00,
+      "currency": "ARS",
+      "category_name": "Alimentación",
+      "goal_name": null,
+      "goal_id": null,
+      "date": "2026-01-05",
+      "created_at": "2026-01-05T14:30:00Z"
+    },
+    {
+      "id": "uuid",
+      "type": "savings_deposit",
+      "description": "Ahorro para vacaciones",
+      "amount": 50000.00,
+      "currency": "ARS",
+      "category_name": null,
+      "goal_name": "Vacaciones Brasil",
+      "goal_id": "uuid-meta-vacaciones",
+      "date": "2026-01-10",
+      "created_at": "2026-01-10T09:15:00Z"
+    },
+    {
+      "id": "uuid",
+      "type": "savings_withdrawal",
+      "description": "Retiro para emergencia",
+      "amount": 10000.00,
+      "currency": "ARS",
+      "category_name": null,
+      "goal_name": "Ahorro General",
+      "goal_id": "uuid-meta-general",
+      "date": "2026-01-15",
+      "created_at": "2026-01-15T11:00:00Z"
+    }
+  ],
+  "total_count": 125,
+  "page": 1,
+  "limit": 50,
+  "total_pages": 3,
+  "summary": {
+    "total_income": 500000.00,
+    "total_expenses": 125000.00,
+    "total_savings_deposits": 80000.00,
+    "total_savings_withdrawals": 10000.00,
+    "net_balance": 305000.00
+  }
+}
+```
+
+**Campos de cada activity:**
+- `id` (string) - UUID de la transacción
+- `type` (string) - Tipo de actividad
+  - Valores: `"income"` | `"expense"` | `"savings_deposit"` | `"savings_withdrawal"`
+- `description` (string) - Descripción de la transacción
+- `amount` (number) - Monto en la moneda original
+- `currency` (string) - Moneda de la transacción (ARS | USD | EUR)
+- `category_name` (string | null) - Nombre de la categoría
+  - Solo para `type: "income"` o `"expense"`
+  - `null` para transacciones de savings goals
+- `goal_name` (string | null) - Nombre de la meta de ahorro
+  - Solo para `type: "savings_deposit"` o `"savings_withdrawal"`
+  - `null` para expenses/incomes
+- `goal_id` (string | null) - UUID de la meta de ahorro
+  - Solo para transacciones de savings goals
+  - `null` para expenses/incomes
+- `date` (string) - Fecha de la transacción (YYYY-MM-DD)
+- `created_at` (string) - Timestamp de creación (RFC3339)
+
+**Campos del summary:**
+- `total_income` (number) - Suma de todos los ingresos del período
+- `total_expenses` (number) - Suma de todos los gastos del período
+- `total_savings_deposits` (number) - Suma de depósitos a metas de ahorro
+- `total_savings_withdrawals` (number) - Suma de retiros de metas de ahorro
+- `net_balance` (number) - Balance neto calculado como:
+  ```
+  net_balance = total_income - total_expenses - total_savings_deposits + total_savings_withdrawals
+  ```
+
+**Ordenamiento:**
+- Primero por `created_at DESC` (más recientes primero)
+- Luego por `date DESC` (fechas más recientes primero)
+- Esto asegura que las transacciones creadas recientemente aparezcan arriba, incluso si tienen fecha pasada
+
+**Paginación:**
+- `total_count` - Total de actividades que coinciden con los filtros
+- `page` - Página actual
+- `limit` - Items por página (máximo 100)
+- `total_pages` - Total de páginas calculado: `ceil(total_count / limit)`
+
+**Notas importantes:**
+- **Solo incluye transacciones "one-time":**
+  - Gastos con `expense_type = 'one-time'` (excluye recurring generados)
+  - Ingresos con `income_type = 'one-time'` (excluye recurring generados)
+  - Todas las transacciones de savings goals (deposits y withdrawals)
+- **Todos los montos en moneda original** (NO convertidos a moneda primaria)
+  - Para obtener montos convertidos, usar el campo `amount_in_primary_currency` de cada transacción individual
+- **Category y Goal son mutuamente excluyentes:**
+  - Expenses/Incomes tienen `category_name`, `goal_name` y `goal_id` en `null`
+  - Savings transactions tienen `goal_name` y `goal_id`, `category_name` en `null`
+
+**Use Cases:**
+- Timeline general de todas las transacciones del mes
+- Vista "Activity Feed" en la app
+- Búsqueda de transacciones por fecha
+- Análisis de flujo de efectivo completo (ingresos, gastos, ahorros)
+
+**Errors:**
+- `400` - Formato de fecha inválido (usar YYYY-MM o YYYY-MM-DD)
+- `400` - `page` o `limit` inválidos (deben ser números positivos)
+- `400` - `limit` excede máximo permitido (100)
+
+**Diferencia con /dashboard/summary:**
+- `/dashboard/summary` retorna solo los últimos 10 `recent_transactions` mezclados
+- `/activity` retorna TODAS las transacciones con paginación y filtros avanzados
+- `/activity` incluye transacciones de savings goals (deposits/withdrawals)
+- `/activity` tiene resumen completo del período (`summary`)
 
 ---
 

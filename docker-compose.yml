@@ -111,7 +111,7 @@ services:
       # CORS - permitir peticiones desde el frontend local Y desde la red local
       # localhost: para desarrollo en la misma máquina
       # 192.168.0.46: tu IP local (para acceder desde otros dispositivos en tu red)
-      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://192.168.0.46:5173,http://192.168.0.46:3000,http://192.168.0.46:9090
+      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://192.168.0.46:5173,http://192.168.0.46:3000,http://192.168.0.46:9090,http://192.168.0.46:5173
     
     # DEPENDS_ON: El backend NO se va a levantar hasta que Postgres esté "healthy"
     # Esto evita errores de "no se puede conectar a la base de datos"

@@ -70,6 +70,12 @@ Bolsillo Claro responde tres preguntas fundamentales:
 - **TanStack Query v5** - Data fetching y cache
 - **React Hook Form + Zod** - Formularios y validación
 - **Axios** - Cliente HTTP
+- **PWA (Vite Plugin PWA)** - Instalable como app nativa, funciona offline
+
+### Mobile UX
+- **Bottom Navigation** (mobile-only) - Navegación nativa tipo app mobile
+- **Quick Add FAB** - Floating Action Button para agregar gastos rápidamente
+- **Responsive Design** - Optimizado para mobile, tablet y desktop
 
 ### Deployment
 - **Docker** - Containerización
@@ -236,6 +242,106 @@ Con deadline → calcula ahorro mensual necesario
 Sin deadline → objetivo de largo plazo
 
 Agregar fondos a una meta descuenta del balance disponible (descuento virtual, no crea expense).
+
+---
+
+## 📱 Mobile & PWA
+
+### Progressive Web App (PWA)
+
+Bolsillo Claro es una **PWA** (Progressive Web App) que puede instalarse en dispositivos móviles como una app nativa:
+
+**Características PWA:**
+- ✅ Instalable desde el navegador (sin App Store/Play Store)
+- ✅ Funciona offline (caché inteligente de datos y assets)
+- ✅ Se abre como app nativa (sin barra de navegador)
+- ✅ Updates automáticos (sin reinstalar)
+- ✅ Push notifications (futuro)
+
+### Instalación en Mobile
+
+#### Android (Chrome/Edge)
+1. Abrir la app en el navegador mobile
+2. Tocar los 3 puntos → **"Agregar a pantalla de inicio"** o **"Install app"**
+3. Confirmar → ícono aparece en home screen
+4. Abrir desde el ícono → funciona como app nativa
+
+#### iOS (Safari)
+1. Abrir la app en Safari
+2. Tocar el botón de compartir (⬆️)
+3. **"Add to Home Screen"**
+4. Confirmar → ícono aparece en home screen
+
+**Nota:** En iOS, las PWAs tienen algunas limitaciones (sin push notifications, storage limitado).
+
+### Mobile UX Features
+
+**Bottom Navigation (mobile-only):**
+- Barra de navegación fija inferior
+- 5 accesos rápidos: Home, Activity, Expenses, Incomes, More
+- Diseño tipo app nativa (Instagram, WhatsApp, etc.)
+
+**Quick Add FAB (Floating Action Button):**
+- Botón flotante "+" en Dashboard (solo mobile)
+- Agregar gastos rápidamente sin formulario completo
+- Pre-fill inteligente (cuenta, moneda, fecha actual)
+
+**Responsive Everywhere:**
+- Desktop: Navbar horizontal clásica
+- Tablet: Navbar adaptativa
+- Mobile: Bottom nav + hamburger menu
+
+### Offline Mode
+
+La app funciona parcialmente sin conexión:
+
+**Funciona offline:**
+- ✅ Ver dashboard cacheado (última versión)
+- ✅ Ver expenses/incomes cacheados
+- ✅ Navegar entre páginas
+- ✅ Todos los assets (CSS, JS, imágenes)
+
+**Requiere conexión:**
+- ❌ Crear/editar/eliminar datos (necesita backend)
+- ❌ Refresh de datos en tiempo real
+
+**Sync automático:**
+- Al recuperar conexión, los datos se actualizan automáticamente
+- Service Worker cachea API responses por 24 horas
+
+### Roadmap Mobile
+
+**Fase 1: PWA Básica** ✅ (COMPLETADO)
+- [x] Manifest configurado
+- [x] Service Worker básico
+- [x] Instalable en Android/iOS
+- [x] Offline parcial (assets + cache)
+
+**Fase 2: Offline Avanzado** (próximamente)
+- [ ] IndexedDB para datos locales
+- [ ] Queue de sincronización (crear expenses offline)
+- [ ] Background sync
+- [ ] Conflict resolution
+
+**Fase 3: App Stores** (futuro, si escala)
+- [ ] Capacitor.js (envolver PWA en app nativa)
+- [ ] Publicar en Google Play Store
+- [ ] Publicar en Apple App Store
+- [ ] Acceso a APIs nativas (cámara, notificaciones, etc.)
+
+### Por qué Capacitor > React Native
+
+Si decidimos publicar en stores, usaremos **Capacitor** en vez de React Native:
+
+| Aspecto | Capacitor | React Native |
+|---------|-----------|--------------|
+| **Código a reescribir** | 0% (usa el mismo React) | 100% (todo de cero) |
+| **Tiempo de migración** | 1-2 días | 3-4 semanas |
+| **Offline funciona igual** | Sí (mismos Service Workers) | No (hay que rehacer) |
+| **Mantener versión web** | Sí (mismo código) | No (doble codebase) |
+| **Performance** | 85-90% nativo | 95-98% nativo |
+
+**Conclusión:** Capacitor da 95% de los beneficios con 10% del esfuerzo. React Native solo vale la pena si necesitás performance extrema o funciones nativas heavy (GPS continuo, procesamiento pesado, etc.).
 
 ---
 

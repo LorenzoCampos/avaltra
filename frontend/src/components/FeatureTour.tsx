@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS } from 'react-joyride';
+import Joyride, { type CallBackProps, STATUS, type Step, ACTIONS, EVENTS } from 'react-joyride';
 import { useTranslation } from 'react-i18next';
 import { analytics } from '@/lib/analytics';
 

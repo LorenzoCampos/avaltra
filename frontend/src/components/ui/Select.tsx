@@ -1,13 +1,20 @@
-import { InputHTMLAttributes, forwardRef } from 'react';
+import { SelectHTMLAttributes, forwardRef, ReactNode } from 'react';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
+interface SelectOption {
+  label: string;
+  value: string;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, className = '', ...props }, ref) => {
+interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string;
+  options?: SelectOption[];
+  error?: string;
+  helperText?: string;
+  children?: ReactNode;
+}
+
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  ({ label, options, error, helperText, className = '', children, ...props }, ref) => {
     return (
       <div className="w-full">
         {label && (
@@ -15,7 +22,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <input
+        <select
           ref={ref}
           className={`
             block w-full px-3 py-2 border rounded-lg 
@@ -29,7 +36,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ${className}
           `}
           {...props}
-        />
+        >
+          {options ? (
+            options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))
+          ) : (
+            children
+          )}
+        </select>
         {error && (
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
@@ -41,4 +58,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
-Input.displayName = 'Input';
+Select.displayName = 'Select';

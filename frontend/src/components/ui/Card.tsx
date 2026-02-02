@@ -20,7 +20,7 @@ export const Card = ({
   
   return (
     <div
-      className={`bg-white rounded-lg shadow-md border border-gray-200 ${paddingStyles[padding]} ${className}`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 transition-colors duration-200 ${paddingStyles[padding]} ${className}`}
       {...props}
     >
       {children}
@@ -46,7 +46,7 @@ interface CardTitleProps extends HTMLAttributes<HTMLHeadingElement> {
 
 export const CardTitle = ({ children, className = '', ...props }: CardTitleProps) => {
   return (
-    <h2 className={`text-2xl font-bold text-gray-900 ${className}`} {...props}>
+    <h2 className={`text-2xl font-bold text-gray-900 dark:text-gray-100 ${className}`} {...props}>
       {children}
     </h2>
   );

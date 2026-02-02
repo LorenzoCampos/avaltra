@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/LorenzoCampos/bolsillo-claro/internal/config"
 	"github.com/LorenzoCampos/bolsillo-claro/internal/database"
 	"github.com/LorenzoCampos/bolsillo-claro/pkg/auth"
 	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // RegisterRequest representa el JSON que el cliente envía para registrarse
@@ -68,7 +68,7 @@ func (h *Handler) Register(c *gin.Context) {
 	err := h.db.Pool.QueryRow(ctx, checkQuery, req.Email).Scan(&exists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error verificando email",
+			"error":   "Error verificando email",
 			"details": err.Error(),
 		})
 		return
@@ -158,9 +158,10 @@ func (h *Handler) Register(c *gin.Context) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User: UserInfo{
-			ID:    userID.String(),
-			Email: req.Email,
-			Name:  req.Name,
+			ID:               userID.String(),
+			Email:            req.Email,
+			Name:             req.Name,
+			DefaultAccountID: nil, // Nuevo usuario no tiene default account aún
 		},
 	})
 }

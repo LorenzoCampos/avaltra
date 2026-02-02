@@ -216,40 +216,42 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 		// 5. RECENT TRANSACTIONS (last 10 expenses + incomes, merged and sorted)
 		// ============================================================================
 		recentTransactionsQuery := `
-			(
-				SELECT 
-					e.id,
-					'expense' as type,
-					e.description,
-					e.amount,
-					e.currency,
-					e.amount_in_primary_currency,
-					ec.name as category_name,
-					e.date::TEXT,
-					e.created_at::TEXT
-				FROM expenses e
-				LEFT JOIN expense_categories ec ON e.category_id = ec.id
-				WHERE e.account_id = $1
-				  AND TO_CHAR(e.date, 'YYYY-MM') = $2
-			)
-			UNION ALL
-			(
-				SELECT 
-					i.id,
-					'income' as type,
-					i.description,
-					i.amount,
-					i.currency,
-					i.amount_in_primary_currency,
-					ic.name as category_name,
-					i.date::TEXT,
-					i.created_at::TEXT
-				FROM incomes i
-				LEFT JOIN income_categories ic ON i.category_id = ic.id
-				WHERE i.account_id = $1
-				  AND TO_CHAR(i.date, 'YYYY-MM') = $2
-			)
-			ORDER BY created_at DESC
+			SELECT * FROM (
+				(
+					SELECT 
+						e.id,
+						'expense' as type,
+						e.description,
+						e.amount,
+						e.currency,
+						e.amount_in_primary_currency,
+						ec.name as category_name,
+						e.date::TEXT as date,
+						e.created_at::TEXT as created_at
+					FROM expenses e
+					LEFT JOIN expense_categories ec ON e.category_id = ec.id
+					WHERE e.account_id = $1
+					  AND TO_CHAR(e.date, 'YYYY-MM') = $2
+				)
+				UNION ALL
+				(
+					SELECT 
+						i.id,
+						'income' as type,
+						i.description,
+						i.amount,
+						i.currency,
+						i.amount_in_primary_currency,
+						ic.name as category_name,
+						i.date::TEXT as date,
+						i.created_at::TEXT as created_at
+					FROM incomes i
+					LEFT JOIN income_categories ic ON i.category_id = ic.id
+					WHERE i.account_id = $1
+					  AND TO_CHAR(i.date, 'YYYY-MM') = $2
+				)
+			) AS combined
+			ORDER BY combined.date DESC, combined.created_at DESC
 			LIMIT 10
 		`
 

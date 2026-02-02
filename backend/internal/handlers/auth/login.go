@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/LorenzoCampos/bolsillo-claro/pkg/auth"
 	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/gin-gonic/gin"
 )
 
 // LoginRequest representa el JSON que el cliente envía para hacer login
@@ -25,9 +25,10 @@ type LoginResponse struct {
 
 // UserInfo contiene información básica del usuario
 type UserInfo struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	ID               string  `json:"id"`
+	Email            string  `json:"email"`
+	Name             string  `json:"name"`
+	DefaultAccountID *string `json:"default_account_id,omitempty"`
 }
 
 // Login maneja el endpoint POST /api/auth/login
@@ -51,8 +52,9 @@ func (h *Handler) Login(c *gin.Context) {
 
 	// Buscar el usuario por email
 	var userID, passwordHash, name string
-	query := "SELECT id, password_hash, name FROM users WHERE email = $1"
-	err := h.db.Pool.QueryRow(ctx, query, req.Email).Scan(&userID, &passwordHash, &name)
+	var defaultAccountID *string
+	query := "SELECT id, password_hash, name, default_account_id FROM users WHERE email = $1"
+	err := h.db.Pool.QueryRow(ctx, query, req.Email).Scan(&userID, &passwordHash, &name, &defaultAccountID)
 
 	if err != nil {
 		// No revelar si el email existe o no (seguridad)
@@ -125,9 +127,10 @@ func (h *Handler) Login(c *gin.Context) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User: UserInfo{
-			ID:    userID,
-			Email: req.Email,
-			Name:  name,
+			ID:               userID,
+			Email:            req.Email,
+			Name:             name,
+			DefaultAccountID: defaultAccountID,
 		},
 	})
 }

@@ -6,26 +6,30 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/LorenzoCampos/bolsillo-claro/internal/middleware"
 	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // UpdateRecurringIncomeRequest representa el JSON para actualizar
 // Todos los campos son opcionales (solo se actualiza lo que se envía)
 type UpdateRecurringIncomeRequest struct {
-	Description            *string  `json:"description"`
-	Amount                 *float64 `json:"amount" binding:"omitempty,gt=0"`
-	Currency               *string  `json:"currency" binding:"omitempty,oneof=ARS USD EUR"`
-	CategoryID             *string  `json:"category_id"`
-	FamilyMemberID         *string  `json:"family_member_id"`
-	RecurrenceInterval     *int     `json:"recurrence_interval" binding:"omitempty,gt=0"`
-	RecurrenceDayOfMonth   *int     `json:"recurrence_day_of_month" binding:"omitempty,gte=1,lte=31"`
-	RecurrenceDayOfWeek    *int     `json:"recurrence_day_of_week" binding:"omitempty,gte=0,lte=6"`
-	EndDate                *string  `json:"end_date"` // YYYY-MM-DD o null para eliminar
-	TotalOccurrences       *int     `json:"total_occurrences" binding:"omitempty,gt=0"`
-	IsActive               *bool    `json:"is_active"` // Para activar/desactivar
+	Description          *string  `json:"description"`
+	Amount               *float64 `json:"amount" binding:"omitempty,gt=0"`
+	Currency             *string  `json:"currency" binding:"omitempty,oneof=ARS USD EUR"`
+	CategoryID           *string  `json:"category_id"`
+	FamilyMemberID       *string  `json:"family_member_id"`
+	RecurrenceInterval   *int     `json:"recurrence_interval" binding:"omitempty,gt=0"`
+	RecurrenceDayOfMonth *int     `json:"recurrence_day_of_month" binding:"omitempty,gte=1,lte=31"`
+	RecurrenceDayOfWeek  *int     `json:"recurrence_day_of_week" binding:"omitempty,gte=0,lte=6"`
+	EndDate              *string  `json:"end_date"` // YYYY-MM-DD o null para eliminar
+	TotalOccurrences     *int     `json:"total_occurrences" binding:"omitempty,gt=0"`
+	IsActive             *bool    `json:"is_active"` // Para activar/desactivar
+
+	// Multi-currency (optional) - Para actualizar campos de conversión
+	ExchangeRate            *float64 `json:"exchange_rate" binding:"omitempty,gt=0"`
+	AmountInPrimaryCurrency *float64 `json:"amount_in_primary_currency" binding:"omitempty,gt=0"`
 }
 
 // UpdateRecurringIncome maneja PUT /api/recurring-expenses/:id
@@ -209,6 +213,18 @@ func UpdateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 			argCount++
 		}
 
+		if req.ExchangeRate != nil {
+			updateFields = append(updateFields, "exchange_rate = $"+itoa(argCount))
+			args = append(args, *req.ExchangeRate)
+			argCount++
+		}
+
+		if req.AmountInPrimaryCurrency != nil {
+			updateFields = append(updateFields, "amount_in_primary_currency = $"+itoa(argCount))
+			args = append(args, *req.AmountInPrimaryCurrency)
+			argCount++
+		}
+
 		// Si no hay campos para actualizar
 		if len(updateFields) == 0 {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -237,10 +253,10 @@ func UpdateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 		// Log de actualización
 		logger.Info("recurring_expense.updated", "Ingreso recurrente actualizado", map[string]interface{}{
 			"recurring_income_id": recurringID,
-			"account_id":           accountID,
-			"user_id":              userID,
-			"fields_updated":       len(updateFields),
-			"ip":                   c.ClientIP(),
+			"account_id":          accountID,
+			"user_id":             userID,
+			"fields_updated":      len(updateFields),
+			"ip":                  c.ClientIP(),
 		})
 
 		c.JSON(http.StatusOK, gin.H{

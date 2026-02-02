@@ -26,6 +26,8 @@ type RecurringExpenseListItem struct {
 	TotalOccurrences        *int     `json:"total_occurrences,omitempty"`
 	CurrentOccurrence       int      `json:"current_occurrence"`
 	IsActive                bool     `json:"is_active"`
+	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`
+	AmountInPrimaryCurrency *float64 `json:"amount_in_primary_currency,omitempty"`
 	CreatedAt               string   `json:"created_at"`
 }
 
@@ -46,11 +48,11 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 		// Query params opcionales
 		isActiveParam := c.DefaultQuery("is_active", "true")
 		frequency := c.Query("frequency")
-		
+
 		// Paginación
 		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-		
+
 		if page < 1 {
 			page = 1
 		}
@@ -78,6 +80,8 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 				re.total_occurrences,
 				re.current_occurrence,
 				re.is_active,
+				re.exchange_rate,
+				re.amount_in_primary_currency,
 				re.created_at
 			FROM recurring_expenses re
 			LEFT JOIN expense_categories ec ON re.category_id = ec.id
@@ -127,12 +131,13 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Parsear resultados
-		var recurringExpenses []RecurringExpenseListItem
+		recurringExpenses := make([]RecurringExpenseListItem, 0)
 
 		for rows.Next() {
 			var item RecurringExpenseListItem
 			var categoryName, familyMemberName *string
 			var dayOfMonth, dayOfWeek, totalOccurrences *int
+			var exchangeRate, amountInPrimaryCurrency *float64
 			var startDate, endDate, createdAt interface{}
 
 			err := rows.Scan(
@@ -151,6 +156,8 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 				&totalOccurrences,
 				&item.CurrentOccurrence,
 				&item.IsActive,
+				&exchangeRate,
+				&amountInPrimaryCurrency,
 				&createdAt,
 			)
 
@@ -168,17 +175,19 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 			item.RecurrenceDayOfMonth = dayOfMonth
 			item.RecurrenceDayOfWeek = dayOfWeek
 			item.TotalOccurrences = totalOccurrences
-			
+			item.ExchangeRate = exchangeRate
+			item.AmountInPrimaryCurrency = amountInPrimaryCurrency
+
 			// Convertir dates a string
 			if startDate != nil {
 				item.StartDate = fmt.Sprint(startDate)
 			}
-			
+
 			if endDate != nil {
 				endDateStr := fmt.Sprint(endDate)
 				item.EndDate = &endDateStr
 			}
-			
+
 			if createdAt != nil {
 				item.CreatedAt = fmt.Sprint(createdAt)
 			}
@@ -192,9 +201,9 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 			FROM recurring_expenses 
 			WHERE account_id = $1
 		`
-		
+
 		countArgs := []interface{}{accountID}
-		
+
 		if isActiveParam != "all" {
 			isActive := isActiveParam == "true"
 			countQuery += " AND is_active = $2"

@@ -12,24 +12,38 @@ import type { LoginRequest, RegisterRequest, AuthResponse } from '@/types/auth';
 export const useAuth = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { setAuth, clearAuth } = useAuthStore();
-  const { clearAccount } = useAccountStore();
+  const { setAuth, logout: storeLogout } = useAuthStore();
+  const { clearActiveAccount } = useAccountStore();
 
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginRequest) => {
+      console.log('🚀 Making login API call...');
       const response = await api.post<AuthResponse>('/auth/login', credentials);
+      console.log('✅ Login API success:', response.data);
       return response.data;
     },
     onSuccess: (data) => {
+      console.log('✅ Login mutation onSuccess, saving to store...');
       // Save auth data to Zustand store (which persists to localStorage)
       setAuth(data.user, data.access_token, data.refresh_token);
+      console.log('✅ Auth saved, checking onboarding status...');
       
-      // Navigate to dashboard
-      navigate('/dashboard');
+      // Check if user has completed onboarding
+      const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
+      
+      // Navigate to onboarding for new users, dashboard for returning users
+      if (hasCompletedOnboarding) {
+        console.log('✅ User completed onboarding, navigating to dashboard...');
+        navigate('/dashboard');
+      } else {
+        console.log('⚠️ User has not completed onboarding, redirecting...');
+        navigate('/onboarding');
+      }
     },
     onError: (error: any) => {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
+      console.error('❌ Error details:', error.response?.data);
       // Error handling is done in the component
     },
   });
@@ -41,11 +55,25 @@ export const useAuth = () => {
       return response.data;
     },
     onSuccess: (data) => {
+      console.log('🎉 REGISTER SUCCESS - Starting onboarding check...');
+      
       // Save auth data to Zustand store (which persists to localStorage)
       setAuth(data.user, data.access_token, data.refresh_token);
+      console.log('✅ Auth saved to store');
       
-      // Navigate to dashboard (or account creation page if needed)
-      navigate('/dashboard');
+      // Check if user has completed onboarding
+      const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
+      console.log('🔍 localStorage.hasCompletedOnboarding:', hasCompletedOnboarding);
+      console.log('🔍 hasCompletedOnboarding === "true":', hasCompletedOnboarding === 'true');
+      
+      // Navigate to onboarding for new users, dashboard for returning users
+      if (hasCompletedOnboarding === 'true') {
+        console.log('➡️ User completed onboarding, navigating to DASHBOARD');
+        navigate('/dashboard');
+      } else {
+        console.log('➡️ User has NOT completed onboarding, navigating to ONBOARDING');
+        navigate('/onboarding');
+      }
     },
     onError: (error: any) => {
       console.error('Register error:', error);
@@ -56,10 +84,10 @@ export const useAuth = () => {
   // Logout function
   const logout = () => {
     // Clear auth state
-    clearAuth();
+    storeLogout();
     
     // Clear account state
-    clearAccount();
+    clearActiveAccount();
     
     // Clear all React Query cache
     queryClient.clear();

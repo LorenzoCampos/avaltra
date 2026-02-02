@@ -1,54 +1,122 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'sonner';
+
 import { Login } from '@/features/auth/Login';
 import { Register } from '@/features/auth/Register';
 import { Dashboard } from '@/features/dashboard/Dashboard';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from '@/components/Layout';
-import { useAuthStore } from '@/stores/auth.store';
+import { AccountList } from '@/features/accounts/AccountList';
+import { AccountForm } from '@/features/accounts/AccountForm';
+import { ExpensesPage } from '@/features/expenses/ExpensesPage';
+import { ExpenseForm } from '@/features/expenses/ExpenseForm';
+import { IncomesPage } from '@/features/incomes/IncomesPage';
+import { IncomeForm } from '@/features/incomes/IncomeForm';
+import { ReportsPage } from '@/features/reports/ReportsPage';
+import { SavingsList } from '@/features/savings/SavingsList';
+import { SavingsForm } from '@/features/savings/SavingsForm';
+import { ActivityPage } from '@/features/activity/ActivityPage';
+import { RecurringExpenseForm } from '@/features/recurring-expenses/RecurringExpenseForm';
+import { RecurringIncomeForm } from '@/features/recurring-incomes/RecurringIncomeForm';
+import { CategoriesList } from '@/features/categories/CategoriesList';
+import { CategoryForm } from '@/features/categories/CategoryForm';
+import UserSettings from '@/features/settings/UserSettings';
+import { OnboardingWizard } from '@/features/onboarding/OnboardingWizard';
 
-// Create React Query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+import { useAuthStore, selectIsAuthenticated } from '@/stores/auth.store';
 
 function App() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  
+  // Read directly from localStorage without writing default value
+  const hasCompletedOnboarding = (() => {
+    try {
+      const value = localStorage.getItem('hasCompletedOnboarding');
+      return value === 'true';
+    } catch {
+      return false;
+    }
+  })();
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
           <Route
             path="/login"
             element={
-              isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+              isAuthenticated ? (
+                <Navigate to={hasCompletedOnboarding ? "/dashboard" : "/onboarding"} replace />
+              ) : (
+                <Login />
+              )
             }
           />
           <Route
             path="/register"
             element={
-              isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
+              isAuthenticated ? (
+                <Navigate to={hasCompletedOnboarding ? "/dashboard" : "/onboarding"} replace />
+              ) : (
+                <Register />
+              )
             }
           />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
+            {/* Onboarding - Always available, wizard handles redirect if completed */}
+            <Route path="/onboarding" element={<OnboardingWizard />} />
+
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               
-              {/* Placeholder routes for future features */}
-              <Route path="/accounts" element={<div>Accounts Page (Coming Soon)</div>} />
-              <Route path="/expenses" element={<div>Expenses Page (Coming Soon)</div>} />
-              <Route path="/incomes" element={<div>Incomes Page (Coming Soon)</div>} />
-              <Route path="/savings" element={<div>Savings Page (Coming Soon)</div>} />
+              {/* Accounts Routes */}
+              <Route path="/accounts" element={<AccountList />} />
+              <Route path="/accounts/new" element={<AccountForm />} />
+              <Route path="/accounts/edit/:accountId" element={<AccountForm />} />
+
+              {/* Expenses Routes (con tabs para Expenses y Recurring) */}
+              <Route path="/expenses" element={<ExpensesPage />} />
+              <Route path="/expenses/new" element={<ExpenseForm />} />
+              <Route path="/expenses/edit/:expenseId" element={<ExpenseForm />} />
+              <Route path="/expenses/recurring/new" element={<RecurringExpenseForm />} />
+              <Route path="/expenses/recurring/edit/:id" element={<RecurringExpenseForm />} />
+
+              {/* Incomes Routes (con tabs para Incomes y Recurring) */}
+              <Route path="/incomes" element={<IncomesPage />} />
+              <Route path="/incomes/new" element={<IncomeForm />} />
+              <Route path="/incomes/edit/:incomeId" element={<IncomeForm />} />
+              <Route path="/incomes/recurring/new" element={<RecurringIncomeForm />} />
+              <Route path="/incomes/recurring/edit/:id" element={<RecurringIncomeForm />} />
+
+              {/* Redirects antiguos (para compatibilidad) */}
+              <Route path="/recurring-expenses" element={<Navigate to="/expenses" replace />} />
+              <Route path="/recurring-expenses/new" element={<Navigate to="/expenses/recurring/new" replace />} />
+              <Route path="/recurring-expenses/edit/:id" element={<Navigate to="/expenses/recurring/edit/:id" replace />} />
+              <Route path="/recurring-incomes" element={<Navigate to="/incomes" replace />} />
+              <Route path="/recurring-incomes/new" element={<Navigate to="/incomes/recurring/new" replace />} />
+              <Route path="/recurring-incomes/edit/:id" element={<Navigate to="/incomes/recurring/edit/:id" replace />} />
+
+              {/* Reports Route */}
+              <Route path="/reports" element={<ReportsPage />} />
+
+              {/* Activity Route */}
+              <Route path="/activity" element={<ActivityPage />} />
+
+              {/* Savings Routes */}
+              <Route path="/savings" element={<SavingsList />} />
+              <Route path="/savings/new" element={<SavingsForm />} />
+              <Route path="/savings/edit/:goalId" element={<SavingsForm />} />
+
+              {/* Categories Routes */}
+              <Route path="/categories" element={<CategoriesList />} />
+              <Route path="/categories/new/:type" element={<CategoryForm />} />
+              <Route path="/categories/edit/:type/:id" element={<CategoryForm />} />
+
+              {/* Settings Route */}
+              <Route path="/settings" element={<UserSettings />} />
             </Route>
           </Route>
 
@@ -65,9 +133,14 @@ function App() {
         </Routes>
       </BrowserRouter>
 
-      {/* React Query DevTools (only in development) */}
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+      {/* Toast Notifications - Global */}
+      <Toaster 
+        position="top-right" 
+        richColors 
+        closeButton
+        duration={4000}
+      />
+    </>
   );
 }
 

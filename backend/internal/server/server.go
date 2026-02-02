@@ -3,11 +3,12 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/LorenzoCampos/bolsillo-claro/internal/config"
 	"github.com/LorenzoCampos/bolsillo-claro/internal/database"
 	accountsHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/accounts"
+	activityHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/activity"
 	authHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/auth"
 	categoriesHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/categories"
 	dashboardHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/dashboard"
@@ -16,7 +17,10 @@ import (
 	recurringExpensesHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/recurring_expenses"
 	recurringIncomesHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/recurring_incomes"
 	savingsGoalsHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/savings_goals"
+	usersHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/users"
 	"github.com/LorenzoCampos/bolsillo-claro/internal/middleware"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 // Server encapsula el servidor HTTP y su configuración
@@ -29,9 +33,21 @@ type Server struct {
 // New crea una nueva instancia del servidor
 // Recibe la configuración y la conexión a la DB, retorna un puntero a Server
 func New(cfg *config.Config, db *database.DB) *Server {
+
 	// Crear el router de Gin
 	// gin.Default() incluye middleware de logging y recovery automático
 	router := gin.Default()
+
+	// Configuración de CORS
+	router.Use(cors.New(cors.Config{
+		// Aquí ponemos tus IPs locales explícitamente para asegurar que funcione
+		AllowOrigins:     []string{"http://localhost:5173", "http://192.168.0.46:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Account-ID"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Crear la instancia del servidor
 	server := &Server{
@@ -87,6 +103,17 @@ func (s *Server) setupRoutes() {
 			authRoutes.POST("/refresh", authH.Refresh) // Renovar tokens con refresh token
 		}
 
+		// Rutas de usuarios (protegidas - requieren auth)
+		usersRoutes := api.Group("/users")
+		usersRoutes.Use(authMiddleware)
+		{
+			usersRoutes.GET("/me", usersHandler.GetMe(s.db.Pool))                             // Obtener perfil
+			usersRoutes.PUT("/me", usersHandler.UpdateMe(s.db.Pool))                          // Actualizar nombre
+			usersRoutes.PUT("/me/password", usersHandler.ChangePassword(s.db.Pool))           // Cambiar password
+			usersRoutes.PUT("/me/default-account", usersHandler.SetDefaultAccount(s.db.Pool)) // Setear cuenta default
+			usersRoutes.DELETE("/me", usersHandler.DeleteMe(s.db.Pool))                       // Eliminar cuenta (danger zone)
+		}
+
 		// Rutas de cuentas (protegidas - requieren auth)
 		accountsRoutes := api.Group("/accounts")
 		accountsRoutes.Use(authMiddleware) // Aplicar middleware a todas las rutas del grupo
@@ -98,8 +125,8 @@ func (s *Server) setupRoutes() {
 			accountsRoutes.POST("", accountsH.CreateAccount)       // Crear nueva cuenta
 
 			// Rutas de gestión de miembros (family accounts)
-			accountsRoutes.POST("/:id/members", accountsH.AddMember)                            // Agregar miembro
-			accountsRoutes.PUT("/:id/members/:member_id", accountsH.UpdateMember)               // Actualizar miembro
+			accountsRoutes.POST("/:id/members", accountsH.AddMember)                               // Agregar miembro
+			accountsRoutes.PUT("/:id/members/:member_id", accountsH.UpdateMember)                  // Actualizar miembro
 			accountsRoutes.PATCH("/:id/members/:member_id/deactivate", accountsH.DeactivateMember) // Desactivar miembro (soft delete)
 			accountsRoutes.PATCH("/:id/members/:member_id/reactivate", accountsH.ReactivateMember) // Reactivar miembro
 		}
@@ -158,19 +185,27 @@ func (s *Server) setupRoutes() {
 			dashboardRoutes.GET("/summary", dashboardHandler.GetSummary(s.db.Pool))
 		}
 
+		// Rutas de activity (protegidas - requieren auth + account)
+		activityRoutes := api.Group("/activity")
+		activityRoutes.Use(authMiddleware)
+		activityRoutes.Use(accountMiddleware)
+		{
+			activityRoutes.GET("", activityHandler.ListActivity(s.db.Pool))
+		}
+
 		// Rutas de savings goals (protegidas - requieren auth + account)
 		savingsGoalsRoutes := api.Group("/savings-goals")
 		savingsGoalsRoutes.Use(authMiddleware)
 		savingsGoalsRoutes.Use(accountMiddleware)
 		{
-		savingsGoalsRoutes.POST("", savingsGoalsHandler.CreateSavingsGoal(s.db.Pool))
-		savingsGoalsRoutes.GET("", savingsGoalsHandler.ListSavingsGoals(s.db.Pool))
-		savingsGoalsRoutes.GET("/:id", savingsGoalsHandler.GetSavingsGoal(s.db.Pool))
-		savingsGoalsRoutes.GET("/:id/transactions", savingsGoalsHandler.GetTransactions(s.db.Pool))
-		savingsGoalsRoutes.PUT("/:id", savingsGoalsHandler.UpdateSavingsGoal(s.db.Pool))
-		savingsGoalsRoutes.DELETE("/:id", savingsGoalsHandler.DeleteSavingsGoal(s.db.Pool))
-		savingsGoalsRoutes.POST("/:id/add-funds", savingsGoalsHandler.AddFunds(s.db.Pool))
-		savingsGoalsRoutes.POST("/:id/withdraw-funds", savingsGoalsHandler.WithdrawFunds(s.db.Pool))
+			savingsGoalsRoutes.POST("", savingsGoalsHandler.CreateSavingsGoal(s.db.Pool))
+			savingsGoalsRoutes.GET("", savingsGoalsHandler.ListSavingsGoals(s.db.Pool))
+			savingsGoalsRoutes.GET("/:id", savingsGoalsHandler.GetSavingsGoal(s.db.Pool))
+			savingsGoalsRoutes.GET("/:id/transactions", savingsGoalsHandler.GetTransactions(s.db.Pool))
+			savingsGoalsRoutes.PUT("/:id", savingsGoalsHandler.UpdateSavingsGoal(s.db.Pool))
+			savingsGoalsRoutes.DELETE("/:id", savingsGoalsHandler.DeleteSavingsGoal(s.db.Pool))
+			savingsGoalsRoutes.POST("/:id/add-funds", savingsGoalsHandler.AddFunds(s.db.Pool))
+			savingsGoalsRoutes.POST("/:id/withdraw-funds", savingsGoalsHandler.WithdrawFunds(s.db.Pool))
 		}
 
 		// Rutas de recurring expenses (protegidas - requieren auth + account)
@@ -336,6 +371,8 @@ func (s *Server) Start() error {
 	fmt.Printf("   - DELETE http://localhost%s/api/income-categories/:id (Eliminar)\n", addr)
 	fmt.Printf("\n📊 Dashboard (requiere autenticación + X-Account-ID):\n")
 	fmt.Printf("   - GET    http://localhost%s/api/dashboard/summary?month=YYYY-MM (Resumen financiero del mes)\n", addr)
+	fmt.Printf("\n📋 Activity (requiere autenticación + X-Account-ID):\n")
+	fmt.Printf("   - GET    http://localhost%s/api/activity?month=YYYY-MM (Timeline de todas las transacciones)\n", addr)
 	fmt.Printf("\n🎯 Metas de Ahorro (requiere autenticación + X-Account-ID):\n")
 	fmt.Printf("   - GET    http://localhost%s/api/savings-goals (Listar metas)\n", addr)
 	fmt.Printf("   - GET    http://localhost%s/api/savings-goals/:id (Detalle con historial)\n", addr)

@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '@/types/api';
+import { useAuthStore } from '@/stores/auth.store';
 
 // Configuración base
 export const api = axios.create({
@@ -22,8 +23,8 @@ const refreshApi = axios.create({
 // Request interceptor - Agregar tokens automáticamente
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Agregar JWT token desde localStorage
-    const token = localStorage.getItem('access_token');
+    // Agregar JWT token desde Zustand store
+    const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -55,7 +56,7 @@ api.interceptors.response.use(
       !originalRequest.url?.includes('/auth/login') &&
       !originalRequest.url?.includes('/auth/refresh')
     ) {
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = useAuthStore.getState().refreshToken;
       
       if (refreshToken) {
         try {
@@ -66,9 +67,8 @@ api.interceptors.response.use(
 
           const { access_token, refresh_token: newRefreshToken } = response.data;
 
-          // Actualizar tokens en localStorage
-          localStorage.setItem('access_token', access_token);
-          localStorage.setItem('refresh_token', newRefreshToken);
+          // Actualizar tokens en Zustand store (esto automáticamente persiste)
+          useAuthStore.getState().setTokens(access_token, newRefreshToken);
 
           // Reintentar request original con nuevo token
           if (originalRequest.headers) {
@@ -76,19 +76,13 @@ api.interceptors.response.use(
           }
           return api(originalRequest);
         } catch (refreshError) {
-          // Si refresh falla, logout
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('user');
-          localStorage.removeItem('active_account_id');
+          // Si refresh falla, logout completo
+          useAuthStore.getState().logout();
           window.location.href = '/login';
         }
       } else {
-        // No hay refresh token, logout
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('active_account_id');
+        // No hay refresh token, logout completo
+        useAuthStore.getState().logout();
         window.location.href = '/login';
       }
     }

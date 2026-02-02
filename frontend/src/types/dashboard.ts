@@ -1,5 +1,4 @@
 import type { Expense } from './expense';
-import type { Income } from './income';
 
 export interface ExpenseByCategory {
   category_id: string;

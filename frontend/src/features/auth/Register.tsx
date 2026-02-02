@@ -1,18 +1,17 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { registerSchema } from '@/schemas/auth.schema';
-import type { RegisterRequest } from '@/types/auth';
+import { registerSchema, type RegisterFormData } from '@/schemas/auth.schema';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 
-type RegisterFormData = RegisterRequest & {
-  confirmPassword: string;
-};
-
 export const Register = () => {
+  const { t } = useTranslation('auth');
   const { register: registerUser, isRegistering, registerError } = useAuth();
   
   const {
@@ -22,109 +21,92 @@ export const Register = () => {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
       email: '',
       password: '',
       confirmPassword: '',
+      name: '',
     },
   });
 
+  // Handle errors
+  useEffect(() => {
+    if (registerError) {
+      const error = registerError as any;
+      toast.error(t('register.error'), {
+        description: error.response?.data?.error || error.message || t('register.tryAgain'),
+      });
+    }
+  }, [registerError, t]);
+
   const onSubmit = (data: RegisterFormData) => {
-    // Remove confirmPassword before sending to API
+    // El backend no necesita confirmPassword, solo name, email, password
     const { confirmPassword, ...registerData } = data;
     registerUser(registerData);
   };
 
-  // Extract error message from API error
-  const getErrorMessage = () => {
-    if (!registerError) return null;
-    
-    const error = registerError as any;
-    if (error.response?.data?.error) {
-      return error.response.data.error;
-    }
-    if (error.message) {
-      return error.message;
-    }
-    return 'An unexpected error occurred';
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 transition-colors duration-300">
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Create Account</CardTitle>
-            <p className="text-center text-gray-600 mt-2">
-              Join Bolsillo Claro today
+            <CardTitle className="text-center">Bolsillo Claro</CardTitle>
+            <p className="text-center text-gray-600 dark:text-gray-400 mt-2">
+              {t('register.subtitle')}
             </p>
           </CardHeader>
           
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* Display API error */}
-              {registerError && (
-                <div className="p-3 rounded-lg bg-red-50 border border-red-200">
-                  <p className="text-sm text-red-800">{getErrorMessage()}</p>
-                </div>
-              )}
-
-              {/* Name field */}
               <Input
-                label="Full Name"
+                label={t('register.name')}
                 type="text"
-                placeholder="John Doe"
+                placeholder={t('register.namePlaceholder')}
                 error={errors.name?.message}
                 {...register('name')}
               />
 
-              {/* Email field */}
               <Input
-                label="Email"
+                label={t('register.email')}
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('register.emailPlaceholder')}
                 error={errors.email?.message}
                 {...register('email')}
               />
 
-              {/* Password field */}
               <Input
-                label="Password"
+                label={t('register.password')}
                 type="password"
                 placeholder="••••••••"
-                helperText="At least 8 characters"
                 error={errors.password?.message}
+                helperText={t('register.passwordHelper')}
                 {...register('password')}
               />
 
-              {/* Confirm Password field */}
               <Input
-                label="Confirm Password"
+                label={t('register.confirmPassword')}
                 type="password"
                 placeholder="••••••••"
                 error={errors.confirmPassword?.message}
                 {...register('confirmPassword')}
               />
 
-              {/* Submit button */}
               <Button
                 type="submit"
                 fullWidth
                 isLoading={isRegistering}
               >
-                Create Account
+                {t('register.signUp')}
               </Button>
             </form>
 
-            {/* Login link */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{' '}
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t('register.hasAccount')}{' '}
                 <Link
                   to="/login"
-                  className="font-medium text-blue-600 hover:text-blue-500"
+                  className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
                 >
-                  Sign in
+                  {t('register.signInLink')}
                 </Link>
               </p>
             </div>

@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  default_account_id?: string | null;
   created_at: string;
 }
 

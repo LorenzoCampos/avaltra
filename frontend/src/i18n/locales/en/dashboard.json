@@ -49,5 +49,14 @@
       "setSavings": "Set up savings goals to reach your financial targets",
       "inviteFamily": "Invite family members to shared accounts"
     }
+  },
+  
+  "tooltips": {
+    "availableBalance": "This is how much money you have left after subtracting your expenses from your income. This is what you can actually spend.",
+    "expenses": "All the expenses you've recorded this month. Includes purchases, services, and any money you've spent.",
+    "income": "The income you've recorded this month. This could be your salary, side work, or any money you've received.",
+    "expensesByCategory": "Here you can see which categories you spend the most on. It helps you identify where you can save.",
+    "recentTransactions": "Your most recent activity. The latest expenses and income you've recorded appear here.",
+    "account": "An 'account' is like a virtual wallet where you organize your money. You can have multiple accounts for different purposes (e.g., Personal, Family, Savings)."
   }
 }

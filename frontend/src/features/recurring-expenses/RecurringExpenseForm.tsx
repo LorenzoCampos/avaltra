@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
+import { InfoTooltip } from '@/components/InfoTooltip';
 import { FormSkeleton } from '@/components/ui/Skeleton';
 import { 
   useRecurringExpense, 
@@ -354,23 +355,37 @@ export const RecurringExpenseForm = () => {
                 🔄 {t('common:recurrence.settings')}
               </h3>
 
-              <Select
-                label={t('expenses.form.frequency')}
-                options={frequencyOptions}
-                error={errors.recurrence_frequency?.message}
-                {...register('recurrence_frequency')}
-              />
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('expenses.form.frequency')}
+                  </label>
+                  <InfoTooltip content={t('recurring:tooltips.frequency')} />
+                </div>
+                <Select
+                  options={frequencyOptions}
+                  error={errors.recurrence_frequency?.message}
+                  {...register('recurrence_frequency')}
+                />
+              </div>
 
-              <Input
-                label={t('expenses.form.interval')}
-                type="number"
-                min="1"
-                step="1"
-                placeholder="1"
-                error={errors.recurrence_interval?.message}
-                {...register('recurrence_interval', { valueAsNumber: true })}
-                helperText={getIntervalHelperText()}
-              />
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('expenses.form.interval')}
+                  </label>
+                  <InfoTooltip content={t('recurring:tooltips.interval')} />
+                </div>
+                <Input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="1"
+                  error={errors.recurrence_interval?.message}
+                  {...register('recurrence_interval', { valueAsNumber: true })}
+                  helperText={getIntervalHelperText()}
+                />
+              </div>
 
               {/* Weekly: Day of Week */}
               {selectedFrequency === 'weekly' && (
@@ -409,21 +424,35 @@ export const RecurringExpenseForm = () => {
                 </>
               )}
 
-              <Input
-                label={t('expenses.form.startDate')}
-                type="date"
-                error={errors.start_date?.message}
-                {...register('start_date')}
-              />
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('expenses.form.startDate')}
+                  </label>
+                  <InfoTooltip content={t('recurring:tooltips.startDate')} />
+                </div>
+                <Input
+                  type="date"
+                  error={errors.start_date?.message}
+                  {...register('start_date')}
+                />
+              </div>
 
               <div className="space-y-3">
-                <Input
-                  label={t('expenses.form.endDate')}
-                  type="date"
-                  error={errors.end_date?.message}
-                  {...register('end_date')}
-                  helperText={t('expenses.form.endDateHelper')}
-                />
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('expenses.form.endDate')}
+                    </label>
+                    <InfoTooltip content={t('recurring:tooltips.endDate')} />
+                  </div>
+                  <Input
+                    type="date"
+                    error={errors.end_date?.message}
+                    {...register('end_date')}
+                    helperText={t('expenses.form.endDateHelper')}
+                  />
+                </div>
 
                 <Input
                   label={t('expenses.form.totalOccurrences')}
@@ -447,8 +476,9 @@ export const RecurringExpenseForm = () => {
                   onChange={(e) => setValue('is_active', e.target.checked)}
                   className="h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 />
-                <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer flex-1">
+                <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer flex-1 flex items-center gap-2">
                   {t('expenses.form.isActive')}
+                  <InfoTooltip content={t('recurring:tooltips.isActive')} />
                 </label>
                 <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
                   isActive 

@@ -89,5 +89,13 @@
       "duplicate": "Duplicar",
       "delete": "Eliminar"
     }
+  },
+  "tooltips": {
+    "description": "Una breve descripción del ingreso. Por ejemplo: 'Sueldo', 'Freelance', 'Venta'.",
+    "amount": "El monto que recibiste. Podés usar decimales (ej: 5000.00).",
+    "currency": "La moneda en que recibiste el ingreso. Si es diferente a la moneda principal de tu cuenta, se convertirá automáticamente.",
+    "date": "La fecha en que recibiste el ingreso. Por defecto es hoy, pero podés cambiarla si fue en otro día.",
+    "category": "La categoría te ayuda a organizar tus ingresos y ver de dónde vienen. Por ejemplo: Sueldo, Freelance, Inversiones.",
+    "familyMember": "Si esta es una cuenta familiar, podés asignar el ingreso a un miembro específico para saber quién lo recibió."
   }
 }

@@ -89,5 +89,14 @@
       "duplicate": "Duplicate",
       "delete": "Delete"
     }
+  },
+  "tooltips": {
+    "description": "A brief description of the expense. For example: 'Grocery Store', 'Netflix', 'Gas'.",
+    "amount": "The amount you spent. You can use decimals (e.g., 1250.50).",
+    "currency": "The currency you spent in. If it's different from your account's main currency, it will be automatically converted.",
+    "date": "The date when you made the expense. Default is today, but you can change it if it was on another day.",
+    "category": "Categories help you organize your expenses and see where you spend the most. For example: Food, Transportation, Utilities.",
+    "familyMember": "If this is a family account, you can assign the expense to a specific member to know who made it.",
+    "exchangeRate": "If you spent in a different currency, you can enter the exchange rate you used here. If you don't know, leave it empty and it will be calculated automatically."
   }
 }

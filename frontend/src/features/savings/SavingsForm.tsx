@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { InfoTooltip } from '@/components/InfoTooltip';
 import { ArrowLeftIcon } from 'lucide-react';
 
 export const SavingsForm = () => {
@@ -177,9 +178,12 @@ export const SavingsForm = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('form.goalNameLabel')}
-              </label>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.goalNameLabel')}
+                </label>
+                <InfoTooltip content={t('tooltips.savingsGoal')} />
+              </div>
               <Input
                 type="text"
                 placeholder={t('form.goalNamePlaceholder')}
@@ -191,9 +195,12 @@ export const SavingsForm = () => {
 
             {/* Target Amount */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('form.targetAmountLabel', { currency: activeAccount.currency })}
-              </label>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.targetAmountLabel', { currency: activeAccount.currency })}
+                </label>
+                <InfoTooltip content={t('tooltips.targetAmount')} />
+              </div>
               <Input
                 type="number"
                 step="0.01"
@@ -223,9 +230,12 @@ export const SavingsForm = () => {
 
             {/* Deadline */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('form.deadlineLabel')}
-              </label>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.deadlineLabel')}
+                </label>
+                <InfoTooltip content={t('tooltips.deadline')} />
+              </div>
               <div className="flex gap-2">
                 <div className="flex-1">
                   <Input

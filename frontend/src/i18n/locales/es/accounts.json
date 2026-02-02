@@ -71,5 +71,11 @@
     "deleted": "¡Cuenta eliminada exitosamente!",
     "activated": "Cuenta activada",
     "error": "Error al guardar la cuenta"
+  },
+  "tooltips": {
+    "accountName": "Dale un nombre que te ayude a identificarla fácilmente. Por ejemplo: 'Mis Finanzas', 'Gastos del Hogar', 'Ahorros'.",
+    "accountType": "Personal: Solo para vos. Familiar: Para compartir gastos con tu familia y ver quién gastó qué.",
+    "currency": "La moneda principal de esta cuenta. Podés registrar gastos en otras monedas, pero se convertirán a esta para los totales.",
+    "familyMembers": "Agregá los miembros de tu familia para poder asignarles gastos e ingresos. Así sabés quién gastó o recibió cada cosa."
   }
 }

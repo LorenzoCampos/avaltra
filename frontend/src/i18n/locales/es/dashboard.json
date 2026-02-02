@@ -49,5 +49,14 @@
       "setSavings": "Configurá metas de ahorro para alcanzar tus objetivos financieros",
       "inviteFamily": "Invitá a miembros de la familia a cuentas compartidas"
     }
+  },
+  
+  "tooltips": {
+    "availableBalance": "Es cuánta plata te queda después de restar tus gastos de tus ingresos. Esto es lo que realmente podés gastar.",
+    "expenses": "Son todos los gastos que registraste este mes. Incluye compras, servicios, y cualquier dinero que hayas gastado.",
+    "income": "Son los ingresos que registraste este mes. Puede ser tu sueldo, un trabajo extra, o cualquier dinero que hayas recibido.",
+    "expensesByCategory": "Acá podés ver en qué categorías gastás más plata. Te ayuda a identificar dónde podés ahorrar.",
+    "recentTransactions": "Tu actividad más reciente. Acá aparecen los últimos gastos e ingresos que registraste.",
+    "account": "Una 'cuenta' es como una billetera virtual donde organizás tu plata. Podés tener varias cuentas para diferentes propósitos (ej: Personal, Familia, Ahorros)."
   }
 }

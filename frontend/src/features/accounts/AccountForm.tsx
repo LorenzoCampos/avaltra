@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { FormSkeleton } from '@/components/ui/Skeleton';
+import { InfoTooltip } from '@/components/InfoTooltip';
 
 import { useAccounts } from '@/hooks/useAccounts';
 import type { FamilyMember } from '@/types/account';
@@ -220,43 +221,67 @@ export const AccountForm = ({ onSubmitSuccess }: AccountFormProps) => {
               </div>
             )}
 
-            <Input
-              label={t('form.nameLabel')}
-              type="text"
-              placeholder={t('form.namePlaceholder')}
-              error={errors.name?.message}
-              {...register('name')}
-            />
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.nameLabel')}
+                </label>
+                <InfoTooltip content={t('tooltips.accountName')} />
+              </div>
+              <Input
+                type="text"
+                placeholder={t('form.namePlaceholder')}
+                error={errors.name?.message}
+                {...register('name')}
+              />
+            </div>
 
             {!isEditing && (
-              <Select
-                label={t('form.typeLabel')}
-                options={[
-                  { label: t('form.typePersonal'), value: 'personal' },
-                  { label: t('form.typeFamily'), value: 'family' },
-                ]}
-                error={errors.type?.message}
-                {...register('type')}
-              />
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('form.typeLabel')}
+                  </label>
+                  <InfoTooltip content={t('tooltips.accountType')} />
+                </div>
+                <Select
+                  options={[
+                    { label: t('form.typePersonal'), value: 'personal' },
+                    { label: t('form.typeFamily'), value: 'family' },
+                  ]}
+                  error={errors.type?.message}
+                  {...register('type')}
+                />
+              </div>
             )}
 
-            <Select
-              label={t('form.currencyLabel')}
-              options={[
-                { label: t('form.currencyARS'), value: 'ARS' },
-                { label: t('form.currencyUSD'), value: 'USD' },
-                { label: t('form.currencyEUR'), value: 'EUR' },
-              ]}
-              error={errors.currency?.message}
-              {...register('currency')}
-            />
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.currencyLabel')}
+                </label>
+                <InfoTooltip content={t('tooltips.currency')} />
+              </div>
+              <Select
+                options={[
+                  { label: t('form.currencyARS'), value: 'ARS' },
+                  { label: t('form.currencyUSD'), value: 'USD' },
+                  { label: t('form.currencyEUR'), value: 'EUR' },
+                ]}
+                error={errors.currency?.message}
+                {...register('currency')}
+              />
+            </div>
 
             {isFamilyAccount && !isEditing && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {t('form.familyMembersLabel')}
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('form.familyMembersLabel')}
+                    </label>
+                    <InfoTooltip content={t('tooltips.familyMembers')} />
+                  </div>
                   <Button
                     type="button"
                     variant="secondary"

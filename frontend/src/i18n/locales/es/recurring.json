@@ -104,5 +104,13 @@
     "lastProcessed": "Última Procesada",
     "generatedTransactions": "Transacciones Generadas",
     "status": "Estado"
+  },
+  "tooltips": {
+    "recurring": "Los gastos/ingresos recurrentes se repiten automáticamente según la frecuencia que configures. Por ejemplo: alquiler mensual, sueldo quincenal, Netflix todos los meses.",
+    "frequency": "¿Cada cuánto se repite? Diario (todos los días), Semanal (todas las semanas), Mensual (todos los meses), Anual (todos los años).",
+    "interval": "El intervalo te permite espaciar más las repeticiones. Por ejemplo: 'cada 2 semanas', 'cada 3 meses', 'cada 6 meses'.",
+    "startDate": "La fecha en que empieza a generarse este gasto/ingreso recurrente. La primera transacción se creará en esta fecha.",
+    "endDate": "Si querés que termine en algún momento, poné la fecha de fin acá. Si lo dejás vacío, seguirá repitiéndose indefinidamente.",
+    "isActive": "Si desactivás esto, el gasto/ingreso no se generará automáticamente. Es útil para pausarlo temporalmente sin eliminarlo."
   }
 }

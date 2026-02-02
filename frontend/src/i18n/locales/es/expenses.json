@@ -89,5 +89,14 @@
       "duplicate": "Duplicar",
       "delete": "Eliminar"
     }
+  },
+  "tooltips": {
+    "description": "Una breve descripción del gasto. Por ejemplo: 'Supermercado', 'Netflix', 'Nafta'.",
+    "amount": "El monto que gastaste. Podés usar decimales (ej: 1250.50).",
+    "currency": "La moneda en que hiciste el gasto. Si es diferente a la moneda principal de tu cuenta, se convertirá automáticamente.",
+    "date": "La fecha en que hiciste el gasto. Por defecto es hoy, pero podés cambiarla si fue en otro día.",
+    "category": "La categoría te ayuda a organizar tus gastos y ver en qué gastás más. Por ejemplo: Comida, Transporte, Servicios.",
+    "familyMember": "Si esta es una cuenta familiar, podés asignar el gasto a un miembro específico para saber quién lo hizo.",
+    "exchangeRate": "Si gastaste en una moneda diferente, acá podés poner el tipo de cambio que usaste. Si no sabés, dejalo vacío y se calculará automáticamente."
   }
 }

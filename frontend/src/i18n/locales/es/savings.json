@@ -84,5 +84,11 @@
     "withdrawButton": "Retirar",
     "adding": "Agregando...",
     "withdrawing": "Retirando..."
+  },
+  "tooltips": {
+    "savingsGoal": "Una meta de ahorro te ayuda a alcanzar un objetivo financiero. Por ejemplo: ahorrar para vacaciones, comprar un auto, fondo de emergencia.",
+    "targetAmount": "¿Cuánta plata necesitás ahorrar en total? Este es tu objetivo final.",
+    "deadline": "¿Para cuándo necesitás llegar a tu meta? Es opcional, pero te ayuda a mantenerte motivado.",
+    "generalSavings": "El 'Ahorro General' es una cuenta especial que se crea automáticamente. Acá podés guardar dinero sin un objetivo específico."
   }
 }

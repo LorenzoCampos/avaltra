@@ -71,5 +71,11 @@
     "deleted": "Account deleted successfully!",
     "activated": "Account activated",
     "error": "Failed to save account"
+  },
+  "tooltips": {
+    "accountName": "Give it a name that helps you identify it easily. For example: 'My Finances', 'Household Expenses', 'Savings'.",
+    "accountType": "Personal: Just for you. Family: To share expenses with your family and see who spent what.",
+    "currency": "The main currency for this account. You can record expenses in other currencies, but they'll be converted to this one for totals.",
+    "familyMembers": "Add your family members to assign expenses and income to them. This way you know who spent or received what."
   }
 }

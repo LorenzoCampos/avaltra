@@ -84,5 +84,11 @@
     "withdrawButton": "Withdraw",
     "adding": "Adding...",
     "withdrawing": "Withdrawing..."
+  },
+  "tooltips": {
+    "savingsGoal": "A savings goal helps you reach a financial objective. For example: saving for vacation, buying a car, emergency fund.",
+    "targetAmount": "How much money do you need to save in total? This is your final goal.",
+    "deadline": "By when do you need to reach your goal? It's optional, but it helps keep you motivated.",
+    "generalSavings": "'General Savings' is a special account created automatically. Here you can save money without a specific goal."
   }
 }

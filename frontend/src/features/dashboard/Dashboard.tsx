@@ -10,6 +10,7 @@ import { formatCurrency, getCurrentMonth } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { QuickAddExpenseFAB } from '@/components/QuickAddExpenseFAB';
+import { InfoTooltip } from '@/components/InfoTooltip';
 import type { Currency } from '@/schemas/account.schema';
 
 export const Dashboard = () => {
@@ -144,7 +145,10 @@ export const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="animate-slide-up">
             <CardHeader>
-              <CardTitle className="text-lg">{t('cards.availableBalance.title')}</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                {t('cards.availableBalance.title')}
+                <InfoTooltip content={t('tooltips.availableBalance')} />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
@@ -156,7 +160,10 @@ export const Dashboard = () => {
 
           <Card className="animate-slide-up animation-delay-100">
             <CardHeader>
-              <CardTitle className="text-lg">{t('cards.expenses.title')}</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                {t('cards.expenses.title')}
+                <InfoTooltip content={t('tooltips.expenses')} />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-red-600 dark:text-red-400">
@@ -170,7 +177,10 @@ export const Dashboard = () => {
 
           <Card className="animate-slide-up animation-delay-200">
             <CardHeader>
-              <CardTitle className="text-lg">{t('cards.income.title')}</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                {t('cards.income.title')}
+                <InfoTooltip content={t('tooltips.income')} />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-green-600 dark:text-green-400">
@@ -210,7 +220,10 @@ export const Dashboard = () => {
         <FeatureErrorBoundary featureName="Expenses by Category">
           <Card className="animate-slide-up animation-delay-300">
             <CardHeader>
-              <CardTitle>{t('expensesByCategory')}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                {t('expensesByCategory')}
+                <InfoTooltip content={t('tooltips.expensesByCategory')} />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -286,7 +299,10 @@ export const Dashboard = () => {
         <FeatureErrorBoundary featureName="Recent Transactions">
           <Card className="animate-slide-up animation-delay-500">
             <CardHeader>
-              <CardTitle>{t('recentTransactions')}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                {t('recentTransactions')}
+                <InfoTooltip content={t('tooltips.recentTransactions')} />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

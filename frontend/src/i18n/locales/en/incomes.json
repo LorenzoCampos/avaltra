@@ -89,5 +89,13 @@
       "duplicate": "Duplicate",
       "delete": "Delete"
     }
+  },
+  "tooltips": {
+    "description": "A brief description of the income. For example: 'Salary', 'Freelance', 'Sale'.",
+    "amount": "The amount you received. You can use decimals (e.g., 5000.00).",
+    "currency": "The currency you received the income in. If it's different from your account's main currency, it will be automatically converted.",
+    "date": "The date when you received the income. Default is today, but you can change it if it was on another day.",
+    "category": "Categories help you organize your income and see where it comes from. For example: Salary, Freelance, Investments.",
+    "familyMember": "If this is a family account, you can assign the income to a specific member to know who received it."
   }
 }

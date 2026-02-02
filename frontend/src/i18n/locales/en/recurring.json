@@ -104,5 +104,13 @@
     "lastProcessed": "Last Processed",
     "generatedTransactions": "Generated Transactions",
     "status": "Status"
+  },
+  "tooltips": {
+    "recurring": "Recurring expenses/income repeat automatically based on the frequency you set. For example: monthly rent, bi-weekly salary, Netflix every month.",
+    "frequency": "How often does it repeat? Daily (every day), Weekly (every week), Monthly (every month), Yearly (every year).",
+    "interval": "The interval allows you to space out repetitions more. For example: 'every 2 weeks', 'every 3 months', 'every 6 months'.",
+    "startDate": "The date when this recurring expense/income starts generating. The first transaction will be created on this date.",
+    "endDate": "If you want it to end at some point, set the end date here. If you leave it empty, it will continue repeating indefinitely.",
+    "isActive": "If you deactivate this, the expense/income won't generate automatically. Useful to pause it temporarily without deleting it."
   }
 }

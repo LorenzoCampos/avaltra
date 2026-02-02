@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { FormSkeleton } from '@/components/ui/Skeleton';
+import { InfoTooltip } from '@/components/InfoTooltip';
 import { useIncomes, useIncomeCategories, useFamilyMembers } from '@/hooks/useIncomes';
 import { useAccountStore } from '@/stores/account.store';
 import { useUser } from '@/hooks/useUser';
@@ -238,29 +239,50 @@ export const IncomeForm = () => {
               </div>
             )}
 
-            <Input
-              label={t('form.description')}
-              type="text"
-              placeholder={t('form.descriptionPlaceholder')}
-              error={errors.description?.message}
-              {...register('description')}
-            />
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.description')}
+                </label>
+                <InfoTooltip content={t('tooltips.description')} />
+              </div>
+              <Input
+                type="text"
+                placeholder={t('form.descriptionPlaceholder')}
+                error={errors.description?.message}
+                {...register('description')}
+              />
+            </div>
 
-            <Input
-              label={t('form.amount')}
-              type="number"
-              step="0.01"
-              placeholder={t('form.amountPlaceholder')}
-              error={errors.amount?.message}
-              {...register('amount', { valueAsNumber: true })}
-            />
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.amount')}
+                </label>
+                <InfoTooltip content={t('tooltips.amount')} />
+              </div>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder={t('form.amountPlaceholder')}
+                error={errors.amount?.message}
+                {...register('amount', { valueAsNumber: true })}
+              />
+            </div>
 
-            <Select
-              label={t('form.currencyLabel')}
-              options={currencyOptions}
-              error={errors.currency?.message}
-              {...register('currency')}
-            />
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.currencyLabel')}
+                </label>
+                <InfoTooltip content={t('tooltips.currency')} />
+              </div>
+              <Select
+                options={currencyOptions}
+                error={errors.currency?.message}
+                {...register('currency')}
+              />
+            </div>
 
             {showMultiCurrencyFields && (
               <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg space-y-3 transition-colors duration-200">
@@ -295,31 +317,52 @@ export const IncomeForm = () => {
               </div>
             )}
 
-            <Input
-              label={t('form.date')}
-              type="date"
-              error={errors.date?.message}
-              {...register('date')}
-            />
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.date')}
+                </label>
+                <InfoTooltip content={t('tooltips.date')} />
+              </div>
+              <Input
+                type="date"
+                error={errors.date?.message}
+                {...register('date')}
+              />
+            </div>
 
-            <Select
-              label={t('form.category')}
-              options={[{ label: t('common:common.noCategory'), value: '' }, ...categoryOptions]}
-              error={errors.category_id?.message}
-              {...register('category_id')}
-              disabled={isLoadingCategories}
-              helperText={isLoadingCategories ? t('form.loadingCategories') : undefined}
-            />
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.category')}
+                </label>
+                <InfoTooltip content={t('tooltips.category')} />
+              </div>
+              <Select
+                options={[{ label: t('common:common.noCategory'), value: '' }, ...categoryOptions]}
+                error={errors.category_id?.message}
+                {...register('category_id')}
+                disabled={isLoadingCategories}
+                helperText={isLoadingCategories ? t('form.loadingCategories') : undefined}
+              />
+            </div>
 
             {activeAccount?.type === 'family' && (
-              <Select
-                label={t('form.familyMember')}
-                options={[{ label: t('form.noMember'), value: '' }, ...memberOptions]}
-                error={errors.family_member_id?.message}
-                {...register('family_member_id')}
-                disabled={isLoadingFamilyMembers}
-                helperText={isLoadingFamilyMembers ? t('form.loadingMembers') : undefined}
-              />
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('form.familyMember')}
+                  </label>
+                  <InfoTooltip content={t('tooltips.familyMember')} />
+                </div>
+                <Select
+                  options={[{ label: t('form.noMember'), value: '' }, ...memberOptions]}
+                  error={errors.family_member_id?.message}
+                  {...register('family_member_id')}
+                  disabled={isLoadingFamilyMembers}
+                  helperText={isLoadingFamilyMembers ? t('form.loadingMembers') : undefined}
+                />
+              </div>
             )}
 
             <Button

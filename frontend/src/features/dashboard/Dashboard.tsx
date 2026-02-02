@@ -143,7 +143,7 @@ export const Dashboard = () => {
       {/* Summary Cards - Protected */}
       <FeatureErrorBoundary featureName="Summary Cards">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="animate-slide-up">
+          <Card className="animate-slide-up" data-tour="available-balance">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 {t('cards.availableBalance.title')}
@@ -191,6 +191,25 @@ export const Dashboard = () => {
           </Card>
         </div>
       </FeatureErrorBoundary>
+
+      {/* Quick Actions - Hidden but exists for tour */}
+      <div data-tour="quick-actions" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Button 
+          onClick={() => navigate('/expenses/new')}
+          size="lg"
+          className="w-full"
+        >
+          💸 {t('common:buttons.addExpense')}
+        </Button>
+        <Button 
+          onClick={() => navigate('/incomes/new')}
+          size="lg"
+          variant="secondary"
+          className="w-full"
+        >
+          💰 {t('common:buttons.addIncome')}
+        </Button>
+      </div>
 
       {/* Reports CTA */}
       <Card className="animate-slide-up animation-delay-300 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">

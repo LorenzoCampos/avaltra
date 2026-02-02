@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/Button';
 import { DarkModeToggle } from './DarkModeToggle';
 import { BottomNav } from './BottomNav';
+import { FeatureTour } from './FeatureTour';
 
 export const Layout = () => {
   const { t } = useTranslation('navigation');
@@ -15,15 +16,15 @@ export const Layout = () => {
   const location = useLocation();
 
   const navLinks = [
-    { to: '/dashboard', label: t('menu.dashboard') },
-    { to: '/activity', label: t('menu.activity') },
-    { to: '/accounts', label: t('menu.accounts') },
-    { to: '/expenses', label: t('menu.expenses') },
-    { to: '/incomes', label: t('menu.incomes') },
-    { to: '/categories', label: t('menu.categories') },
-    { to: '/reports', label: t('menu.reports') },
-    { to: '/savings', label: t('menu.goals') },
-    { to: '/settings', label: t('menu.settings') },
+    { to: '/dashboard', label: t('menu.dashboard'), dataTour: undefined },
+    { to: '/activity', label: t('menu.activity'), dataTour: undefined },
+    { to: '/accounts', label: t('menu.accounts'), dataTour: undefined },
+    { to: '/expenses', label: t('menu.expenses'), dataTour: 'expenses' },
+    { to: '/incomes', label: t('menu.incomes'), dataTour: 'incomes' },
+    { to: '/categories', label: t('menu.categories'), dataTour: undefined },
+    { to: '/reports', label: t('menu.reports'), dataTour: 'reports' },
+    { to: '/savings', label: t('menu.goals'), dataTour: undefined },
+    { to: '/settings', label: t('menu.settings'), dataTour: 'settings' },
   ];
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -47,6 +48,7 @@ export const Layout = () => {
                 <Link
                   key={link.to}
                   to={link.to}
+                  data-tour={link.dataTour}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(link.to)
                       ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
@@ -111,6 +113,9 @@ export const Layout = () => {
 
       {/* Bottom Navigation - Mobile Only */}
       <BottomNav />
+
+      {/* Feature Tour */}
+      <FeatureTour />
     </div>
   );
 };

@@ -164,8 +164,8 @@ export const OnboardingWizard = () => {
   // STEP 4: Completed
   // ============================================================================
   const handleStartTour = () => {
-    // TODO: Activar tour guiado (implementaremos después)
-    localStorage.setItem('runTour', 'true');
+    // Request feature tour
+    localStorage.setItem('tourRequested', 'true');
     completeOnboarding();
   };
 

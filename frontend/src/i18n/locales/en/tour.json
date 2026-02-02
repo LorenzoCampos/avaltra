@@ -1,0 +1,20 @@
+{
+  "welcome": "Want us to show you how it works?",
+  "start": "Yes, show me",
+  "skip": "No, I'll explore on my own",
+  "steps": {
+    "availableBalance": "Here you see your Available Balance: how much money you have left after subtracting expenses from income",
+    "quickActions": "Use these buttons to quickly add expenses and incomes",
+    "expenses": "Here you manage all your Expenses: one-time and recurring (like Netflix, rent)",
+    "incomes": "Here you record your Incomes: salaries, freelance work, or any money coming in",
+    "reports": "Here you see Reports and charts to understand where you spend and how your finances are doing",
+    "settings": "Here you change your Settings: profile, language, and app preferences"
+  },
+  "controls": {
+    "back": "Back",
+    "close": "Close",
+    "last": "Finish",
+    "next": "Next",
+    "skip": "Skip tour"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "welcome": "¿Querés que te mostremos cómo funciona?",
+  "start": "Sí, mostrame",
+  "skip": "No, lo descubro solo",
+  "steps": {
+    "availableBalance": "Acá ves tu Saldo Disponible: cuánta plata te queda después de restar gastos de ingresos",
+    "quickActions": "Usá estos botones para agregar gastos e ingresos rápidamente",
+    "expenses": "Acá administrás todos tus Gastos: puntuales y recurrentes (como Netflix, alquiler)",
+    "incomes": "Acá registrás tus Ingresos: salarios, freelance, o cualquier entrada de plata",
+    "reports": "Acá ves Reportes y gráficos para entender en qué gastás y cómo van tus finanzas",
+    "settings": "Acá cambiás tu Configuración: perfil, idioma, y preferencias de la app"
+  },
+  "controls": {
+    "back": "Atrás",
+    "close": "Cerrar",
+    "last": "Finalizar",
+    "next": "Siguiente",
+    "skip": "Saltar tour"
+  }
+}

@@ -17,6 +17,7 @@ import savingsEN from './locales/en/savings.json';
 import reportsEN from './locales/en/reports.json';
 import recurringEN from './locales/en/recurring.json';
 import onboardingEN from './locales/en/onboarding.json';
+import tourEN from './locales/en/tour.json';
 
 // Importar traducciones ES
 import commonES from './locales/es/common.json';
@@ -33,6 +34,7 @@ import savingsES from './locales/es/savings.json';
 import reportsES from './locales/es/reports.json';
 import recurringES from './locales/es/recurring.json';
 import onboardingES from './locales/es/onboarding.json';
+import tourES from './locales/es/tour.json';
 
 i18n
   .use(LanguageDetector) // Detecta idioma del browser
@@ -54,6 +56,7 @@ i18n
         reports: reportsEN,
         recurring: recurringEN,
         onboarding: onboardingEN,
+        tour: tourEN,
       },
       es: {
         common: commonES,
@@ -70,6 +73,7 @@ i18n
         reports: reportsES,
         recurring: recurringES,
         onboarding: onboardingES,
+        tour: tourES,
       },
     },
     fallbackLng: 'es', // Default: Español (target rioplatense)

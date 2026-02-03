@@ -13,11 +13,11 @@ export const MoreMenu = ({ isOpen, onClose }: MoreMenuProps) => {
   const location = useLocation();
 
   const moreItems = [
-    { to: '/accounts', label: t('moreMenu.accounts.label'), icon: Wallet, description: t('moreMenu.accounts.description') },
-    { to: '/categories', label: t('moreMenu.categories.label'), icon: Tag, description: t('moreMenu.categories.description') },
-    { to: '/reports', label: t('moreMenu.reports.label'), icon: BarChart3, description: t('moreMenu.reports.description') },
-    { to: '/savings', label: t('moreMenu.savings.label'), icon: PiggyBank, description: t('moreMenu.savings.description') },
-    { to: '/settings', label: t('moreMenu.settings.label'), icon: Settings, description: t('moreMenu.settings.description') },
+    { to: '/accounts', label: t('moreMenu.accounts.label'), icon: Wallet, description: t('moreMenu.accounts.description'), dataTour: undefined },
+    { to: '/categories', label: t('moreMenu.categories.label'), icon: Tag, description: t('moreMenu.categories.description'), dataTour: undefined },
+    { to: '/reports', label: t('moreMenu.reports.label'), icon: BarChart3, description: t('moreMenu.reports.description'), dataTour: 'reports' },
+    { to: '/savings', label: t('moreMenu.savings.label'), icon: PiggyBank, description: t('moreMenu.savings.description'), dataTour: undefined },
+    { to: '/settings', label: t('moreMenu.settings.label'), icon: Settings, description: t('moreMenu.settings.description'), dataTour: 'settings' },
   ];
 
   const handleNavigate = (to: string) => {
@@ -64,6 +64,7 @@ export const MoreMenu = ({ isOpen, onClose }: MoreMenuProps) => {
                 <button
                   key={item.to}
                   onClick={() => handleNavigate(item.to)}
+                  data-tour={item.dataTour}
                   className={`w-full flex items-center gap-4 p-4 rounded-lg transition-colors ${
                     active
                       ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800'

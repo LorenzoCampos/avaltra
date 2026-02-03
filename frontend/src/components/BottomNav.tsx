@@ -10,10 +10,10 @@ export const BottomNav = () => {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   const navItems = [
-    { to: '/dashboard', label: t('bottomNav.home'), icon: Home },
-    { to: '/activity', label: t('bottomNav.activity'), icon: Activity },
-    { to: '/expenses', label: t('bottomNav.expenses'), icon: DollarSign },
-    { to: '/incomes', label: t('bottomNav.incomes'), icon: TrendingUp },
+    { to: '/dashboard', label: t('bottomNav.home'), icon: Home, dataTour: undefined },
+    { to: '/activity', label: t('bottomNav.activity'), icon: Activity, dataTour: undefined },
+    { to: '/expenses', label: t('bottomNav.expenses'), icon: DollarSign, dataTour: 'expenses' },
+    { to: '/incomes', label: t('bottomNav.incomes'), icon: TrendingUp, dataTour: 'incomes' },
   ];
 
   const isActive = (path: string) => {
@@ -37,6 +37,7 @@ export const BottomNav = () => {
               <Link
                 key={item.to}
                 to={item.to}
+                data-tour={item.dataTour}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                   active
                     ? 'text-blue-600 dark:text-blue-400'

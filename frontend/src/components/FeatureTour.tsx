@@ -12,12 +12,19 @@ export const FeatureTour = () => {
     const tourCompleted = localStorage.getItem('tourCompleted') === 'true';
     const tourRequested = localStorage.getItem('tourRequested') === 'true';
     
-    if (!tourCompleted && tourRequested) {
+    // Only run tour on desktop (md breakpoint = 768px)
+    const isDesktop = window.innerWidth >= 768;
+    
+    if (!tourCompleted && tourRequested && isDesktop) {
       // Small delay to ensure DOM elements are rendered
       const timer = setTimeout(() => {
         setRunTour(true);
       }, 500);
       return () => clearTimeout(timer);
+    } else if (tourRequested && !isDesktop) {
+      // On mobile, mark as completed immediately (skip tour)
+      localStorage.setItem('tourCompleted', 'true');
+      localStorage.removeItem('tourRequested');
     }
   }, []);
 

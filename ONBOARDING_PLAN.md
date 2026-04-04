@@ -1,4 +1,4 @@
-# 🎯 Plan de Onboarding - Bolsillo Claro
+# 🎯 Plan de Onboarding - Avaltra
 
 > **Fecha de creación:** 01 de Febrero, 2026  
 > **Prioridad:** 🔴 CRÍTICA  
@@ -103,7 +103,7 @@ Si un usuario necesita que alguien le explique la app, significa que:
 ┌─────────────────────────────────────────────────────────┐
 │ STEP 1: Bienvenida                                      │
 │                                                         │
-│  👋 ¡Bienvenido a Bolsillo Claro!                      │
+│  👋 ¡Bienvenido a Avaltra!                      │
 │                                                         │
 │  Te vamos a ayudar a configurar tu cuenta en           │
 │  3 simples pasos para que puedas empezar a             │
@@ -144,7 +144,7 @@ Si un usuario necesita que alguien le explique la app, significa que:
 ┌─────────────────────────────────────────────────────────┐
 │ STEP 4: Completado                                     │
 │                                                         │
-│  ✅ ¡Listo! Ya podés usar Bolsillo Claro               │
+│  ✅ ¡Listo! Ya podés usar Avaltra               │
 │                                                         │
 │  ✓ Tu cuenta está configurada                          │
 │  ✓ Podés agregar gastos e ingresos                     │
@@ -203,7 +203,7 @@ export const useOnboarding = () => {
 // frontend/src/i18n/locales/es/onboarding.json
 {
   "welcome": {
-    "title": "¡Bienvenido a Bolsillo Claro!",
+    "title": "¡Bienvenido a Avaltra!",
     "subtitle": "Te vamos a ayudar a configurar tu cuenta en 3 simples pasos para que puedas empezar a controlar tus finanzas",
     "start": "Comenzar",
     "skip": "Saltar (no recomendado)",
@@ -234,7 +234,7 @@ export const useOnboarding = () => {
     "add": "Agregar"
   },
   "completed": {
-    "title": "¡Listo! Ya podés usar Bolsillo Claro",
+    "title": "¡Listo! Ya podés usar Avaltra",
     "subtitle": "Todo configurado",
     "checklist": {
       "account": "Tu cuenta está configurada",
@@ -260,7 +260,7 @@ export const useOnboarding = () => {
 // frontend/src/i18n/locales/en/onboarding.json
 {
   "welcome": {
-    "title": "Welcome to Bolsillo Claro!",
+    "title": "Welcome to Avaltra!",
     "subtitle": "We'll help you set up your account in 3 simple steps so you can start managing your finances",
     "start": "Get Started",
     "skip": "Skip (not recommended)",
@@ -291,7 +291,7 @@ export const useOnboarding = () => {
     "add": "Add"
   },
   "completed": {
-    "title": "All Set! You're Ready to Use Bolsillo Claro",
+    "title": "All Set! You're Ready to Use Avaltra",
     "subtitle": "Everything is configured",
     "checklist": {
       "account": "Your account is set up",

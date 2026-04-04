@@ -1,4 +1,4 @@
-# Changelog - Bolsillo Claro
+# Changelog - Avaltra
 
 ## [MVP v1.0] - En Desarrollo
 

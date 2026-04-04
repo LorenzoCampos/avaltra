@@ -1,4 +1,4 @@
-# Changelog - Bolsillo Claro
+# Changelog - Avaltra
 
 Todos los cambios notables del proyecto se documentan en este archivo.
 
@@ -126,7 +126,7 @@ Esta versión incluye todas las funcionalidades core necesarias para gestionar f
 
 ## 🔗 Links
 
-- [Repositorio GitHub](https://github.com/LorenzoCampos/bolsillo-claro)
+- [Repositorio GitHub](https://github.com/LorenzoCampos/avaltra)
 - [API Producción](https://api.fakerbostero.online/bolsillo)
 - [Documentación API](./API.md)
 - [Guía de Features](./FEATURES.md)

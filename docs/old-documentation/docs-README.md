@@ -1,4 +1,4 @@
-# 📚 Documentación - Bolsillo Claro
+# 📚 Documentación - Avaltra
 
 Esta carpeta contiene toda la documentación técnica y de diseño del proyecto.
 

@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/LorenzoCampos/bolsillo-claro/internal/middleware"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 )
 
 // AddMemberRequest representa la request para agregar un miembro

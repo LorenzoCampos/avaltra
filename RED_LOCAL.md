@@ -1,6 +1,6 @@
-# 🌐 Acceso desde Red Local - Bolsillo Claro
+# 🌐 Acceso desde Red Local - Avaltra
 
-Esta guía te explica cómo acceder a tu backend de Bolsillo Claro desde **cualquier dispositivo en tu red local** (celular, tablet, otra computadora, etc.).
+Esta guía te explica cómo acceder a tu backend de Avaltra desde **cualquier dispositivo en tu red local** (celular, tablet, otra computadora, etc.).
 
 ---
 
@@ -63,7 +63,7 @@ Database: bolsillo_claro
 1. Conectá tu celular a la **misma red WiFi** que tu computadora
 2. Abrí el navegador (Chrome, Safari, etc.)
 3. Accedé a: `http://192.168.0.46:9090/api/health`
-4. Deberías ver: `{"message":"Bolsillo Claro API está funcionando correctamente","status":"ok"}`
+4. Deberías ver: `{"message":"Avaltra API está funcionando correctamente","status":"ok"}`
 
 #### B. Usando una app (React Native, Flutter, etc.):
 ```javascript
@@ -224,7 +224,7 @@ curl http://192.168.0.46:9090/api/health
 ```bash
 # Desde tu celular/tablet conectado a la misma WiFi
 # Abrí el navegador → http://192.168.0.46:9090/api/health
-# ✅ Debería mostrar: {"message":"Bolsillo Claro API está funcionando correctamente","status":"ok"}
+# ✅ Debería mostrar: {"message":"Avaltra API está funcionando correctamente","status":"ok"}
 ```
 
 ### Test 4: CORS desde navegador

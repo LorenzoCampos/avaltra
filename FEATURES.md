@@ -1,4 +1,4 @@
-# 📖 Guía Narrativa de Funcionalidades - Bolsillo Claro
+# 📖 Guía Narrativa de Funcionalidades - Avaltra
 
 **Versión:** 1.0  
 **Fecha:** 2026-01-16  

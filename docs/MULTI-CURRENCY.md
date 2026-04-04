@@ -1,6 +1,6 @@
 # 💱 Sistema Multi-Currency - Modo 3: Flexibilidad Total
 
-Documentación completa del sistema de multi-moneda implementado en Bolsillo Claro.
+Documentación completa del sistema de multi-moneda implementado en Avaltra.
 
 ---
 

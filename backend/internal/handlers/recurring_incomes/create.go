@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/LorenzoCampos/bolsillo-claro/internal/middleware"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 )
 
 // CreateRecurringIncomeRequest representa el JSON para crear un ingreso recurrente

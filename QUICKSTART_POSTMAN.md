@@ -23,7 +23,7 @@ Guía ultra-rápida para empezar a probar la API en **2 minutos**.
 ## 🌍 PASO 2: Seleccionar el Environment
 
 1. **Arriba a la derecha**, en el selector de environment
-2. **Seleccioná**: "Bolsillo Claro - Local"
+2. **Seleccioná**: "Avaltra - Local"
 3. ✅ Ya está configurado con: `http://192.168.0.46:9090/api`
 
 ---
@@ -168,8 +168,8 @@ Categories → Create Custom Expense Category → Send
 docker-compose ps
 
 # Deberías ver:
-# bolsillo-claro-backend   Up
-# bolsillo-claro-db        Up (healthy)
+# avaltra-backend   Up
+# avaltra-db        Up (healthy)
 ```
 
 ### Error 401 Unauthorized:

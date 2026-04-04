@@ -1,4 +1,4 @@
-# 📚 Stack Tecnológico - Bolsillo Claro
+# 📚 Stack Tecnológico - Avaltra
 
 ## 🎯 Visión General
 

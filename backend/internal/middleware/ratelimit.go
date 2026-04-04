@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 

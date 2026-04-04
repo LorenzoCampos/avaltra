@@ -1,4 +1,4 @@
-# 📚 Stack Tecnológico - Bolsillo Claro
+# 📚 Stack Tecnológico - Avaltra
 
 Aplicación web full-stack para gestión financiera personal/familiar con soporte multi-moneda.
 

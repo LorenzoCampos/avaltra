@@ -1,4 +1,4 @@
-# Decisiones Técnicas - Bolsillo Claro
+# Decisiones Técnicas - Avaltra
 
 Este documento registra las decisiones arquitectónicas y técnicas importantes del proyecto, con sus justificaciones.
 

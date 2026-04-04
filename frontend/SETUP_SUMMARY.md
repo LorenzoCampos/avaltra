@@ -1,4 +1,4 @@
-# ✅ Setup Completado - Bolsillo Claro Frontend
+# ✅ Setup Completado - Avaltra Frontend
 
 ## 📦 Instalación Completada
 
@@ -30,7 +30,7 @@
 ## 🗂️ Estructura Creada
 
 ```
-bolsillo-claro-frontend/
+avaltra-frontend/
 ├── src/
 │   ├── api/
 │   │   └── axios.ts                    ✅ Configurado con interceptors

@@ -1,6 +1,6 @@
-# 📬 Guía de Postman - Bolsillo Claro API
+# 📬 Guía de Postman - Avaltra API
 
-Esta guía te explica cómo usar la colección de Postman para probar TODOS los endpoints de la API de Bolsillo Claro.
+Esta guía te explica cómo usar la colección de Postman para probar TODOS los endpoints de la API de Avaltra.
 
 ---
 
@@ -24,7 +24,7 @@ Si no lo tenés instalado:
 ### 3. Seleccionar el Environment
 
 1. Arriba a la derecha, en el selector de environment
-2. Seleccioná **"Bolsillo Claro - Local"**
+2. Seleccioná **"Avaltra - Local"**
 3. ✅ Ya está configurado con tu IP local: `http://192.168.0.46:9090/api`
 
 ---
@@ -84,8 +84,8 @@ Cuando crees un expense, el backend REQUIERE estos campos:
 docker-compose ps
 
 # Deberías ver:
-# bolsillo-claro-backend   Up
-# bolsillo-claro-db        Up (healthy)
+# avaltra-backend   Up
+# avaltra-db        Up (healthy)
 ```
 
 ### PASO 2: Health Check
@@ -96,7 +96,7 @@ docker-compose ps
 4. Deberías ver:
 ```json
 {
-  "message": "Bolsillo Claro API está funcionando correctamente",
+  "message": "Avaltra API está funcionando correctamente",
   "status": "ok"
 }
 ```
@@ -262,7 +262,7 @@ Las variables se **guardan automáticamente** cuando ejecutás ciertos requests:
 
 **Ver variables:**
 - Click en el ícono del ojo 👁️ arriba a la derecha
-- O click en "Bolsillo Claro - Local" → Edit
+- O click en "Avaltra - Local" → Edit
 
 **Editar manualmente:**
 Si necesitás cambiar alguna variable (ej: probar con otro account_id):
@@ -463,7 +463,7 @@ Otras variables útiles:
 - [ ] Backend corriendo: `docker-compose ps`
 - [ ] Postman instalado
 - [ ] Colección importada
-- [ ] Environment seleccionado: "Bolsillo Claro - Local"
+- [ ] Environment seleccionado: "Avaltra - Local"
 - [ ] Health check pasando (request "Health")
 - [ ] Usuario registrado (request "Register")
 - [ ] Cuenta creada (request "Create Personal Account")
@@ -471,4 +471,4 @@ Otras variables útiles:
 
 ---
 
-¡Listo! Ahora tenés una colección completa para probar TODOS los endpoints del backend de Bolsillo Claro de forma eficiente y profesional. 🚀
+¡Listo! Ahora tenés una colección completa para probar TODOS los endpoints del backend de Avaltra de forma eficiente y profesional. 🚀

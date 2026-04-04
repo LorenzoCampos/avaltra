@@ -1,4 +1,4 @@
-# 🗄️ Base de Datos - Bolsillo Claro
+# 🗄️ Base de Datos - Avaltra
 
 Schema completo de PostgreSQL 15 con todas las tablas, relaciones, constraints y migraciones.
 

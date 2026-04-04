@@ -980,7 +980,7 @@ El módulo de savings_goals tiene una **arquitectura EXCELENTE con features avan
 - `backend/internal/handlers/savings_goals/withdraw_funds.go`
 
 **Implementación:**
-- Agregado import: `"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"`
+- Agregado import: `"github.com/LorenzoCampos/avaltra/pkg/logger"`
 - Agregado logging estructurado con contexto completo:
   - Eventos: `savings_goal.created`, `savings_goal.updated`, `savings_goal.deleted`, `savings_goal.add_funds`, `savings_goal.withdraw_funds`
   - Metadata: `goal_id`, `account_id`, `user_id`, `amount`, `goal_name`, `ip`, etc.
@@ -1003,7 +1003,7 @@ El módulo de savings_goals tiene una **arquitectura EXCELENTE con features avan
 }
 ```
 
-**Testing:** Logs verificados en `docker logs bolsillo-claro-backend` ✅
+**Testing:** Logs verificados en `docker logs avaltra-backend` ✅
 
 ---
 

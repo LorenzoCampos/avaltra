@@ -1,4 +1,4 @@
-# 📚 Bolsillo Claro - API Documentation
+# 📚 Avaltra - API Documentation
 
 **Base URL:** `https://api.fakerbostero.online/bolsillo/api`  
 **Versión:** 2.6  

@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LorenzoCampos/bolsillo-claro/internal/config"
-	"github.com/LorenzoCampos/bolsillo-claro/internal/database"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/auth"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/LorenzoCampos/avaltra/internal/config"
+	"github.com/LorenzoCampos/avaltra/internal/database"
+	"github.com/LorenzoCampos/avaltra/pkg/auth"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

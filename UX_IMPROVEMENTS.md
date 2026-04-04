@@ -1,6 +1,6 @@
-# 🎨 Bolsillo Claro - UX Improvements Roadmap
+# 🎨 Avaltra - UX Improvements Roadmap
 
-> **Objetivo:** Transformar Bolsillo Claro de una app funcional a una experiencia de usuario excepcional
+> **Objetivo:** Transformar Avaltra de una app funcional a una experiencia de usuario excepcional
 > 
 > **Filosofía:** Menos fricción, más velocidad, mejor feedback
 
@@ -300,7 +300,7 @@ Wizard de onboarding de 3 pasos después del registro
 **Paso 1/3: Create Your First Account**
 ```
 ┌──────────────────────────────────┐
-│   👋 Welcome to Bolsillo Claro!  │
+│   👋 Welcome to Avaltra!  │
 │                                  │
 │   Let's set up your first       │
 │   account to start tracking     │

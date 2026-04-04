@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/LorenzoCampos/bolsillo-claro/internal/database"
+	"github.com/LorenzoCampos/avaltra/internal/database"
 )
 
 // AccountMiddleware valida que el header X-Account-ID existe y pertenece al usuario autenticado

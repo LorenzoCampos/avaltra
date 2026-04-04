@@ -11,7 +11,7 @@ Chrome Android requiere **HTTPS** para mostrar el banner de instalación. En des
 Ahora Vite sirve la app con HTTPS (certificado auto-firmado):
 
 ```bash
-cd /home/devuser/projects/bolsillo-claro/frontend
+cd /home/devuser/projects/avaltra/frontend
 pnpm dev
 
 # La app ahora corre en:
@@ -52,7 +52,7 @@ En producción con HTTPS real (no auto-firmado), el banner aparece automáticame
 
 **Setup producción:**
 ```bash
-cd /home/devuser/projects/bolsillo-claro/frontend
+cd /home/devuser/projects/avaltra/frontend
 pnpm build
 
 # Subir dist/ a servidor con HTTPS
@@ -73,7 +73,7 @@ En producción, Chrome detecta automáticamente que es PWA y muestra el banner d
 1. Abrir la app en Chrome desktop
 2. F12 → Tab **"Application"**
 3. Sidebar → **"Manifest"**
-   - ✅ Debería mostrar: Bolsillo Claro, ícono, colores, etc.
+   - ✅ Debería mostrar: Avaltra, ícono, colores, etc.
 4. Sidebar → **"Service Workers"**
    - ✅ Debería mostrar: Service Worker registrado y activo
 

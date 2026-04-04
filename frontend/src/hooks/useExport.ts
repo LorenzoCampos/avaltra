@@ -51,7 +51,7 @@ export const useExport = () => {
     // Header
     doc.setFontSize(20);
     doc.setTextColor(59, 130, 246); // Blue
-    doc.text('Bolsillo Claro', 14, 20);
+    doc.text('Avaltra', 14, 20);
     
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);

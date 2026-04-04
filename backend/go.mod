@@ -1,4 +1,4 @@
-module github.com/LorenzoCampos/bolsillo-claro
+module github.com/LorenzoCampos/avaltra
 
 go 1.24.0
 

@@ -1,4 +1,4 @@
-# 🐳 Guía Docker - Bolsillo Claro
+# 🐳 Guía Docker - Avaltra
 
 Esta guía te enseña cómo correr el proyecto completo (backend + base de datos) usando Docker.
 
@@ -27,8 +27,8 @@ docker-compose --version
 
 ### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/LorenzoCampos/bolsillo-claro.git
-cd bolsillo-claro
+git clone https://github.com/LorenzoCampos/avaltra.git
+cd avaltra
 ```
 
 ### 2. Levantar los servicios
@@ -98,10 +98,10 @@ docker-compose up --build
 ### Entrar a un contenedor (para debugging)
 ```bash
 # Entrar al backend
-docker exec -it bolsillo-claro-backend sh
+docker exec -it avaltra-backend sh
 
 # Entrar a Postgres
-docker exec -it bolsillo-claro-db psql -U bolsillo_user -d bolsillo_claro
+docker exec -it avaltra-db psql -U bolsillo_user -d bolsillo_claro
 ```
 
 ---
@@ -124,17 +124,17 @@ Las migraciones se ejecutan automáticamente la primera vez que se crea la base 
 
 Si necesitás ejecutarlas manualmente:
 ```bash
-docker exec -it bolsillo-claro-db psql -U bolsillo_user -d bolsillo_claro -f /docker-entrypoint-initdb.d/001_create_users_table.sql
+docker exec -it avaltra-db psql -U bolsillo_user -d bolsillo_claro -f /docker-entrypoint-initdb.d/001_create_users_table.sql
 ```
 
 ### Hacer backup de la base de datos
 ```bash
-docker exec bolsillo-claro-db pg_dump -U bolsillo_user bolsillo_claro > backup.sql
+docker exec avaltra-db pg_dump -U bolsillo_user bolsillo_claro > backup.sql
 ```
 
 ### Restaurar backup
 ```bash
-docker exec -i bolsillo-claro-db psql -U bolsillo_user -d bolsillo_claro < backup.sql
+docker exec -i avaltra-db psql -U bolsillo_user -d bolsillo_claro < backup.sql
 ```
 
 ### Resetear la base de datos (empezar desde cero)

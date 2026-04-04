@@ -15,7 +15,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['pwa-icon.svg'],
       manifest: {
-        name: 'Bolsillo Claro',
+        name: 'Avaltra',
         short_name: 'Bolsillo',
         description: 'Personal and family finance management',
         theme_color: '#3B82F6',

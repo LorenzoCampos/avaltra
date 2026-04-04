@@ -25,7 +25,7 @@ func GenerateAccessToken(userID, email, secret string, expiry time.Duration) (st
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "bolsillo-claro",
+			Issuer:    "avaltra",
 		},
 	}
 
@@ -51,7 +51,7 @@ func GenerateRefreshToken(userID, secret string, expiry time.Duration) (string, 
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "bolsillo-claro",
+			Issuer:    "avaltra",
 		},
 	}
 

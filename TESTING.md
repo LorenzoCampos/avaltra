@@ -1,6 +1,6 @@
 # 🧪 Testing Backend - Resumen de Archivos
 
-Esta es la guía completa de todos los archivos que creamos para probar el backend de Bolsillo Claro.
+Esta es la guía completa de todos los archivos que creamos para probar el backend de Avaltra.
 
 ---
 
@@ -66,7 +66,7 @@ Antes de empezar con el frontend, verificá que TODO funcione:
 
 ### Postman
 - [ ] Colección importada
-- [ ] Environment seleccionado: "Bolsillo Claro - Local"
+- [ ] Environment seleccionado: "Avaltra - Local"
 - [ ] Health check pasando ✅
 
 ### Endpoints de Autenticación

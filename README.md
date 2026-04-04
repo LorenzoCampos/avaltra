@@ -1,4 +1,4 @@
-# Bolsillo Claro
+# Avaltra
 
 Gestor financiero personal y familiar construido para trackear gastos, ingresos y metas de ahorro. Diseñado específicamente para la realidad argentina con soporte nativo para múltiples monedas y el "dólar tarjeta".
 
@@ -22,7 +22,7 @@ El backend corre en `http://localhost:8080` y el frontend en `http://localhost:5
 
 ## 🎯 ¿Qué hace este proyecto?
 
-Bolsillo Claro responde tres preguntas fundamentales:
+Avaltra responde tres preguntas fundamentales:
 1. **¿Cuánto gasto?** - Trackea gastos puntuales y recurrentes (Netflix, alquiler, etc.)
 2. **¿Cuánto ingresa?** - Maneja ingresos fijos, variables y temporales
 3. **¿Cuánto estoy ahorrando?** - Metas con cálculo automático de ahorro mensual necesario
@@ -97,8 +97,8 @@ Bolsillo Claro responde tres preguntas fundamentales:
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/LorenzoCampos/bolsillo-claro.git
-cd bolsillo-claro
+git clone https://github.com/LorenzoCampos/avaltra.git
+cd avaltra
 ```
 
 ### 2. Setup Backend
@@ -161,7 +161,7 @@ Durante desarrollo, Vite hace proxy de `/api/*` al backend en puerto 8080 autom�
 ## 📁 Estructura del Proyecto
 
 ```
-bolsillo-claro/
+avaltra/
 ├── backend/
 │   ├── cmd/
 │   │   └── server/main.go          # Entry point
@@ -249,7 +249,7 @@ Agregar fondos a una meta descuenta del balance disponible (descuento virtual, n
 
 ### Progressive Web App (PWA)
 
-Bolsillo Claro es una **PWA** (Progressive Web App) que puede instalarse en dispositivos móviles como una app nativa:
+Avaltra es una **PWA** (Progressive Web App) que puede instalarse en dispositivos móviles como una app nativa:
 
 **Características PWA:**
 - ✅ Instalable desde el navegador (sin App Store/Play Store)

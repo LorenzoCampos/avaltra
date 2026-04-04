@@ -1,6 +1,6 @@
-# 💰 Bolsillo Claro - Frontend
+# 💰 Avaltra - Frontend
 
-Frontend application for Bolsillo Claro personal/family finance management system.
+Frontend application for Avaltra personal/family finance management system.
 
 ## 🚀 Tech Stack
 

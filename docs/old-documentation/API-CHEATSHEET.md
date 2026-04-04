@@ -1,4 +1,4 @@
-# 📄 Bolsillo Claro - API Cheat Sheet
+# 📄 Avaltra - API Cheat Sheet
 
 Referencia rápida de endpoints y estructuras de datos.
 

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 )
 
 // RecurringIncomeTemplate representa un template activo que puede generar ingresos

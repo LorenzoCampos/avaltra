@@ -5,20 +5,20 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/LorenzoCampos/bolsillo-claro/internal/config"
-	"github.com/LorenzoCampos/bolsillo-claro/internal/database"
-	accountsHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/accounts"
-	activityHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/activity"
-	authHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/auth"
-	categoriesHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/categories"
-	dashboardHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/dashboard"
-	expensesHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/expenses"
-	incomesHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/incomes"
-	recurringExpensesHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/recurring_expenses"
-	recurringIncomesHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/recurring_incomes"
-	savingsGoalsHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/savings_goals"
-	usersHandler "github.com/LorenzoCampos/bolsillo-claro/internal/handlers/users"
-	"github.com/LorenzoCampos/bolsillo-claro/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/internal/config"
+	"github.com/LorenzoCampos/avaltra/internal/database"
+	accountsHandler "github.com/LorenzoCampos/avaltra/internal/handlers/accounts"
+	activityHandler "github.com/LorenzoCampos/avaltra/internal/handlers/activity"
+	authHandler "github.com/LorenzoCampos/avaltra/internal/handlers/auth"
+	categoriesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/categories"
+	dashboardHandler "github.com/LorenzoCampos/avaltra/internal/handlers/dashboard"
+	expensesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/expenses"
+	incomesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/incomes"
+	recurringExpensesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/recurring_expenses"
+	recurringIncomesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/recurring_incomes"
+	savingsGoalsHandler "github.com/LorenzoCampos/avaltra/internal/handlers/savings_goals"
+	usersHandler "github.com/LorenzoCampos/avaltra/internal/handlers/users"
+	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -239,14 +239,14 @@ func (s *Server) setupRoutes() {
 func (s *Server) healthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "ok",
-		"message": "Bolsillo Claro API está funcionando correctamente",
+		"message": "Avaltra API está funcionando correctamente",
 	})
 }
 
 // helloWorld es un endpoint de prueba para verificar que todo funciona
 func (s *Server) helloWorld(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"message": "¡Hola desde Bolsillo Claro!",
+		"message": "¡Hola desde Avaltra!",
 		"info":    "Este es tu primer endpoint en Go con Gin",
 	})
 }
@@ -258,7 +258,7 @@ func (s *Server) greetUser(c *gin.Context) {
 	name := c.Param("name")
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": fmt.Sprintf("¡Hola %s! Bienvenido a Bolsillo Claro", name),
+		"message": fmt.Sprintf("¡Hola %s! Bienvenido a Avaltra", name),
 		"name":    name,
 	})
 }

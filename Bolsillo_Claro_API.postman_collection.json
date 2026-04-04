@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Bolsillo Claro API",
-    "description": "Colección completa de endpoints para la API de Bolsillo Claro.\n\n**Instrucciones:**\n1. Importar también el archivo de Environment\n2. Seleccionar el environment 'Bolsillo Claro - Local'\n3. Ejecutar primero 'Register' o 'Login' para obtener tokens\n4. Los tokens se guardan automáticamente en variables de entorno\n5. Crear una cuenta y el account_id se guarda automáticamente\n\n**Flujo recomendado:**\n1. Auth → Register (crea usuario y obtiene tokens)\n2. Accounts → Create Account (crea cuenta y guarda account_id)\n3. Usar cualquier otro endpoint con los tokens ya configurados",
+    "name": "Avaltra API",
+    "description": "Colección completa de endpoints para la API de Avaltra.\n\n**Instrucciones:**\n1. Importar también el archivo de Environment\n2. Seleccionar el environment 'Avaltra - Local'\n3. Ejecutar primero 'Register' o 'Login' para obtener tokens\n4. Los tokens se guardan automáticamente en variables de entorno\n5. Crear una cuenta y el account_id se guarda automáticamente\n\n**Flujo recomendado:**\n1. Auth → Register (crea usuario y obtiene tokens)\n2. Accounts → Create Account (crea cuenta y guarda account_id)\n3. Usar cualquier otro endpoint con los tokens ya configurados",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [

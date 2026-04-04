@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/auth"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/LorenzoCampos/avaltra/pkg/auth"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 )
 
 // AuthMiddleware es un middleware que valida JWT tokens

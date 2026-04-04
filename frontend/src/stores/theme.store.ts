@@ -56,7 +56,7 @@ export const useThemeStore = create<ThemeState>()(
       },
     }),
     {
-      name: 'bolsillo-claro-theme',
+      name: 'avaltra-theme',
       onRehydrateStorage: () => (state) => {
         if (state) {
           // Re-apply theme after rehydration

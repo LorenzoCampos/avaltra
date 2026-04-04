@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
-	"github.com/LorenzoCampos/bolsillo-claro/internal/middleware"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 )
 
 // DeactivateMember maneja PATCH /api/accounts/:id/members/:member_id/deactivate

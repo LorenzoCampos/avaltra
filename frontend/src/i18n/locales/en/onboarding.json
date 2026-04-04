@@ -1,6 +1,6 @@
 {
   "welcome": {
-    "title": "Welcome to Bolsillo Claro!",
+    "title": "Welcome to Avaltra!",
     "subtitle": "We'll help you set up your account in 3 simple steps so you can start managing your finances",
     "start": "Get Started",
     "skip": "Skip",
@@ -40,7 +40,7 @@
     }
   },
   "completed": {
-    "title": "All Set! You're Ready to Use Bolsillo Claro",
+    "title": "All Set! You're Ready to Use Avaltra",
     "subtitle": "Everything is configured",
     "checklist": {
       "account": "Your account is set up",

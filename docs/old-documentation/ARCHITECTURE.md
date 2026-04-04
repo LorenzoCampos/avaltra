@@ -1,6 +1,6 @@
-# Bolsillo Claro - Arquitectura y Especificaciones Técnicas Completas
+# Avaltra - Arquitectura y Especificaciones Técnicas Completas
 
-Este documento contiene las especificaciones técnicas detalladas de cada módulo del sistema Bolsillo Claro. Está diseñado como una guía de implementación práctica que responde preguntas concretas sobre qué funcionalidad existe, cómo se comporta cada feature, qué validaciones se aplican, y cómo interactúan los diferentes módulos entre sí.
+Este documento contiene las especificaciones técnicas detalladas de cada módulo del sistema Avaltra. Está diseñado como una guía de implementación práctica que responde preguntas concretas sobre qué funcionalidad existe, cómo se comporta cada feature, qué validaciones se aplican, y cómo interactúan los diferentes módulos entre sí.
 
 ## Tabla de Contenidos
 
@@ -23,7 +23,7 @@ Este documento contiene las especificaciones técnicas detalladas de cada módul
 
 ## Visión General del Sistema
 
-Bolsillo Claro es un gestor financiero personal y familiar que responde tres preguntas fundamentales: ¿cuánto gasto?, ¿cuánto ingresa?, y ¿cuánto estoy ahorrando? El sistema está diseñado específicamente para la realidad económica argentina donde conviven múltiples monedas, los ingresos pueden ser variables, y las familias necesitan trackear contribuciones individuales de cada miembro.
+Avaltra es un gestor financiero personal y familiar que responde tres preguntas fundamentales: ¿cuánto gasto?, ¿cuánto ingresa?, y ¿cuánto estoy ahorrando? El sistema está diseñado específicamente para la realidad económica argentina donde conviven múltiples monedas, los ingresos pueden ser variables, y las familias necesitan trackear contribuciones individuales de cada miembro.
 
 ### Principios de Diseño Fundamentales
 
@@ -2857,7 +2857,7 @@ Estas estimaciones asumen desarrollo sin diseño gráfico profesional, usando co
 
 ## Conclusión
 
-Este documento contiene las especificaciones técnicas completas para implementar Bolsillo Claro. Cada módulo está detallado con:
+Este documento contiene las especificaciones técnicas completas para implementar Avaltra. Cada módulo está detallado con:
 - Estructura de datos precisa
 - Endpoints de API con request/response examples
 - Validaciones específicas que deben aplicarse

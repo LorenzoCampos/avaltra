@@ -49,7 +49,7 @@ export const Register = () => {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Bolsillo Claro</CardTitle>
+            <CardTitle className="text-center">Avaltra</CardTitle>
             <p className="text-center text-gray-600 dark:text-gray-400 mt-2">
               {t('register.subtitle')}
             </p>

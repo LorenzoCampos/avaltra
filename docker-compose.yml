@@ -1,5 +1,5 @@
 # ============================================================================
-# DOCKER COMPOSE - Bolsillo Claro
+# DOCKER COMPOSE - Avaltra
 # ============================================================================
 # Este archivo define y orquesta todos los servicios necesarios para correr
 # la aplicación completa: backend (Go) y base de datos (PostgreSQL)
@@ -27,7 +27,7 @@ services:
     image: postgres:15-alpine
     
     # Nombre del contenedor (más fácil de identificar)
-    container_name: bolsillo-claro-db
+    container_name: avaltra-db
     
     # Reiniciar automáticamente si se cae (salvo que lo paremos manualmente)
     restart: unless-stopped
@@ -84,7 +84,7 @@ services:
       dockerfile: Dockerfile  # Nombre del Dockerfile a usar
     
     # Nombre del contenedor
-    container_name: bolsillo-claro-backend
+    container_name: avaltra-backend
     
     # Reiniciar automáticamente si se cae
     restart: unless-stopped

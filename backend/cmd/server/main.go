@@ -9,10 +9,10 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/LorenzoCampos/bolsillo-claro/internal/config"
-	"github.com/LorenzoCampos/bolsillo-claro/internal/database"
-	"github.com/LorenzoCampos/bolsillo-claro/internal/server"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/scheduler"
+	"github.com/LorenzoCampos/avaltra/internal/config"
+	"github.com/LorenzoCampos/avaltra/internal/database"
+	"github.com/LorenzoCampos/avaltra/internal/server"
+	"github.com/LorenzoCampos/avaltra/pkg/scheduler"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -51,7 +51,7 @@ func runMigrations(databaseURL string) error {
 // main es la función especial que Go ejecuta al iniciar el programa
 // Es el punto de entrada de toda aplicación Go
 func main() {
-	fmt.Println("🏦 Iniciando Bolsillo Claro API...")
+	fmt.Println("🏦 Iniciando Avaltra API...")
 
 	// Paso 1: Cargar la configuración desde variables de entorno
 	cfg, err := config.Load()

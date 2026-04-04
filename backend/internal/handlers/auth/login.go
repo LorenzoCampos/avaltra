@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/auth"
-	"github.com/LorenzoCampos/bolsillo-claro/pkg/logger"
+	"github.com/LorenzoCampos/avaltra/pkg/auth"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 

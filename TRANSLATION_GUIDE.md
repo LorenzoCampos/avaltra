@@ -1,4 +1,4 @@
-# 🌍 Guía de Traducción - Bolsillo Claro
+# 🌍 Guía de Traducción - Avaltra
 
 ## ✅ Traducciones Creadas
 

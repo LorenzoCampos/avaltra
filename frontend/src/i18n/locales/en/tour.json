@@ -5,8 +5,11 @@
   "steps": {
     "availableBalance": "Here you see your Available Balance: how much money you have left after subtracting expenses from income",
     "quickActions": "Use these buttons to quickly add expenses and incomes",
+    "bottomNav": "Use the bottom menu to navigate between: Home, Activity, Expenses, Incomes, and More. Tap 'More' to access Reports, Settings, and logout.",
     "expenses": "Here you manage all your Expenses: one-time and recurring (like Netflix, rent)",
+    "expensesMobile": "Tap here to manage your Expenses: one-time and recurring (like Netflix, rent)",
     "incomes": "Here you record your Incomes: salaries, freelance work, or any money coming in",
+    "incomesMobile": "Tap here to record your Incomes: salaries, freelance work, or any money coming in",
     "reports": "Here you see Reports and charts to understand where you spend and how your finances are doing",
     "settings": "Here you change your Settings: profile, language, and app preferences"
   },

@@ -19,12 +19,12 @@ export const Layout = () => {
     { to: '/dashboard', label: t('menu.dashboard'), dataTour: undefined },
     { to: '/activity', label: t('menu.activity'), dataTour: undefined },
     { to: '/accounts', label: t('menu.accounts'), dataTour: undefined },
-    { to: '/expenses', label: t('menu.expenses'), dataTour: 'expenses' },
-    { to: '/incomes', label: t('menu.incomes'), dataTour: 'incomes' },
+    { to: '/expenses', label: t('menu.expenses'), dataTour: 'expenses-desktop' },
+    { to: '/incomes', label: t('menu.incomes'), dataTour: 'incomes-desktop' },
     { to: '/categories', label: t('menu.categories'), dataTour: undefined },
-    { to: '/reports', label: t('menu.reports'), dataTour: 'reports' },
+    { to: '/reports', label: t('menu.reports'), dataTour: 'reports-desktop' },
     { to: '/savings', label: t('menu.goals'), dataTour: undefined },
-    { to: '/settings', label: t('menu.settings'), dataTour: 'settings' },
+    { to: '/settings', label: t('menu.settings'), dataTour: 'settings-desktop' },
   ];
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');

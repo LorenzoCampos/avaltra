@@ -55,6 +55,7 @@ export const BottomNav = () => {
           {/* More Button */}
           <button
             onClick={() => setIsMoreMenuOpen(true)}
+            data-more-menu-trigger="true"
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
               isMoreActive
                 ? 'text-blue-600 dark:text-blue-400'

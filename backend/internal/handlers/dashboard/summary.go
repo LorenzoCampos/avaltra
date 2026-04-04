@@ -280,8 +280,37 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		// ============================================================================
-		// 6. CALCULATE TOTAL ASSIGNED TO SAVINGS GOALS
+		// 6. CALCULATE NET SAVINGS ACTIVITY FOR THIS MONTH
 		// ============================================================================
+		// Calculate deposits and withdrawals for THIS MONTH only
+		// Deposits reduce available balance (money moved to savings)
+		// Withdrawals increase available balance (money returned from savings)
+		var monthlyDeposits, monthlyWithdrawals float64
+
+		savingsActivityQuery := `
+		SELECT 
+			COALESCE(SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END), 0) as deposits,
+			COALESCE(SUM(CASE WHEN transaction_type = 'withdrawal' THEN amount ELSE 0 END), 0) as withdrawals
+		FROM savings_goal_transactions sgt
+		INNER JOIN savings_goals sg ON sgt.savings_goal_id = sg.id
+		WHERE sg.account_id = $1
+		  AND TO_CHAR(sgt.date, 'YYYY-MM') = $2
+	`
+		err = db.QueryRow(ctx, savingsActivityQuery, accountID, month).Scan(&monthlyDeposits, &monthlyWithdrawals)
+		if err != nil {
+			// If there's an error, just set to 0 instead of failing the entire request
+			monthlyDeposits = 0
+			monthlyWithdrawals = 0
+		}
+
+		// Net savings activity (deposits - withdrawals)
+		netSavingsActivity := monthlyDeposits - monthlyWithdrawals
+
+		// ============================================================================
+		// 7. CALCULATE TOTAL ACCUMULATED IN SAVINGS (FOR DISPLAY)
+		// ============================================================================
+		// This is the TOTAL accumulated across all months
+		// It's for informational purposes only
 		var totalAssignedToGoals float64
 		goalsQuery := `
 		SELECT COALESCE(SUM(current_amount), 0)
@@ -290,14 +319,26 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 	`
 		err = db.QueryRow(ctx, goalsQuery, accountID).Scan(&totalAssignedToGoals)
 		if err != nil {
-			// If there's an error, just set to 0 instead of failing the entire request
 			totalAssignedToGoals = 0
 		}
 
 		// ============================================================================
-		// 7. CALCULATE AVAILABLE BALANCE
+		// 8. CALCULATE AVAILABLE BALANCE (MONTHLY)
 		// ============================================================================
-		availableBalance := totalIncome - totalExpenses - totalAssignedToGoals
+		// Available balance = income - expenses - net savings activity
+		//
+		// Example:
+		// - Income: $10,000
+		// - Expenses: $3,000
+		// - Saved this month: $2,000
+		// - Available: $10,000 - $3,000 - $2,000 = $5,000 ✓
+		//
+		// Next month (no activity):
+		// - Income: $0
+		// - Expenses: $0
+		// - Saved this month: $0
+		// - Available: $0 - $0 - $0 = $0 ✓ (not negative!)
+		availableBalance := totalIncome - totalExpenses - netSavingsActivity
 
 		// ============================================================================
 		// BUILD RESPONSE

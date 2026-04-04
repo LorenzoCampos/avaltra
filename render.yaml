@@ -13,7 +13,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ALLOWED_ORIGINS
-        value: https://bolsillo-claro.vercel.app
+        sync: false
       - key: ENV
         value: production
       - key: COOKIE_SECURE
@@ -21,7 +21,7 @@ services:
       - key: GIN_MODE
         value: release
       - key: FRONTEND_URL
-        value: https://bolsillo-claro.vercel.app
+        sync: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

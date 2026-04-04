@@ -70,21 +70,13 @@ export const useExport = () => {
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const totalSavingsDeposits = transactions
-      .filter(t => t.type === 'savings_deposit')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const totalSavingsWithdrawals = transactions
-      .filter(t => t.type === 'savings_withdrawal')
-      .reduce((sum, t) => sum + t.amount, 0);
-    
     const balance = totalIncomes - totalExpenses;
 
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
     
     // Main Balance
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(`Total Incomes: ${options.currency} ${totalIncomes.toFixed(2)}`, 14, 45);
     doc.text(`Total Expenses: ${options.currency} ${totalExpenses.toFixed(2)}`, 14, 51);
     doc.text(`Net Balance: ${options.currency} ${balance.toFixed(2)}`, 14, 57);

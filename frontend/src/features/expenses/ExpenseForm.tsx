@@ -66,8 +66,8 @@ export const ExpenseForm = () => {
       amount: 0,
       currency: defaultCurrency,
       date: defaultDate,
-      category_id: lastCategoryId,
-      family_member_id: null,
+      category_id: lastCategoryId ?? undefined,
+      family_member_id: undefined,
     },
     mode: 'onChange',
   });
@@ -91,8 +91,8 @@ export const ExpenseForm = () => {
       setValue('amount', expenseData.amount);
       setValue('currency', expenseData.currency);
       setValue('date', expenseData.date);
-      setValue('category_id', expenseData.category_id);
-      setValue('family_member_id', expenseData.family_member_id);
+      setValue('category_id', expenseData.category_id ?? undefined);
+      setValue('family_member_id', expenseData.family_member_id ?? undefined);
       
       // Load amount_in_primary_currency if it exists (for multi-currency expenses)
       // Set with a small delay to ensure the multi-currency field is rendered first
@@ -129,8 +129,6 @@ export const ExpenseForm = () => {
     const isSuccess = isEditing ? updateExpenseSuccess : createExpenseSuccess;
 
     if (isSuccess && redirectCountdown === null) {
-      const action = isEditing ? t('form.updated') : t('form.created');
-      
       toast.success(t(`form.success.${isEditing ? 'update' : 'create'}`), {
         description: t('form.success.redirecting'),
         duration: 3000,

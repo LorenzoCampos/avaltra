@@ -1,4 +1,5 @@
-import { Component, ReactNode } from 'react';
+import { Component } from 'react';
+import type { ReactNode } from 'react';
 import { Button } from './ui/Button';
 import { Card, CardContent } from './ui/Card';
 

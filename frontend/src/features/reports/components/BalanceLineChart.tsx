@@ -56,11 +56,6 @@ export const BalanceLineChart = ({ data, currency }: BalanceLineChartProps) => {
     return null;
   };
   
-  // Calculate min/max for better Y-axis scaling
-  const balances = data.map(d => d.balance);
-  const minBalance = Math.min(...balances);
-  const maxBalance = Math.max(...balances);
-  
   // Determine line color based on overall trend
   const startBalance = data[0]?.balance || 0;
   const endBalance = data[data.length - 1]?.balance || 0;

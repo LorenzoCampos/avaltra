@@ -63,7 +63,6 @@ export const useIncomes = (params?: IncomeListParams) => {
           date: newIncomeData.date,
           end_date: null,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         };
 
         queryClient.setQueryData<IncomeListResponse>(['incomes', activeAccountId], {

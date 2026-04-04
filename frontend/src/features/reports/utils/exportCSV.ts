@@ -5,7 +5,7 @@ import type { ReportData } from '@/types/report';
  */
 export const exportExpensesCategoryCSV = (
   data: ReportData,
-  currency: string
+  _currency: string
 ): void => {
   if (!data.expensesByCategory || data.expensesByCategory.length === 0) {
     alert('No expense data to export');
@@ -27,7 +27,7 @@ export const exportExpensesCategoryCSV = (
  */
 export const exportMonthlyComparisonCSV = (
   data: ReportData,
-  currency: string
+  _currency: string
 ): void => {
   if (!data.monthlyComparison || data.monthlyComparison.length === 0) {
     alert('No monthly data to export');
@@ -50,7 +50,7 @@ export const exportMonthlyComparisonCSV = (
  */
 export const exportBalanceEvolutionCSV = (
   data: ReportData,
-  currency: string
+  _currency: string
 ): void => {
   if (!data.balanceEvolution || data.balanceEvolution.length === 0) {
     alert('No balance data to export');

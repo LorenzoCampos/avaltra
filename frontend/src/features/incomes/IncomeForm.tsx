@@ -66,8 +66,8 @@ export const IncomeForm = () => {
       amount: 0,
       currency: defaultCurrency,
       date: defaultDate,
-      category_id: lastCategoryId,
-      family_member_id: null,
+      category_id: lastCategoryId ?? undefined,
+      family_member_id: undefined,
     },
     mode: 'onChange',
   });
@@ -91,8 +91,8 @@ export const IncomeForm = () => {
       setValue('amount', incomeData.amount);
       setValue('currency', incomeData.currency);
       setValue('date', incomeData.date);
-      setValue('category_id', incomeData.category_id);
-      setValue('family_member_id', incomeData.family_member_id);
+      setValue('category_id', incomeData.category_id ?? undefined);
+      setValue('family_member_id', incomeData.family_member_id ?? undefined);
       
       // Load amount_in_primary_currency if it exists (multi-currency)
       if (incomeData.amount_in_primary_currency !== null && 
@@ -127,8 +127,6 @@ export const IncomeForm = () => {
     const isSuccess = isEditing ? updateIncomeSuccess : createIncomeSuccess;
 
     if (isSuccess && redirectCountdown === null) {
-      const action = isEditing ? t('form.updated') : t('form.created');
-      
       toast.success(t(`form.success.${isEditing ? 'update' : 'create'}`), {
         description: t('form.success.redirecting'),
         duration: 3000,

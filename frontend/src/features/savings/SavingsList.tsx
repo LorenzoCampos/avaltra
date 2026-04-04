@@ -6,7 +6,7 @@ import { useAccountStore } from '@/stores/account.store';
 import { SavingsCard } from './components/SavingsCard';
 import { ContributionForm } from './components/ContributionForm';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { ListSkeleton } from '@/components/ui/Skeleton';
 import { PlusIcon, TrophyIcon } from 'lucide-react';
 import type { SavingsGoal, AddFundsRequest } from '@/types/savings';

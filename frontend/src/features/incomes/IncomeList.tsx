@@ -17,7 +17,7 @@ export const IncomeList = () => {
   const { incomes, isLoadingIncomes, incomesError, deleteIncome, isDeletingIncome } = useIncomes();
   const { data: familyMembers } = useFamilyMembers();
   const { data: categories } = useIncomeCategories();
-  const { deletingId, handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
+  const { handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
 
   const isFamilyAccount = activeAccount?.type === 'family';
 

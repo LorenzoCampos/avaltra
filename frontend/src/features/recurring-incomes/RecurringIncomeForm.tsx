@@ -36,7 +36,7 @@ const createRecurringIncomeSchema = (t: (key: string) => string) => z.object({
   end_date: z.string().nullable().optional(),
   total_occurrences: z.number().int().positive().nullable().optional(),
   amount_in_primary_currency: z.number().positive().nullable().optional(),
-  is_active: z.boolean().default(true),
+  is_active: z.boolean().optional(),
 }).refine((data) => {
   // If monthly or yearly, require day_of_month
   if ((data.recurrence_frequency === 'monthly' || data.recurrence_frequency === 'yearly') && 
@@ -68,7 +68,7 @@ export const RecurringIncomeForm = () => {
   const { activeAccount } = useAccountStore();
   const isEditing = !!id;
 
-  const { data: incomeData, isLoading: isLoadingIncome } = useRecurringIncome(id);
+  const { data: incomeData, isLoading: isLoadingIncome } = useRecurringIncome(id ?? '');
   const { data: categories, isLoading: isLoadingCategories } = useIncomeCategories();
   const { data: familyMembers, isLoading: isLoadingFamilyMembers } = useFamilyMembers();
   const { mutate: createIncome, isPending: isCreating, isSuccess: createSuccess } = useCreateRecurringIncome();
@@ -98,7 +98,6 @@ export const RecurringIncomeForm = () => {
   });
 
   const selectedFrequency = watch('recurrence_frequency');
-  const selectedInterval = watch('recurrence_interval');
   const selectedCurrency = watch('currency');
   const isActive = watch('is_active');
   const showMultiCurrencyFields = activeAccount && selectedCurrency !== activeAccount.currency;
@@ -108,7 +107,7 @@ export const RecurringIncomeForm = () => {
     if (isEditing && incomeData) {
       setValue('description', incomeData.description);
       setValue('amount', incomeData.amount);
-      setValue('currency', incomeData.currency);
+      setValue('currency', incomeData.currency as 'ARS' | 'USD' | 'EUR');
       setValue('category_id', incomeData.category_id);
       setValue('family_member_id', incomeData.family_member_id);
       setValue('recurrence_frequency', incomeData.recurrence_frequency);

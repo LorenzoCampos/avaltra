@@ -17,7 +17,7 @@ export const ExpenseList = () => {
   const { expenses, isLoadingExpenses, expensesError, deleteExpense, isDeletingExpense } = useExpenses();
   const { data: familyMembers } = useFamilyMembers();
   const { data: categories } = useExpenseCategories();
-  const { deletingId, handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
+  const { handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
 
   const isFamilyAccount = activeAccount?.type === 'family';
 

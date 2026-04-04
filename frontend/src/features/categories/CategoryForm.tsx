@@ -16,6 +16,7 @@ import {
   useUpdateExpenseCategory,
   useUpdateIncomeCategory,
 } from '@/hooks/useCategories';
+import type { CategoryType } from '@/types/category';
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
@@ -109,6 +110,7 @@ export const CategoryForm = () => {
       name: data.name,
       icon: data.icon && data.icon.trim() !== '' ? data.icon : undefined,
       color: data.color && data.color.trim() !== '' ? data.color : undefined,
+      type: (isExpense ? 'expense' : 'income') as CategoryType,
     };
 
     if (isEditing && id) {

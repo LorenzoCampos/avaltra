@@ -14,5 +14,5 @@ export const familyMemberSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }).optional().or(z.literal("")),
 });
 
-export type AccountType = z.infer<typeof ACCOUNT_TYPES[number]>;
-export type Currency = z.infer<typeof CURRENCIES[number]>;
+export type AccountType = typeof ACCOUNT_TYPES[number];
+export type Currency = typeof CURRENCIES[number];

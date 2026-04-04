@@ -17,7 +17,7 @@ import type { AccountData } from '../types';
 const createAccountSchema = z.object({
   name: z.string().min(3, 'validation.nameMinLength').min(1, 'validation.nameRequired'),
   currency: z.enum(['ARS', 'USD', 'EUR']),
-  type: z.enum(['personal', 'family']).default('personal'),
+  type: z.enum(['personal', 'family']),
 });
 
 type CreateAccountFormData = z.infer<typeof createAccountSchema>;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { Input } from './ui/Input';
+
 import type { FilterState } from '@/hooks/useFilters';
 
 interface FilterBarProps {

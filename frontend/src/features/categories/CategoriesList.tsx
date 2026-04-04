@@ -12,7 +12,7 @@ import { useDeleteAnimation } from '@/hooks/useDeleteAnimation';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { TableSkeleton } from '@/components/ui/Skeleton';
-import type { ExpenseCategory, IncomeCategory } from '@/types/category';
+
 
 export const CategoriesList = () => {
   const { t } = useTranslation('categories');
@@ -27,7 +27,7 @@ export const CategoriesList = () => {
   const { data: incomeData, isLoading: isLoadingIncomes, error: incomesError } = useIncomeCategories();
   const { mutate: deleteIncomeCategory, isPending: isDeletingIncome } = useDeleteIncomeCategory();
 
-  const { deletingId, handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
+  const { handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
 
   const expenseCategories = expenseData?.expense_categories || [];
   const incomeCategories = incomeData?.income_categories || [];

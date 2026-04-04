@@ -13,7 +13,7 @@ export const AccountList = () => {
   const navigate = useNavigate();
   const { accounts, isLoading, error, deleteAccount, isDeletingAccount } = useAccounts();
   const { setActiveAccount, activeAccountId } = useAccountStore();
-  const { deletingId, handleDelete, isDeleting } = useDeleteAnimation();
+  const { handleDelete, isDeleting } = useDeleteAnimation();
 
   const handleSetActiveAccount = (account: Account) => {
     setActiveAccount(account.id, account);

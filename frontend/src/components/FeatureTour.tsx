@@ -210,7 +210,7 @@ export const FeatureTour = () => {
                 console.log('[FeatureTour] ✅ Target found after opening menu:', target);
                 console.log('[FeatureTour] 📍 Element details:', {
                   tag: element.tagName,
-                  visible: element.offsetParent !== null,
+                  visible: (element as HTMLElement).offsetParent !== null,
                   rect: element.getBoundingClientRect()
                 });
               } else {
@@ -373,7 +373,7 @@ export const FeatureTour = () => {
     }
     
     // Track completion or skip
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+    if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(status)) {
       console.log('[FeatureTour] 🏁 Tour ending:', status);
       
       // Immediately stop the tour to prevent re-triggering

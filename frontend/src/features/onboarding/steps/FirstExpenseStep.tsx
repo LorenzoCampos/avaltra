@@ -16,7 +16,7 @@ import type { ExpenseData } from '../types';
 
 const firstExpenseSchema = z.object({
   description: z.string().min(1, 'validation.descriptionRequired'),
-  amount: z.coerce.number().positive('validation.amountPositive'),
+  amount: z.number().positive('validation.amountPositive'),
 });
 
 type FirstExpenseFormData = z.infer<typeof firstExpenseSchema>;

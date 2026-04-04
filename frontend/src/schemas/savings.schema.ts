@@ -8,7 +8,7 @@ export const createSavingsGoalSchema = z.object({
     .max(255, 'Name must be less than 255 characters')
     .trim(),
   target_amount: z
-    .number({ invalid_type_error: 'Target amount must be a number' })
+    .number({ error: () => 'Target amount must be a number' })
     .positive('Target amount must be greater than 0')
     .finite('Target amount must be a valid number'),
   description: z
@@ -29,8 +29,7 @@ export const createSavingsGoalSchema = z.object({
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return deadlineDate >= today;
-    }, 'Deadline must be a future date')
-    .transform((date) => date === '' ? undefined : date),
+    }, 'Deadline must be a future date'),
   saved_in: z
     .string()
     .max(255, 'Saved in must be less than 255 characters')
@@ -49,7 +48,7 @@ export const updateSavingsGoalSchema = z.object({
     .trim()
     .optional(),
   target_amount: z
-    .number({ invalid_type_error: 'Target amount must be a number' })
+    .number({ error: () => 'Target amount must be a number' })
     .positive('Target amount must be greater than 0')
     .finite('Target amount must be a valid number')
     .optional(),
@@ -83,7 +82,7 @@ export type UpdateSavingsGoalSchema = z.infer<typeof updateSavingsGoalSchema>;
 // Schema for adding funds
 export const addFundsSchema = z.object({
   amount: z
-    .number({ invalid_type_error: 'Amount must be a number' })
+    .number({ error: () => 'Amount must be a number' })
     .positive('Amount must be greater than 0')
     .finite('Amount must be a valid number'),
   description: z
@@ -102,7 +101,7 @@ export type AddFundsSchema = z.infer<typeof addFundsSchema>;
 // Schema for withdrawing funds
 export const withdrawFundsSchema = z.object({
   amount: z
-    .number({ invalid_type_error: 'Amount must be a number' })
+    .number({ error: () => 'Amount must be a number' })
     .positive('Amount must be greater than 0')
     .finite('Amount must be a valid number'),
   description: z

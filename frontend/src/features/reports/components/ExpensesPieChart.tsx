@@ -102,7 +102,7 @@ export const ExpensesPieChart = ({ data, currency }: ExpensesPieChartProps) => {
             <Legend 
               verticalAlign="bottom" 
               height={36}
-              formatter={(value, entry: any) => (
+              formatter={(value) => (
                 <span className="text-sm text-gray-700 dark:text-gray-300">
                   {value}
                 </span>

@@ -6,7 +6,8 @@
  * Sincroniza automáticamente entre estado de React y localStorage
  */
 
-import { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 /**
  * Hook para sincronizar un estado de React con localStorage

@@ -1,4 +1,4 @@
-import type { TransactionType } from './api'; // Assuming TransactionType is defined here as 'expense' | 'income'
+export type CategoryType = 'expense' | 'income';
 
 export interface BaseCategory {
   id: string;
@@ -16,7 +16,7 @@ export interface CreateCategoryRequest {
   name: string;
   icon?: string;
   color?: string;
-  type: TransactionType; // 'expense' or 'income'
+  type: CategoryType;
 }
 
 export interface UpdateCategoryRequest {

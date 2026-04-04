@@ -24,8 +24,8 @@ export interface CreateIncomeRequest {
   amount: number;
   currency: Currency;
   date: string; // YYYY-MM-DD
-  category_id?: string;
-  family_member_id?: string;
+  category_id?: string | null;
+  family_member_id?: string | null;
   income_type?: TransactionType; // Default: "one-time"
   end_date?: string;
   // Multi-Currency Modo 3 (preferido)
@@ -39,9 +39,9 @@ export interface UpdateIncomeRequest {
   amount?: number;
   currency?: Currency;
   date?: string;
-  category_id?: string | '';
-  family_member_id?: string | '';
-  end_date?: string | '';
+  category_id?: string | null;
+  family_member_id?: string | null;
+  end_date?: string | null;
   exchange_rate?: number;
   amount_in_primary_currency?: number;
 }

@@ -28,17 +28,17 @@ export interface RecurringIncomeFormData {
   description: string;
   amount: number;
   currency: string;
-  category_id?: string;
-  family_member_id?: string;
+  category_id?: string | null;
+  family_member_id?: string | null;
   recurrence_frequency: RecurrenceFrequency;
   recurrence_interval: number;
-  recurrence_day_of_month?: number;
-  recurrence_day_of_week?: number;
+  recurrence_day_of_month?: number | null;
+  recurrence_day_of_week?: number | null;
   start_date: string;
-  end_date?: string;
-  total_occurrences?: number;
-  amount_in_primary_currency?: number;
-  is_active?: boolean; // For Pause/Resume functionality
+  end_date?: string | null;
+  total_occurrences?: number | null;
+  amount_in_primary_currency?: number | null;
+  is_active?: boolean;
 }
 
 export interface RecurringIncomesListResponse {

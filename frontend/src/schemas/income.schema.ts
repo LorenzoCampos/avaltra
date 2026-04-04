@@ -10,6 +10,7 @@ export const incomeSchema = z.object({
   family_member_id: z.string().uuid("Invalid family member ID").nullable().optional(), // Nullable for no specific member
   exchange_rate: z.number().min(0.01, { message: "Exchange rate must be greater than 0" }).optional(),
   amount_in_primary_currency: z.number().min(0.01, { message: "Amount in primary currency must be greater than 0" }).optional(),
+  end_date: z.string().optional(),
 });
 
 export const updateIncomeSchema = incomeSchema.partial().extend({

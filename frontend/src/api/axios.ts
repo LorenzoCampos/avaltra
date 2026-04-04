@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth.store';
 
 // Configuración base
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://api.fakerbostero.online/bolsillo/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -13,7 +13,7 @@ export const api = axios.create({
 
 // Instancia separada para refresh (sin interceptors para evitar loops)
 const refreshApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://api.fakerbostero.online/bolsillo/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

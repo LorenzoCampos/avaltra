@@ -19,8 +19,8 @@ echo "============================================"
 # Directorio donde están las migraciones (dentro del contenedor)
 MIGRATIONS_DIR="/docker-entrypoint-initdb.d"
 
-# Ejecutar todas las migraciones .sql en orden numérico
-for migration in $(ls -1 ${MIGRATIONS_DIR}/*.sql 2>/dev/null | sort); do
+# Ejecutar todas las migraciones .up.sql en orden numérico
+for migration in $(ls -1 ${MIGRATIONS_DIR}/*.up.sql 2>/dev/null | sort); do
     echo "📄 Ejecutando: $(basename $migration)"
     
     # Ejecutar el archivo SQL

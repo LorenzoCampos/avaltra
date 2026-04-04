@@ -50,7 +50,7 @@ services:
     # Esto permite que accedas a Postgres desde tu máquina local en el puerto 5433
     # CAMBIAMOS a 5433 porque el 5432 ya está ocupado en tu máquina
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     
     # Volumen para PERSISTIR los datos
     # Si no hacés esto, cuando el contenedor se destruya, PERDÉS TODOS LOS DATOS
@@ -91,7 +91,7 @@ services:
     
     # Mapeo de puertos: tu API estará disponible en http://localhost:9090
     ports:
-      - "9090:8080"
+      - "127.0.0.1:9090:8080"
     
     # Variables de entorno que el backend necesita
     environment:
@@ -111,7 +111,7 @@ services:
       # CORS - permitir peticiones desde el frontend local Y desde la red local
       # localhost: para desarrollo en la misma máquina
       # 192.168.0.46: tu IP local (para acceder desde otros dispositivos en tu red)
-      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://192.168.0.46:5173,http://192.168.0.46:3000,http://192.168.0.46:9090,http://192.168.0.46:5173
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://192.168.0.46:5173,http://192.168.0.46:3000,http://192.168.0.46:9090,http://192.168.0.46:5173
     
     # DEPENDS_ON: El backend NO se va a levantar hasta que Postgres esté "healthy"
     # Esto evita errores de "no se puede conectar a la base de datos"

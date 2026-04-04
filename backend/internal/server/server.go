@@ -40,8 +40,8 @@ func New(cfg *config.Config, db *database.DB) *Server {
 
 	// Configuración de CORS
 	router.Use(cors.New(cors.Config{
-		// Aquí ponemos tus IPs locales explícitamente para asegurar que funcione
-		AllowOrigins:     []string{"http://localhost:5173", "http://192.168.0.46:5173"},
+		// Orígenes cargados desde configuración (env CORS_ALLOWED_ORIGINS)
+		AllowOrigins:     cfg.CORSAllowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Account-ID"},
 		ExposeHeaders:    []string{"Content-Length"},

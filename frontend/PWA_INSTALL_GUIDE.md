@@ -56,7 +56,7 @@ cd /home/devuser/projects/avaltra/frontend
 pnpm build
 
 # Subir dist/ a servidor con HTTPS
-# Ejemplo: https://bolsillo.tudominio.com
+# Ejemplo: https://avaltra.tudominio.com
 ```
 
 En producción, Chrome detecta automáticamente que es PWA y muestra el banner de instalación después de:

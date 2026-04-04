@@ -1,6 +1,6 @@
 # 📚 Avaltra - API Documentation
 
-**Base URL:** `https://api.fakerbostero.online/bolsillo/api`
+**Base URL:** `https://api.fakerbostero.online/avaltra/api`
 
 **Versión:** 1.0  
 **Última actualización:** 2026-01-15

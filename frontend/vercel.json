@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://avaltra-api.onrender.com/api/:path*"
+      "destination": "https://avaltra-api-gmte.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",

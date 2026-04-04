@@ -86,7 +86,7 @@ avaltra-frontend/
 - ✅ Sin archivos de config (v4 es automático)
 
 ### Axios
-- ✅ Base URL: `https://api.fakerbostero.online/bolsillo/api`
+- ✅ Base URL: `https://api.fakerbostero.online/avaltra/api`
 - ✅ Request interceptor: JWT + X-Account-ID automáticos
 - ✅ Response interceptor: Refresh token automático
 - ✅ Timeout: 10 segundos

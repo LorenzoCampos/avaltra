@@ -87,7 +87,7 @@ VITE_ENV=development
 
 ### `.env.production`
 ```env
-VITE_API_URL=https://api.fakerbostero.online/bolsillo/api
+VITE_API_URL=https://api.fakerbostero.online/avaltra/api
 VITE_ENV=production
 ```
 

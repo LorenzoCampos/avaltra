@@ -81,7 +81,7 @@ Avaltra responde tres preguntas fundamentales:
 - **Docker** - Containerización
 - **Apache 2.4** - Reverse proxy
 - **VPS Debian 12** - Servidor
-- **URL Producción**: https://api.fakerbostero.online/bolsillo
+- **URL Producción**: https://api.fakerbostero.online/avaltra
 
 ---
 

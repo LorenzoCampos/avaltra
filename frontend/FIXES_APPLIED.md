@@ -24,7 +24,7 @@ El refresh token usaba `axios.post()` (instancia base) en vez de una instancia s
 ```typescript
 // Instancia separada para refresh (sin interceptors para evitar loops)
 const refreshApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://api.fakerbostero.online/bolsillo/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://api.fakerbostero.online/avaltra/api',
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -61,7 +61,7 @@ El frontend apuntaba a producción por defecto.
 
 **Solución:**
 - Creado `.env.development` → `http://localhost:9090/api`
-- Creado `.env.production` → `https://api.fakerbostero.online/bolsillo/api`
+- Creado `.env.production` → `https://api.fakerbostero.online/avaltra/api`
 - Actualizado `.env` por defecto a desarrollo local
 
 **Archivos creados:**

@@ -392,7 +392,7 @@ Si necesitás cambiar alguna variable (ej: probar con otro account_id):
 Podés crear otro environment para producción:
 ```json
 {
-  "base_url": "https://api.fakerbostero.online/bolsillo/api"
+  "base_url": "https://api.fakerbostero.online/avaltra/api"
 }
 ```
 

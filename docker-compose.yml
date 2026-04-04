@@ -71,7 +71,7 @@ services:
     
     # Red interna de Docker (para que los servicios se comuniquen entre sí)
     networks:
-      - bolsillo-network
+      - avaltra-network
 
   # ==========================================================================
   # BACKEND - API en Go
@@ -121,7 +121,7 @@ services:
     
     # Red interna
     networks:
-      - bolsillo-network
+      - avaltra-network
     
     # Volumen para desarrollo: Mapea tu código local al contenedor
     # Esto permite hacer hot-reload (cambios en tiempo real)
@@ -143,5 +143,5 @@ volumes:
 # Docker crea una red interna donde los servicios pueden hablarse entre sí
 # usando sus nombres como DNS (ej: "postgres", "backend")
 networks:
-  bolsillo-network:
+  avaltra-network:
     driver: bridge  # Tipo de red (bridge es el estándar)

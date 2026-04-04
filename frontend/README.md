@@ -118,7 +118,7 @@ src/
 Create a `.env` file based on `.env.example`:
 
 ```env
-VITE_API_URL=https://api.fakerbostero.online/bolsillo/api
+VITE_API_URL=https://api.fakerbostero.online/avaltra/api
 VITE_ENV=production
 ```
 

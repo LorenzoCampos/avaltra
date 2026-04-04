@@ -32,7 +32,7 @@ github.com/google/uuid v1.6.0              // UUIDs
 - **Tamaño Imagen:** ~80MB (optimizada)
 - **Reverse Proxy:** Apache 2.4.66
 - **SSL:** Let's Encrypt (certbot)
-- **URL Producción:** https://api.fakerbostero.online/bolsillo
+- **URL Producción:** https://api.fakerbostero.online/avaltra
 
 ### Infraestructura
 - **VPS:** Debian 12
@@ -386,7 +386,7 @@ colors: {
 ### Producción (Futuro)
 - Build: `npm run build` → carpeta `dist/`
 - Servir con Apache/Nginx
-- URL: https://bolsillo.fakerbostero.online
+- URL: https://avaltra.fakerbostero.online
 - Assets optimizados (minificados, tree-shaken)
 
 ---

@@ -98,7 +98,7 @@ Primera versión completa y funcional del sistema.
 - Configuración de Apache como reverse proxy
 
 ### Deployment
-- Producción: https://api.fakerbostero.online/bolsillo
+- Producción: https://api.fakerbostero.online/avaltra
 - VPS Debian 12 configurado
 
 ---
@@ -127,7 +127,7 @@ Esta versión incluye todas las funcionalidades core necesarias para gestionar f
 ## 🔗 Links
 
 - [Repositorio GitHub](https://github.com/LorenzoCampos/avaltra)
-- [API Producción](https://api.fakerbostero.online/bolsillo)
+- [API Producción](https://api.fakerbostero.online/avaltra)
 - [Documentación API](./API.md)
 - [Guía de Features](./FEATURES.md)
 

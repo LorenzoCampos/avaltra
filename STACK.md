@@ -49,7 +49,7 @@ github.com/google/uuid v1.6.0              // UUIDs
 - **Tamaño imagen:** ~80MB optimizada
 - **Reverse Proxy:** Apache 2.4.66 con SSL (Let's Encrypt)
 - **VPS:** Debian 12
-- **URL Producción:** https://api.fakerbostero.online/bolsillo
+- **URL Producción:** https://api.fakerbostero.online/avaltra
 - **Puerto interno:** 8080
 - **DB:** PostgreSQL compartida (host.docker.internal)
 
@@ -439,14 +439,14 @@ psql -U postgres bolsillo_claro < backup.sql      # Restore
 - **Frontend:** Build estático servido por Apache
 - **DB:** PostgreSQL local en VPS
 - **Reverse Proxy:** Apache con SSL (Let's Encrypt)
-- **URL:** https://api.fakerbostero.online/bolsillo
+- **URL:** https://api.fakerbostero.online/avaltra
 
 ### Build de Producción
 
 ```bash
 # Backend
-docker build -t bolsillo-backend .
-docker run -d -p 8080:8080 --name bolsillo bolsillo-backend
+docker build -t avaltra-backend .
+docker run -d -p 8080:8080 --name avaltra avaltra-backend
 
 # Frontend
 cd frontend

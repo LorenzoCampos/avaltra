@@ -198,10 +198,10 @@ Por defecto, macOS no bloquea puertos salientes. Si tenés problemas, revisá "C
 ### Windows:
 ```powershell
 # Permitir puerto 9090
-netsh advfirewall firewall add rule name="Bolsillo Backend" dir=in action=allow protocol=TCP localport=9090
+netsh advfirewall firewall add rule name="Avaltra Backend" dir=in action=allow protocol=TCP localport=9090
 
 # Permitir puerto 5433
-netsh advfirewall firewall add rule name="Bolsillo Postgres" dir=in action=allow protocol=TCP localport=5433
+netsh advfirewall firewall add rule name="Avaltra Postgres" dir=in action=allow protocol=TCP localport=5433
 ```
 
 ---

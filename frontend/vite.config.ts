@@ -16,7 +16,7 @@ export default defineConfig({
       includeAssets: ['pwa-icon.svg'],
       manifest: {
         name: 'Avaltra',
-        short_name: 'Bolsillo',
+        short_name: 'Avaltra',
         description: 'Personal and family finance management',
         theme_color: '#3B82F6',
         background_color: '#ffffff',

@@ -136,9 +136,15 @@ func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 }
 
 // RateLimitAuth crea un rate limiter específico para endpoints de autenticación
-// Límite: 5 intentos cada 15 minutos (agresivo para prevenir brute-force)
-func RateLimitAuth() gin.HandlerFunc {
-	limiter := NewRateLimiter(5, 15*time.Minute)
+// Production: 5 intentos cada 15 minutos (agresivo para prevenir brute-force)
+// Development: 1000 intentos cada 1 minuto (prácticamente sin límite para testing)
+func RateLimitAuth(env string) gin.HandlerFunc {
+	if env == "production" {
+		limiter := NewRateLimiter(5, 15*time.Minute)
+		return limiter.Middleware()
+	}
+	// En development/staging: rate limit muy permisivo para testing
+	limiter := NewRateLimiter(1000, 1*time.Minute)
 	return limiter.Middleware()
 }
 

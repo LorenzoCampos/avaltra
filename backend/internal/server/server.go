@@ -96,7 +96,7 @@ func (s *Server) setupRoutes() {
 		// Rutas de autenticación (públicas - no requieren auth)
 		// Aplicamos rate limiting agresivo para prevenir brute-force attacks
 		authRoutes := api.Group("/auth")
-		authRoutes.Use(middleware.RateLimitAuth()) // 5 intentos cada 15 minutos
+		authRoutes.Use(middleware.RateLimitAuth(s.config.Env)) // production: 5/15min, dev: 1000/1min
 		{
 			authRoutes.POST("/register", authH.Register)
 			authRoutes.POST("/login", authH.Login)

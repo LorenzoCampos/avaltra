@@ -107,7 +107,7 @@ export const FirstExpenseStep = ({
                 step="0.01"
                 label={`${t('firstExpense.amountLabel')} (${currency})`}
                 placeholder={t('firstExpense.amountPlaceholder')}
-                {...register('amount')}
+                {...register('amount', { valueAsNumber: true })}
                 error={errors.amount?.message ? t(`firstExpense.${errors.amount.message}`) : undefined}
               />
             </div>

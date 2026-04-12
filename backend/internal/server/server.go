@@ -19,6 +19,7 @@ import (
 	savingsGoalsHandler "github.com/LorenzoCampos/avaltra/internal/handlers/savings_goals"
 	usersHandler "github.com/LorenzoCampos/avaltra/internal/handlers/users"
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/pkg/email"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -64,8 +65,17 @@ func New(cfg *config.Config, db *database.DB) *Server {
 
 // setupRoutes configura todas las rutas de la API
 func (s *Server) setupRoutes() {
+	// Crear email sender (LogSender en dev cuando SMTP_HOST está vacío, SMTPSender en prod)
+	emailSender := email.NewSender(
+		s.config.SMTPHost,
+		s.config.SMTPPort,
+		s.config.SMTPUser,
+		s.config.SMTPPass,
+		s.config.SMTPFrom,
+	)
+
 	// Crear handlers
-	authH := authHandler.NewHandler(s.db, s.config)
+	authH := authHandler.NewHandler(s.db, s.config, emailSender)
 	accountsH := accountsHandler.NewHandler(s.db)
 
 	// Crear middlewares
@@ -100,7 +110,11 @@ func (s *Server) setupRoutes() {
 		{
 			authRoutes.POST("/register", authH.Register)
 			authRoutes.POST("/login", authH.Login)
-			authRoutes.POST("/refresh", authH.Refresh) // Renovar tokens con refresh token
+			authRoutes.POST("/refresh", authH.Refresh)                        // Renovar tokens con refresh token
+			authRoutes.POST("/forgot-password", authH.ForgotPassword)         // Solicitar reset de contraseña
+			authRoutes.POST("/reset-password", authH.ResetPassword)           // Confirmar reset con token
+			authRoutes.POST("/verify-email", authH.VerifyEmail)               // Verificar email con token
+			authRoutes.POST("/resend-verification", authH.ResendVerification) // Reenviar email de verificación
 		}
 
 		// Rutas de usuarios (protegidas - requieren auth)

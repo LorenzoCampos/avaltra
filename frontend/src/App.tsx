@@ -3,6 +3,9 @@ import { Toaster } from 'sonner';
 
 import { Login } from '@/features/auth/Login';
 import { Register } from '@/features/auth/Register';
+import { ForgotPassword } from '@/features/auth/ForgotPassword';
+import { ResetPassword } from '@/features/auth/ResetPassword';
+import { VerifyEmail } from '@/features/auth/VerifyEmail';
 import { Dashboard } from '@/features/dashboard/Dashboard';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from '@/components/Layout';
@@ -63,6 +66,9 @@ function App() {
               )
             }
           />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>

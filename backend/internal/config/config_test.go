@@ -142,3 +142,60 @@ func TestLoad_JWTSecretPresent(t *testing.T) {
 		t.Error("Load() returned nil config, want non-nil")
 	}
 }
+
+func TestLoad_SMTPFieldsFromEnv(t *testing.T) {
+	t.Setenv("JWT_SECRET", "test-secret")
+	t.Setenv("SMTP_HOST", "smtp.example.com")
+	t.Setenv("SMTP_PORT", "587")
+	t.Setenv("SMTP_USER", "user@example.com")
+	t.Setenv("SMTP_PASS", "secret-pass")
+	t.Setenv("SMTP_FROM", "noreply@example.com")
+	t.Setenv("FRONTEND_URL", "https://app.example.com")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() returned unexpected error: %v", err)
+	}
+
+	if cfg.SMTPHost != "smtp.example.com" {
+		t.Errorf("SMTPHost = %q, want %q", cfg.SMTPHost, "smtp.example.com")
+	}
+	if cfg.SMTPPort != "587" {
+		t.Errorf("SMTPPort = %q, want %q", cfg.SMTPPort, "587")
+	}
+	if cfg.SMTPUser != "user@example.com" {
+		t.Errorf("SMTPUser = %q, want %q", cfg.SMTPUser, "user@example.com")
+	}
+	if cfg.SMTPPass != "secret-pass" {
+		t.Errorf("SMTPPass = %q, want %q", cfg.SMTPPass, "secret-pass")
+	}
+	if cfg.SMTPFrom != "noreply@example.com" {
+		t.Errorf("SMTPFrom = %q, want %q", cfg.SMTPFrom, "noreply@example.com")
+	}
+	if cfg.FrontendURL != "https://app.example.com" {
+		t.Errorf("FrontendURL = %q, want %q", cfg.FrontendURL, "https://app.example.com")
+	}
+}
+
+func TestLoad_SMTPFieldsDefaultEmpty(t *testing.T) {
+	t.Setenv("JWT_SECRET", "test-secret")
+	// SMTP fields not set — should default to empty string (disabled)
+	t.Setenv("SMTP_HOST", "")
+	t.Setenv("SMTP_PORT", "")
+	t.Setenv("SMTP_USER", "")
+	t.Setenv("SMTP_PASS", "")
+	t.Setenv("SMTP_FROM", "")
+	t.Setenv("FRONTEND_URL", "")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() returned unexpected error: %v", err)
+	}
+
+	if cfg.SMTPHost != "" {
+		t.Errorf("SMTPHost = %q, want empty string (disabled)", cfg.SMTPHost)
+	}
+	if cfg.FrontendURL != "" {
+		t.Errorf("FrontendURL = %q, want empty string", cfg.FrontendURL)
+	}
+}

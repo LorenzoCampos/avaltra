@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifica tu email - Avaltra</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
+          <!-- Header -->
+          <tr>
+            <td style="background-color:#18181b;padding:32px 40px;">
+              <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Avaltra</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px;">
+              <h2 style="margin:0 0 16px;color:#18181b;font-size:20px;font-weight:600;">
+                Hola, {{.Name}}
+              </h2>
+              <p style="margin:0 0 24px;color:#52525b;font-size:16px;line-height:1.6;">
+                Gracias por registrarte en Avaltra. Para completar tu registro y activar tu cuenta, 
+                necesitás verificar tu dirección de email.
+              </p>
+              <p style="margin:0 0 32px;color:#52525b;font-size:16px;line-height:1.6;">
+                Hacé clic en el botón de abajo para verificar tu email:
+              </p>
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-radius:6px;background-color:#18181b;">
+                    <a href="{{.Link}}" 
+                       style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:6px;">
+                      Verificar mi email
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:32px 0 0;color:#71717a;font-size:14px;line-height:1.6;">
+                Este enlace expira en <strong>24 horas</strong>. Si no creaste una cuenta en Avaltra, 
+                podés ignorar este email con seguridad.
+              </p>
+              <p style="margin:16px 0 0;color:#71717a;font-size:14px;line-height:1.6;">
+                Si el botón no funciona, copiá y pegá este enlace en tu navegador:<br>
+                <a href="{{.Link}}" style="color:#18181b;word-break:break-all;">{{.Link}}</a>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;border-top:1px solid #e4e4e7;">
+              <p style="margin:0;color:#a1a1aa;font-size:13px;">
+                © 2024 Avaltra. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

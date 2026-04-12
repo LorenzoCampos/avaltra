@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/LorenzoCampos/avaltra/internal/config"
 	"github.com/LorenzoCampos/avaltra/internal/database"
 	"github.com/LorenzoCampos/avaltra/pkg/auth"
+	"github.com/LorenzoCampos/avaltra/pkg/email"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -30,15 +32,17 @@ type RegisterResponse struct {
 
 // Handler encapsula las dependencias necesarias para los handlers de auth
 type Handler struct {
-	db     *database.DB
-	config *config.Config
+	db          *database.DB
+	config      *config.Config
+	emailSender email.Sender
 }
 
 // NewHandler crea una nueva instancia del handler de auth
-func NewHandler(db *database.DB, cfg *config.Config) *Handler {
+func NewHandler(db *database.DB, cfg *config.Config, emailSender email.Sender) *Handler {
 	return &Handler{
-		db:     db,
-		config: cfg,
+		db:          db,
+		config:      cfg,
+		emailSender: emailSender,
 	}
 }
 
@@ -152,6 +156,40 @@ func (h *Handler) Register(c *gin.Context) {
 
 	// Log de registro exitoso
 	logger.LogRegisterSuccess(userID.String(), req.Email, c.ClientIP())
+
+	// Enviar email de verificación en goroutine (fire and forget — no bloquea la respuesta)
+	// Usamos context.Background() porque ctx se cancela cuando la respuesta HTTP es enviada
+	bgCtx := context.Background()
+	go func() {
+		rawToken, hashedToken, err := auth.GenerateToken()
+		if err != nil {
+			logger.Error("auth.register.token_error", "Error generando token de verificación", map[string]interface{}{
+				"user_id": userID.String(),
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		insertTokenQuery := `
+			INSERT INTO email_tokens (user_id, token_hash, token_type, expires_at)
+			VALUES ($1, $2, 'verification', NOW() + INTERVAL '24 hours')
+		`
+		if _, err := h.db.Pool.Exec(bgCtx, insertTokenQuery, userID.String(), hashedToken); err != nil {
+			logger.Error("auth.register.insert_token_error", "Error insertando token de verificación", map[string]interface{}{
+				"user_id": userID.String(),
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		if err := h.emailSender.SendVerificationEmail(req.Email, rawToken, h.config.FrontendURL); err != nil {
+			logger.Error("auth.register.email_error", "Error enviando email de verificación", map[string]interface{}{
+				"user_id": userID.String(),
+				"email":   req.Email,
+				"error":   err.Error(),
+			})
+		}
+	}()
 
 	// Retornar el usuario creado CON tokens (auto-login)
 	c.JSON(http.StatusCreated, LoginResponse{

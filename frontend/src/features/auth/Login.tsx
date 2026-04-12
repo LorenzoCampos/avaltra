@@ -64,13 +64,23 @@ export const Login = () => {
                 {...register('email')}
               />
 
-              <Input
-                label={t('login.password')}
-                type="password"
-                placeholder="••••••••"
-                error={errors.password?.message}
-                {...register('password')}
-              />
+              <div>
+                <Input
+                  label={t('login.password')}
+                  type="password"
+                  placeholder="••••••••"
+                  error={errors.password?.message}
+                  {...register('password')}
+                />
+                <div className="mt-1 text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+                  >
+                    {t('login.forgotPassword')}
+                  </Link>
+                </div>
+              </div>
 
               <Button
                 type="submit"

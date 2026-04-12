@@ -107,3 +107,25 @@ func TestSMTPSender_HasCorrectFields(t *testing.T) {
 		t.Errorf("from = %q, want %q", s.from, "noreply@example.com")
 	}
 }
+
+// TestExtractEmail verifies that extractEmail correctly parses "Name <email>" format.
+func TestExtractEmail(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"Avaltra <noreply@example.com>", "noreply@example.com"},
+		{"noreply@example.com", "noreply@example.com"},
+		{"Support Team <support@avaltra.app>", "support@avaltra.app"},
+		{"<bare@example.com>", "bare@example.com"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got := extractEmail(tt.input)
+			if got != tt.expected {
+				t.Errorf("extractEmail(%q) = %q, want %q", tt.input, got, tt.expected)
+			}
+		})
+	}
+}

@@ -117,6 +117,54 @@
     "noInactive": "Sin {{entity}} Inactivos",
     "noInactiveDescription": "No tenés {{entity}} desactivados"
   },
+  "emptyState": {
+    "expenses": {
+      "title": "Sin gastos todavía",
+      "description": "Empezá a registrar tus gastos para tener control de tu dinero",
+      "action": "+ Agregar Gasto"
+    },
+    "incomes": {
+      "title": "Sin ingresos registrados",
+      "description": "Registrá tus fuentes de ingreso para tener una visión completa de tus finanzas",
+      "action": "+ Agregar Ingreso"
+    },
+    "accounts": {
+      "title": "Creá tu primera cuenta",
+      "description": "Las cuentas te ayudan a organizar tu dinero por billetera, banco, etc.",
+      "action": "+ Crear Cuenta"
+    },
+    "categories": {
+      "title": "Sin categorías todavía",
+      "description": "Las categorías te ayudan a clasificar y analizar tus gastos e ingresos",
+      "action": "+ Crear Categoría"
+    },
+    "savings": {
+      "title": "Sin metas de ahorro",
+      "description": "Creá una meta de ahorro para empezar a guardar plata para lo que querés",
+      "action": "+ Crear Meta"
+    },
+    "recurring": {
+      "title": "Sin gastos recurrentes",
+      "description": "Agregá tus gastos fijos como Netflix, Spotify o alquiler para no olvidarte de ninguno",
+      "action": "+ Agregar Recurrente"
+    },
+    "recurringIncomes": {
+      "title": "Sin ingresos recurrentes",
+      "description": "Agregá tu sueldo u otros ingresos fijos para un mejor seguimiento",
+      "action": "+ Agregar Recurrente"
+    },
+    "search": {
+      "title": "Sin resultados",
+      "titleWithQuery": "Sin resultados para \"{{query}}\"",
+      "description": "Probá ajustando la búsqueda o los filtros",
+      "action": "Limpiar Filtros"
+    },
+    "activity": {
+      "title": "Sin actividad reciente",
+      "description": "Agregá gastos o ingresos para ver tu historial de transacciones",
+      "action": "+ Agregar Transacción"
+    }
+  },
   "multiCurrency": {
     "title": "Transacción Multi-Moneda",
     "expenseDescription": "Como estás gastando en {{currency}} pero tu cuenta está en {{accountCurrency}}, podés especificar el monto exacto debitado de tu cuenta (incluyendo impuestos/tasas).",

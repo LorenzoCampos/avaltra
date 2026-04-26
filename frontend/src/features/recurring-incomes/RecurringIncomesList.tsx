@@ -8,6 +8,7 @@ import { useAccountStore } from '@/stores/account.store';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { TableSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { RecurringIncome, RecurrenceFrequency } from '@/types/recurringIncome';
 
 // This will be moved inside component to access t()
@@ -272,21 +273,28 @@ export const RecurringIncomesList = () => {
 
       {recurringIncomes.length === 0 ? (
         <Card>
-          <CardContent className="py-20 text-center">
-            <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-              {activeFilter === 'false' ? t('common:empty.noInactive', { entity: t('incomes.title') }) : t('incomes.list.empty')}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {activeFilter === 'false' 
-                ? t('common:empty.noInactiveDescription', { entity: t('incomes.title') })
-                : t('incomes.list.emptyDescription')
+          <CardContent>
+            <EmptyState
+              icon="💵"
+              title={
+                activeFilter === 'false'
+                  ? t('common:empty.noInactive', { entity: t('incomes.title') })
+                  : t('common:emptyState.recurringIncomes.title')
               }
-            </p>
-            {activeFilter !== 'false' && (
-              <Button onClick={() => navigate('/incomes/recurring/new')}>
-                {t('incomes.list.addFirst')}
-              </Button>
-            )}
+              description={
+                activeFilter === 'false'
+                  ? t('common:empty.noInactiveDescription', { entity: t('incomes.title') })
+                  : t('common:emptyState.recurringIncomes.description')
+              }
+              action={
+                activeFilter !== 'false'
+                  ? {
+                      label: t('common:emptyState.recurringIncomes.action'),
+                      onClick: () => navigate('/incomes/recurring/new'),
+                    }
+                  : undefined
+              }
+            />
           </CardContent>
         </Card>
       ) : (

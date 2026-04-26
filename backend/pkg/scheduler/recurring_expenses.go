@@ -5,29 +5,30 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/LorenzoCampos/avaltra/pkg/recurrence"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // RecurringExpenseTemplate representa un template activo que puede generar gastos
 type RecurringExpenseTemplate struct {
-	ID                        string
-	AccountID                 string
-	Description               string
-	Amount                    float64
-	Currency                  string
-	CategoryID                *string
-	FamilyMemberID            *string
-	RecurrenceFrequency       string
-	RecurrenceInterval        int
-	RecurrenceDayOfMonth      *int
-	RecurrenceDayOfWeek       *int
-	StartDate                 time.Time
-	EndDate                   *time.Time
-	TotalOccurrences          *int
-	CurrentOccurrence         int
-	ExchangeRate              *float64
-	AmountInPrimaryCurrency   *float64
+	ID                      string
+	AccountID               string
+	Description             string
+	Amount                  float64
+	Currency                string
+	CategoryID              *string
+	FamilyMemberID          *string
+	RecurrenceFrequency     string
+	RecurrenceInterval      int
+	RecurrenceDayOfMonth    *int
+	RecurrenceDayOfWeek     *int
+	StartDate               time.Time
+	EndDate                 *time.Time
+	TotalOccurrences        *int
+	CurrentOccurrence       int
+	ExchangeRate            *float64
+	AmountInPrimaryCurrency *float64
 }
 
 // GenerateDailyRecurringExpenses genera gastos recurrentes para el día de hoy
@@ -225,72 +226,20 @@ func getTemplatesForToday(pool *pgxpool.Pool, ctx context.Context, today time.Ti
 
 // shouldGenerateToday determina si un template debe generar un gasto HOY
 func shouldGenerateToday(t RecurringExpenseTemplate, today time.Time) bool {
-	switch t.RecurrenceFrequency {
-	case "daily":
-		// Daily: genera todos los días (respetando interval)
-		daysSinceStart := int(today.Sub(t.StartDate).Hours() / 24)
-		return daysSinceStart%t.RecurrenceInterval == 0
+	return recurrence.ShouldOccurOnDate(toRecurrenceTemplate(t), today)
+}
 
-	case "weekly":
-		// Weekly: solo si hoy es el día de semana configurado
-		if t.RecurrenceDayOfWeek == nil {
-			return false
-		}
-		weekday := int(today.Weekday()) // 0=Sunday, 6=Saturday
-		if weekday != *t.RecurrenceDayOfWeek {
-			return false
-		}
-		// Verificar interval (cada N semanas)
-		weeksSinceStart := int(today.Sub(t.StartDate).Hours() / (24 * 7))
-		return weeksSinceStart%t.RecurrenceInterval == 0
-
-	case "monthly":
-		// Monthly: solo si hoy es el día del mes configurado
-		if t.RecurrenceDayOfMonth == nil {
-			return false
-		}
-		
-		// Edge case: día 31 en meses cortos → último día del mes
-		targetDay := *t.RecurrenceDayOfMonth
-		lastDayOfMonth := time.Date(today.Year(), today.Month()+1, 0, 0, 0, 0, 0, time.UTC).Day()
-		if targetDay > lastDayOfMonth {
-			targetDay = lastDayOfMonth
-		}
-
-		if today.Day() != targetDay {
-			return false
-		}
-
-		// Verificar interval (cada N meses)
-		monthsSinceStart := (today.Year()-t.StartDate.Year())*12 + int(today.Month()-t.StartDate.Month())
-		return monthsSinceStart%t.RecurrenceInterval == 0
-
-	case "yearly":
-		// Yearly: solo si hoy es el mismo día/mes que start_date
-		if t.RecurrenceDayOfMonth == nil {
-			return false
-		}
-		if today.Month() != t.StartDate.Month() {
-			return false
-		}
-
-		// Edge case: 29 de febrero en años no bisiestos → 28 de febrero
-		targetDay := *t.RecurrenceDayOfMonth
-		lastDayOfMonth := time.Date(today.Year(), today.Month()+1, 0, 0, 0, 0, 0, time.UTC).Day()
-		if targetDay > lastDayOfMonth {
-			targetDay = lastDayOfMonth
-		}
-
-		if today.Day() != targetDay {
-			return false
-		}
-
-		// Verificar interval (cada N años)
-		yearsSinceStart := today.Year() - t.StartDate.Year()
-		return yearsSinceStart%t.RecurrenceInterval == 0
-
-	default:
-		return false
+func toRecurrenceTemplate(t RecurringExpenseTemplate) recurrence.Template {
+	return recurrence.Template{
+		IsActive:             true,
+		RecurrenceFrequency:  t.RecurrenceFrequency,
+		RecurrenceInterval:   t.RecurrenceInterval,
+		RecurrenceDayOfMonth: t.RecurrenceDayOfMonth,
+		RecurrenceDayOfWeek:  t.RecurrenceDayOfWeek,
+		StartDate:            t.StartDate,
+		EndDate:              t.EndDate,
+		TotalOccurrences:     t.TotalOccurrences,
+		CurrentOccurrence:    t.CurrentOccurrence,
 	}
 }
 

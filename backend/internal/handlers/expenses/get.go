@@ -38,7 +38,7 @@ func GetExpense(db *pgxpool.Pool) gin.HandlerFunc {
 			       e.expense_type, e.date, e.end_date, e.created_at
 			FROM expenses e
 			LEFT JOIN expense_categories ec ON e.category_id = ec.id
-			WHERE e.id = $1 AND e.account_id = $2
+			WHERE e.id = $1 AND e.account_id = $2 AND e.deleted_at IS NULL
 		`
 
 		err := db.QueryRow(c.Request.Context(), query, expenseID, accountID).Scan(

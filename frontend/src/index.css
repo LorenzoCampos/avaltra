@@ -106,6 +106,56 @@ body {
   }
 }
 
+/* Fast enter - Para feedback localizado */
+@keyframes feedbackEnterFast {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fast exit - Para delete ligero */
+@keyframes feedbackExitFast {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+/* Success flash - Para create */
+@keyframes feedbackFlashSuccess {
+  0% {
+    background-color: transparent;
+  }
+  20% {
+    background-color: color-mix(in srgb, #22c55e 14%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* Update flash - Para update */
+@keyframes feedbackFlashUpdate {
+  0% {
+    background-color: transparent;
+  }
+  20% {
+    background-color: color-mix(in srgb, #f59e0b 14%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
 /* Bounce In - Para success states en onboarding */
 @keyframes bounceIn {
   0% {
@@ -172,6 +222,24 @@ body {
   animation: slideInRight 0.4s ease-out forwards;
 }
 
+.animate-feedback-enter-fast {
+  animation: feedbackEnterFast 0.18s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+.animate-feedback-exit-fast {
+  animation: feedbackExitFast 0.18s ease-in forwards;
+  will-change: transform, opacity;
+}
+
+.feedback-flash-success {
+  animation: feedbackFlashSuccess 0.8s ease-out;
+}
+
+.feedback-flash-update {
+  animation: feedbackFlashUpdate 0.8s ease-out;
+}
+
 /* Staggered animations - add delay classes */
 .animation-delay-100 {
   animation-delay: 100ms;
@@ -209,4 +277,47 @@ body {
 
 .transition-transform-smooth {
   transition: transform 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-slide-down,
+  .animate-slide-out-left,
+  .animate-scale-in,
+  .animate-bounce-in,
+  .animate-slide-in-right,
+  .animate-feedback-enter-fast,
+  .animate-feedback-exit-fast,
+  .animate-pulse-subtle {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .feedback-flash-success,
+  .feedback-flash-update {
+    animation: none !important;
+    transition: background-color 0.16s ease-out;
+  }
+
+  .feedback-flash-success {
+    background-color: color-mix(in srgb, #22c55e 12%, transparent);
+  }
+
+  .feedback-flash-update {
+    background-color: color-mix(in srgb, #f59e0b 12%, transparent);
+  }
+
+  .transition-smooth,
+  .transition-transform-smooth {
+    transition-duration: 0.01ms !important;
+  }
+
+  .transition-colors-smooth {
+    transition-duration: 0.12s !important;
+  }
 }

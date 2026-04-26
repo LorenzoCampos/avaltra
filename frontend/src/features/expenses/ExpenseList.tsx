@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Copy } from 'lucide-react';
+import { toast } from 'sonner';
 import { useExpenses, useFamilyMembers, useExpenseCategories } from '@/hooks/useExpenses';
 import { useDeleteAnimation } from '@/hooks/useDeleteAnimation';
 import { useAccountStore } from '@/stores/account.store';
@@ -9,15 +10,19 @@ import { FilterBar } from '@/components/FilterBar';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { TableSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { useActionFeedback } from '@/hooks/useActionFeedback';
+import { cn } from '@/lib/utils';
 
 export const ExpenseList = () => {
   const { t } = useTranslation('expenses');
   const navigate = useNavigate();
   const { activeAccount } = useAccountStore();
-  const { expenses, isLoadingExpenses, expensesError, deleteExpense, isDeletingExpense } = useExpenses();
+  const { expenses, isLoadingExpenses, expensesError, deleteExpenseAsync, restoreExpenseAsync, isDeletingExpense, isRestoringExpense } = useExpenses();
   const { data: familyMembers } = useFamilyMembers();
   const { data: categories } = useExpenseCategories();
   const { handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
+  const { getFeedbackClassName } = useActionFeedback();
 
   const isFamilyAccount = activeAccount?.type === 'family';
 
@@ -55,11 +60,31 @@ export const ExpenseList = () => {
     });
   };
 
-  const handleDelete = (e: React.MouseEvent, expenseId: string, description: string) => {
+  const handleDelete = (e: React.MouseEvent, expense: any) => {
     e.stopPropagation();
-    if (window.confirm(t('list.confirmDelete', { description }))) {
-      handleDeleteWithAnimation(expenseId, () => deleteExpense(expenseId));
-    }
+
+    handleDeleteWithAnimation(expense.id, async () => {
+      await deleteExpenseAsync(expense.id);
+
+      const toastId = toast.success(t('list.toast.deleted', { description: expense.description }), {
+        duration: 5000,
+        action: {
+          label: t('list.toast.undo'),
+          onClick: async () => {
+            try {
+              await restoreExpenseAsync(expense);
+              toast.success(t('list.toast.restored', { description: expense.description }));
+            } catch (error) {
+              toast.error(t('list.toast.restoreError'), {
+                description: (error as any)?.response?.data?.error || (error as Error).message,
+              });
+            } finally {
+              toast.dismiss(toastId);
+            }
+          },
+        },
+      });
+    });
   };
 
   if (!activeAccount) {
@@ -144,12 +169,16 @@ export const ExpenseList = () => {
 
       {expenses.length === 0 ? (
         <Card>
-          <CardContent className="py-20 text-center">
-            <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">{t('list.empty.title')}</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">{t('list.empty.description')}</p>
-            <Button onClick={() => navigate('/expenses/new')}>
-              {t('list.empty.button')}
-            </Button>
+          <CardContent>
+            <EmptyState
+              icon="📝"
+              title={t('common:emptyState.expenses.title')}
+              description={t('common:emptyState.expenses.description')}
+              action={{
+                label: t('common:emptyState.expenses.action'),
+                onClick: () => navigate('/expenses/new'),
+              }}
+            />
           </CardContent>
         </Card>
       ) : (
@@ -167,15 +196,18 @@ export const ExpenseList = () => {
             </CardHeader>
             <CardContent>
               {filteredExpenses.length === 0 ? (
-                <div className="py-10 text-center">
-                  <p className="text-gray-500 dark:text-gray-400">{t('list.noMatch')}</p>
-                  <button
-                    onClick={clearFilters}
-                    className="mt-4 text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {t('list.clearFilters')}
-                  </button>
-                </div>
+                <EmptyState
+                  icon="🔍"
+                  title={filters.searchText 
+                    ? t('common:emptyState.search.titleWithQuery', { query: filters.searchText })
+                    : t('common:emptyState.search.title')
+                  }
+                  description={t('common:emptyState.search.description')}
+                  action={{
+                    label: t('common:emptyState.search.action'),
+                    onClick: clearFilters,
+                  }}
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -204,14 +236,13 @@ export const ExpenseList = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {filteredExpenses.map((expense, index) => (
+                      {filteredExpenses.map((expense) => (
                       <tr 
                         key={expense.id} 
-                        className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                          isDeleting(expense.id) ? 'animate-slide-out-left' : 'animate-slide-up'
-                        } ${
-                          index < 5 ? `animation-delay-${index * 100}` : ''
-                        }`}
+                        className={cn(
+                          'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors-smooth',
+                          isDeleting(expense.id) ? 'animate-feedback-exit-fast' : getFeedbackClassName(expense.id)
+                        )}
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                           {expense.date}
@@ -245,9 +276,9 @@ export const ExpenseList = () => {
                             <Copy className="w-4 h-4 inline" />
                           </button>
                           <button
-                            onClick={(e) => handleDelete(e, expense.id, expense.description)}
+                            onClick={(e) => handleDelete(e, expense)}
                             className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors disabled:opacity-50"
-                            disabled={isDeletingExpense}
+                            disabled={isDeletingExpense || isRestoringExpense}
                           >
                             {t('list.actions.delete')}
                           </button>
@@ -273,24 +304,30 @@ export const ExpenseList = () => {
               </h2>
             </div>
             {filteredExpenses.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                <p className="text-gray-500 dark:text-gray-400 mb-4">{t('list.noMatch')}</p>
-                <button
-                  onClick={clearFilters}
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  {t('list.clearFilters')}
-                </button>
-              </div>
+              <Card>
+                <CardContent>
+                  <EmptyState
+                    icon="🔍"
+                    title={filters.searchText 
+                      ? t('common:emptyState.search.titleWithQuery', { query: filters.searchText })
+                      : t('common:emptyState.search.title')
+                    }
+                    description={t('common:emptyState.search.description')}
+                    action={{
+                      label: t('common:emptyState.search.action'),
+                      onClick: clearFilters,
+                    }}
+                  />
+                </CardContent>
+              </Card>
             ) : (
-              filteredExpenses.map((expense, index) => (
+              filteredExpenses.map((expense) => (
               <div
                 key={expense.id}
-                className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm ${
-                  isDeleting(expense.id) ? 'animate-slide-out-left' : 'animate-slide-up'
-                } ${
-                  index < 5 ? `animation-delay-${index * 100}` : ''
-                }`}
+                className={cn(
+                  'bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm transition-colors-smooth',
+                  isDeleting(expense.id) ? 'animate-feedback-exit-fast' : getFeedbackClassName(expense.id)
+                )}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
@@ -333,9 +370,9 @@ export const ExpenseList = () => {
                     {t('list.actions.duplicate')}
                   </button>
                   <button
-                    onClick={(e) => handleDelete(e, expense.id, expense.description)}
+                    onClick={(e) => handleDelete(e, expense)}
                     className="flex-1 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors disabled:opacity-50"
-                    disabled={isDeletingExpense}
+                    disabled={isDeletingExpense || isRestoringExpense}
                   >
                     {t('list.actions.delete')}
                   </button>

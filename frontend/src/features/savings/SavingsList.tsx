@@ -7,8 +7,9 @@ import { SavingsCard } from './components/SavingsCard';
 import { ContributionForm } from './components/ContributionForm';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ListSkeleton } from '@/components/ui/Skeleton';
-import { PlusIcon, TrophyIcon } from 'lucide-react';
+import { PlusIcon } from 'lucide-react';
 import type { SavingsGoal, AddFundsRequest } from '@/types/savings';
 
 export const SavingsList = () => {
@@ -203,18 +204,16 @@ export const SavingsList = () => {
         <>
           {savingsGoals.length === 0 ? (
             <Card className="animate-slide-up animation-delay-200">
-              <CardContent className="py-16 text-center">
-                <TrophyIcon className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-                  {t('list.noGoals')}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  {t('list.noGoalsDescription')}
-                </p>
-                <Button onClick={() => navigate('/savings/new')} className="flex items-center gap-2 mx-auto">
-                  <PlusIcon className="w-5 h-5" />
-                  {t('list.createFirstGoal')}
-                </Button>
+              <CardContent>
+                <EmptyState
+                  icon="🎯"
+                  title={t('common:emptyState.savings.title')}
+                  description={t('common:emptyState.savings.description')}
+                  action={{
+                    label: t('common:emptyState.savings.action'),
+                    onClick: () => navigate('/savings/new'),
+                  }}
+                />
               </CardContent>
             </Card>
           ) : (

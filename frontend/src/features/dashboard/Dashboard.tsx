@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { QuickAddExpenseFAB } from '@/components/QuickAddExpenseFAB';
 import { InfoTooltip } from '@/components/InfoTooltip';
+import { InsightsCard } from './InsightsCard';
 import type { Currency } from '@/schemas/account.schema';
 
 export const Dashboard = () => {
@@ -190,6 +191,10 @@ export const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+      </FeatureErrorBoundary>
+
+      <FeatureErrorBoundary featureName="Monthly Insights">
+        <InsightsCard />
       </FeatureErrorBoundary>
 
       {/* Quick Actions - Hidden but exists for tour */}

@@ -60,7 +60,12 @@
     "filteredShort": "Filtered ({{filtered}}/{{total}})",
     "noMatch": "No expenses match your filters",
     "clearFilters": "Clear filters",
-    "confirmDelete": "Are you sure you want to delete \"{{description}}\"?",
+    "toast": {
+      "deleted": "\"{{description}}\" deleted",
+      "restored": "\"{{description}}\" restored",
+      "undo": "Undo",
+      "restoreError": "Failed to restore expense"
+    },
     "noAccount": {
       "title": "No Active Account",
       "description": "Please select or create an account first",

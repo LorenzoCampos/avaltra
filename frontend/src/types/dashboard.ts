@@ -22,6 +22,20 @@ export interface Transaction {
   created_at: string;
 }
 
+export interface UpcomingRecurringItem {
+  id: string;
+  description: string;
+  amount: number;
+  currency: string;
+  next_occurrence: string;
+  days_until: number;
+}
+
+export interface UpcomingRecurringSummary {
+  count: number;
+  items: UpcomingRecurringItem[];
+}
+
 export interface DashboardSummary {
   period: string; // YYYY-MM
   primary_currency: string;
@@ -32,4 +46,5 @@ export interface DashboardSummary {
   expenses_by_category: ExpenseByCategory[];
   top_expenses: Expense[];
   recent_transactions: Transaction[];
+  upcoming_recurring: UpcomingRecurringSummary;
 }

@@ -154,7 +154,8 @@ func (s *Server) setupRoutes() {
 			expensesRoutes.GET("/:id", expensesHandler.GetExpense(s.db.Pool))       // Obtener gasto por ID
 			expensesRoutes.PUT("/:id", expensesHandler.UpdateExpense(s.db.Pool))    // Actualizar gasto
 			expensesRoutes.DELETE("/:id", expensesHandler.DeleteExpense(s.db.Pool)) // Eliminar gasto
-			expensesRoutes.GET("", expensesHandler.ListExpenses(s.db.Pool))         // Listar gastos
+			expensesRoutes.PATCH("/:id/restore", expensesHandler.RestoreExpense(s.db.Pool))
+			expensesRoutes.GET("", expensesHandler.ListExpenses(s.db.Pool)) // Listar gastos
 		}
 
 		// Rutas de ingresos (protegidas - requieren auth + account)
@@ -166,7 +167,8 @@ func (s *Server) setupRoutes() {
 			incomesRoutes.GET("/:id", incomesHandler.GetIncome(s.db.Pool))       // Obtener ingreso por ID
 			incomesRoutes.PUT("/:id", incomesHandler.UpdateIncome(s.db.Pool))    // Actualizar ingreso
 			incomesRoutes.DELETE("/:id", incomesHandler.DeleteIncome(s.db.Pool)) // Eliminar ingreso
-			incomesRoutes.GET("", incomesHandler.ListIncomes(s.db.Pool))         // Listar ingresos
+			incomesRoutes.PATCH("/:id/restore", incomesHandler.RestoreIncome(s.db.Pool))
+			incomesRoutes.GET("", incomesHandler.ListIncomes(s.db.Pool)) // Listar ingresos
 		}
 
 		// Rutas de categorías de gastos (protegidas - requieren auth + account)

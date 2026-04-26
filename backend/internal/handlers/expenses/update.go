@@ -48,13 +48,14 @@ func UpdateExpense(db *pgxpool.Pool) gin.HandlerFunc {
 
 		// First, get existing expense to recalculate multi-currency if needed
 		var existingExpenseType, existingCurrency string
+		var deletedAt *time.Time
 		var existingAmount, existingExchangeRate, existingAmountInPrimaryCurrency float64
 		var existingDate string
-		checkQuery := `SELECT expense_type, amount, currency, exchange_rate, amount_in_primary_currency, date::TEXT 
+		checkQuery := `SELECT expense_type, amount, currency, exchange_rate, amount_in_primary_currency, date::TEXT, deleted_at 
 	               FROM expenses WHERE id = $1 AND account_id = $2`
 		err := db.QueryRow(c.Request.Context(), checkQuery, expenseID, accountID).Scan(
 			&existingExpenseType, &existingAmount, &existingCurrency,
-			&existingExchangeRate, &existingAmountInPrimaryCurrency, &existingDate)
+			&existingExchangeRate, &existingAmountInPrimaryCurrency, &existingDate, &deletedAt)
 
 		if err == pgx.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": "expense not found or does not belong to this account"})
@@ -63,6 +64,11 @@ func UpdateExpense(db *pgxpool.Pool) gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check expense: " + err.Error()})
+			return
+		}
+
+		if deletedAt != nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "expense is deleted and cannot be updated"})
 			return
 		}
 
@@ -254,7 +260,7 @@ func UpdateExpense(db *pgxpool.Pool) gin.HandlerFunc {
 			exchange_rate = COALESCE($11, exchange_rate),
 			amount_in_primary_currency = COALESCE($12, amount_in_primary_currency),
 			updated_at = CURRENT_TIMESTAMP
-		WHERE id = $9 AND account_id = $10
+		WHERE id = $9 AND account_id = $10 AND deleted_at IS NULL
 		RETURNING id, account_id, family_member_id, category_id, description, 
 		          amount, currency, exchange_rate, amount_in_primary_currency,
 		          expense_type, date, end_date, created_at
@@ -296,6 +302,11 @@ func UpdateExpense(db *pgxpool.Pool) gin.HandlerFunc {
 			&endDate,
 			&createdAt,
 		)
+
+		if err == pgx.ErrNoRows {
+			c.JSON(http.StatusConflict, gin.H{"error": "expense is deleted and cannot be updated"})
+			return
+		}
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update expense: " + err.Error()})

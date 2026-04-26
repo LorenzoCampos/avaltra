@@ -37,7 +37,7 @@ func GetIncome(db *pgxpool.Pool) gin.HandlerFunc {
 			       i.income_type, i.date, i.end_date, i.created_at
 			FROM incomes i
 			LEFT JOIN income_categories ic ON i.category_id = ic.id
-			WHERE i.id = $1 AND i.account_id = $2
+			WHERE i.id = $1 AND i.account_id = $2 AND i.deleted_at IS NULL
 		`
 
 		err := db.QueryRow(c.Request.Context(), query, incomeID, accountID).Scan(

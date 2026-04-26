@@ -117,6 +117,54 @@
     "noInactive": "No Inactive {{entity}}",
     "noInactiveDescription": "You have no deactivated {{entity}}"
   },
+  "emptyState": {
+    "expenses": {
+      "title": "No expenses yet",
+      "description": "Start tracking your spending by adding your first expense",
+      "action": "+ Add Expense"
+    },
+    "incomes": {
+      "title": "No income recorded yet",
+      "description": "Track your income sources to get a complete financial picture",
+      "action": "+ Add Income"
+    },
+    "accounts": {
+      "title": "Create your first account",
+      "description": "Accounts help you organize your money by wallet, bank, etc.",
+      "action": "+ Create Account"
+    },
+    "categories": {
+      "title": "No categories yet",
+      "description": "Categories help you classify and analyze your expenses and income",
+      "action": "+ Create Category"
+    },
+    "savings": {
+      "title": "No savings goals",
+      "description": "Create a savings goal to start putting money aside for what you want",
+      "action": "+ Create Goal"
+    },
+    "recurring": {
+      "title": "No recurring expenses",
+      "description": "Add your fixed expenses like Netflix, Spotify or rent so you don't miss any",
+      "action": "+ Add Recurring"
+    },
+    "recurringIncomes": {
+      "title": "No recurring income",
+      "description": "Add your salary or other fixed income for better tracking",
+      "action": "+ Add Recurring"
+    },
+    "search": {
+      "title": "No results found",
+      "titleWithQuery": "No results for \"{{query}}\"",
+      "description": "Try adjusting your search or filters",
+      "action": "Clear Filters"
+    },
+    "activity": {
+      "title": "No recent activity",
+      "description": "Add expenses or income to see your transaction history",
+      "action": "+ Add Transaction"
+    }
+  },
   "multiCurrency": {
     "title": "Multi-Currency Transaction",
     "expenseDescription": "Since you're spending in {{currency}} but your account is in {{accountCurrency}}, you can specify the exact amount debited from your account (including taxes/fees).",

@@ -60,7 +60,12 @@
     "filteredShort": "Filtrados ({{filtered}}/{{total}})",
     "noMatch": "No hay gastos que coincidan con tus filtros",
     "clearFilters": "Limpiar filtros",
-    "confirmDelete": "¿Estás seguro que querés eliminar \"{{description}}\"?",
+    "toast": {
+      "deleted": "Se eliminó \"{{description}}\"",
+      "restored": "Se restauró \"{{description}}\"",
+      "undo": "Deshacer",
+      "restoreError": "No se pudo restaurar el gasto"
+    },
     "noAccount": {
       "title": "Sin Cuenta Activa",
       "description": "Por favor seleccioná o creá una cuenta primero",

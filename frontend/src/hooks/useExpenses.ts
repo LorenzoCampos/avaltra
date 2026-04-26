@@ -6,6 +6,12 @@ import type { Expense, CreateExpenseRequest, UpdateExpenseRequest, ExpensesListR
 import type { FamilyMember } from '@/types/account';
 import type { ExpenseCategory } from '@/types/category';
 
+const invalidateExpenseQueries = (queryClient: ReturnType<typeof useQueryClient>, activeAccountId: string | null) => {
+  queryClient.invalidateQueries({ queryKey: ['expenses', activeAccountId] });
+  queryClient.invalidateQueries({ queryKey: ['dashboard', activeAccountId] });
+  queryClient.invalidateQueries({ queryKey: ['activity', activeAccountId] });
+};
+
 export const useExpenses = () => {
   const queryClient = useQueryClient();
   const { activeAccountId } = useAccountStore();
@@ -85,12 +91,8 @@ export const useExpenses = () => {
         description: (err as any).response?.data?.error || 'Please try again',
       });
     },
-    onSuccess: () => {
-      toast.success('Expense created successfully!');
-    },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses', activeAccountId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', activeAccountId] });
+      invalidateExpenseQueries(queryClient, activeAccountId);
     },
   });
 
@@ -130,13 +132,9 @@ export const useExpenses = () => {
         description: (err as any).response?.data?.error || 'Please try again',
       });
     },
-    onSuccess: () => {
-      toast.success('Expense updated successfully!');
-    },
     onSettled: (_, __, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['expenses', activeAccountId] });
+      invalidateExpenseQueries(queryClient, activeAccountId);
       queryClient.invalidateQueries({ queryKey: ['expense', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', activeAccountId] });
     },
   });
 
@@ -174,12 +172,42 @@ export const useExpenses = () => {
         description: (err as any).response?.data?.error || 'Please try again',
       });
     },
-    onSuccess: () => {
-      toast.success('Expense deleted successfully!');
-    },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses', activeAccountId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', activeAccountId] });
+      invalidateExpenseQueries(queryClient, activeAccountId);
+    },
+  });
+
+  const restoreExpenseMutation = useMutation({
+    mutationFn: async (expense: Expense) => {
+      if (!activeAccountId) throw new Error('No active account selected');
+      await api.patch(`/expenses/${expense.id}/restore`, undefined, {
+        headers: { 'X-Account-ID': activeAccountId },
+      });
+      return expense;
+    },
+    onMutate: async (expense) => {
+      await queryClient.cancelQueries({ queryKey: ['expenses', activeAccountId] });
+
+      const previousExpenses = queryClient.getQueryData<ExpensesListResponse>(['expenses', activeAccountId]);
+
+      if (previousExpenses && !previousExpenses.expenses.some((item) => item.id === expense.id)) {
+        queryClient.setQueryData<ExpensesListResponse>(['expenses', activeAccountId], {
+          ...previousExpenses,
+          expenses: [expense, ...previousExpenses.expenses],
+          count: previousExpenses.count + 1,
+        });
+      }
+
+      return { previousExpenses };
+    },
+    onError: (_err, _expense, context) => {
+      if (context?.previousExpenses) {
+        queryClient.setQueryData(['expenses', activeAccountId], context.previousExpenses);
+      }
+    },
+    onSettled: (_, __, expense) => {
+      invalidateExpenseQueries(queryClient, activeAccountId);
+      queryClient.invalidateQueries({ queryKey: ['expense', expense.id] });
     },
   });
 
@@ -203,17 +231,23 @@ export const useExpenses = () => {
     isLoadingExpenses,
     expensesError,
     createExpense: createExpenseMutation.mutate,
+    createExpenseAsync: createExpenseMutation.mutateAsync,
     isCreatingExpense: createExpenseMutation.isPending,
     createExpenseError: createExpenseMutation.error,
     createExpenseSuccess: createExpenseMutation.isSuccess,
     updateExpense: updateExpenseMutation.mutate,
+    updateExpenseAsync: updateExpenseMutation.mutateAsync,
     isUpdatingExpense: updateExpenseMutation.isPending,
     updateExpenseError: updateExpenseMutation.error,
     updateExpenseSuccess: updateExpenseMutation.isSuccess,
     deleteExpense: deleteExpenseMutation.mutate,
+    deleteExpenseAsync: deleteExpenseMutation.mutateAsync,
     isDeletingExpense: deleteExpenseMutation.isPending,
     deleteExpenseError: deleteExpenseMutation.error,
     deleteExpenseSuccess: deleteExpenseMutation.isSuccess,
+    restoreExpense: restoreExpenseMutation.mutate,
+    restoreExpenseAsync: restoreExpenseMutation.mutateAsync,
+    isRestoringExpense: restoreExpenseMutation.isPending,
     useExpense,
   };
 };
@@ -241,8 +275,7 @@ export const useCreateExpense = () => {
     },
     onSuccess: () => {
       const activeAccountId = useAccountStore.getState().activeAccountId;
-      queryClient.invalidateQueries({ queryKey: ['expenses', activeAccountId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', activeAccountId] });
+      invalidateExpenseQueries(queryClient, activeAccountId);
     },
   });
 };

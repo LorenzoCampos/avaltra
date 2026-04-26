@@ -117,7 +117,7 @@ func ListExpenses(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		// Build WHERE clauses dynamically (with table alias e.)
-		whereClauses := []string{"e.account_id = $1"}
+		whereClauses := []string{"e.account_id = $1", "e.deleted_at IS NULL"}
 		args := []interface{}{accountID}
 		argIndex := 2
 

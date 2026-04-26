@@ -37,6 +37,27 @@
     "button": "Ver Reportes Completos →"
   },
   
+  "insights": {
+    "title": "Insights mensuales",
+    "spentMore": "Gastaste {{percent}}% más que el mes pasado",
+    "spentLess": "Gastaste {{percent}}% menos que el mes pasado",
+    "spentSame": "Gastaste más o menos lo mismo que el mes pasado",
+    "versus": "{{current}} vs {{previous}}",
+    "topCategory": "Categoría principal: {{name}}",
+    "categoryPercentage": "{{amount}} ({{percent}}% de los gastos)",
+    "savingsGoal": "Ahorro: {{name}}",
+    "savingsProgress": "{{current}} / {{target}} ({{percent}}%)",
+    "savingsAlmostThere": "¡Ya casi llegás!",
+    "savingsCompleted": "¡Meta completada! 🎉",
+    "savingsRemaining": "¡Te faltan {{amount}}!",
+    "upcomingTitle": "Próximos gastos recurrentes",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "inDays": "En {{count}} días",
+    "noUpcoming": "No hay gastos recurrentes en los próximos 7 días",
+    "noInsights": "Agregá algunas transacciones para ver tus insights"
+  },
+  
   "expensesByCategory": "Gastos por Categoría",
   "topExpenses": "Mayores Gastos del Mes",
   "recentTransactions": "Transacciones Recientes",

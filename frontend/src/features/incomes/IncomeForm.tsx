@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -15,6 +14,7 @@ import { useIncomes, useIncomeCategories, useFamilyMembers } from '@/hooks/useIn
 import { useAccountStore } from '@/stores/account.store';
 import { useUser } from '@/hooks/useUser';
 import { useAccounts } from '@/hooks/useAccounts';
+import type { ActionFeedbackState } from '@/hooks/useActionFeedback';
 import { incomeSchema } from '@/schemas/income.schema';
 import type { CreateIncomeRequest } from '@/types/income';
 import type { Currency } from '@/schemas/account.schema';
@@ -28,14 +28,10 @@ export const IncomeForm = () => {
   const { data: user } = useUser();
   const { accounts } = useAccounts();
   const {
-    createIncome,
+    createIncomeAsync,
     isCreatingIncome,
-    createIncomeError,
-    createIncomeSuccess,
-    updateIncome,
+    updateIncomeAsync,
     isUpdatingIncome,
-    updateIncomeError,
-    updateIncomeSuccess,
     useIncome,
   } = useIncomes();
 
@@ -44,6 +40,7 @@ export const IncomeForm = () => {
   const { data: familyMembers, isLoading: isLoadingFamilyMembers } = useFamilyMembers();
 
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const [pendingFeedback, setPendingFeedback] = useState<ActionFeedbackState['actionFeedback']>();
   const isEditing = !!incomeId;
 
   // ============================================================================
@@ -122,45 +119,29 @@ export const IncomeForm = () => {
     }
   }, [location.state, isEditing, setValue]);
 
-  // Handle success with countdown and redirect
   useEffect(() => {
-    const isSuccess = isEditing ? updateIncomeSuccess : createIncomeSuccess;
-
-    if (isSuccess && redirectCountdown === null) {
-      toast.success(t(`form.success.${isEditing ? 'update' : 'create'}`), {
-        description: t('form.success.redirecting'),
-        duration: 3000,
-      });
-
-      setRedirectCountdown(3);
-
-      const countdownInterval = setInterval(() => {
-        setRedirectCountdown((prev) => {
-          if (prev === null || prev <= 1) {
-            clearInterval(countdownInterval);
-            navigate('/incomes');
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(countdownInterval);
+    if (redirectCountdown === null) {
+      return;
     }
-  }, [createIncomeSuccess, updateIncomeSuccess, isEditing, redirectCountdown, navigate]);
 
-  // Handle errors
-  useEffect(() => {
-    const error = isEditing ? updateIncomeError : createIncomeError;
-    if (error) {
-      const apiError = error as any;
-      toast.error(t('form.error.save'), {
-        description: apiError.response?.data?.error || apiError.message || t('form.error.tryAgain'),
+    const countdownInterval = window.setInterval(() => {
+      setRedirectCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          window.clearInterval(countdownInterval);
+          navigate('/incomes', {
+            state: pendingFeedback ? { actionFeedback: pendingFeedback } : undefined,
+          });
+          return null;
+        }
+
+        return prev - 1;
       });
-    }
-  }, [createIncomeError, updateIncomeError, isEditing, t]);
+    }, 1000);
 
-  const onSubmit = (data: CreateIncomeRequest) => {
+    return () => window.clearInterval(countdownInterval);
+  }, [redirectCountdown, navigate, pendingFeedback]);
+
+  const onSubmit = async (data: CreateIncomeRequest) => {
     // ============================================================================
     // GUARDAR ÚLTIMA CATEGORÍA USADA (para próxima vez)
     // ============================================================================
@@ -168,13 +149,21 @@ export const IncomeForm = () => {
       localStorage.setItem('lastIncomeCategoryId', data.category_id);
     }
 
-    if (isEditing && incomeId) {
-      updateIncome({
-        id: incomeId,
-        ...data
+    try {
+      const savedIncome = isEditing && incomeId
+        ? await updateIncomeAsync({
+            id: incomeId,
+            ...data,
+          })
+        : await createIncomeAsync(data);
+
+      setPendingFeedback({
+        action: isEditing ? 'updated' : 'created',
+        itemId: savedIncome.id,
       });
-    } else {
-      createIncome(data);
+      setRedirectCountdown(3);
+    } catch {
+      // Error toast is handled in the hook mutation.
     }
   };
 

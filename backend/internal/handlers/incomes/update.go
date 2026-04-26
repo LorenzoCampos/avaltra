@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/LorenzoCampos/avaltra/internal/middleware"
-	"github.com/LorenzoCampos/avaltra/pkg/logger"
 )
 
 type UpdateIncomeRequest struct {
@@ -50,13 +50,14 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 
 		// First, get existing income to recalculate multi-currency if needed
 		var existingIncomeType, existingCurrency string
+		var deletedAt *time.Time
 		var existingAmount, existingExchangeRate, existingAmountInPrimaryCurrency float64
 		var existingDate string
-		checkQuery := `SELECT income_type, amount, currency, exchange_rate, amount_in_primary_currency, date::TEXT 
+		checkQuery := `SELECT income_type, amount, currency, exchange_rate, amount_in_primary_currency, date::TEXT, deleted_at 
 		               FROM incomes WHERE id = $1 AND account_id = $2`
 		err := db.QueryRow(c.Request.Context(), checkQuery, incomeID, accountID).Scan(
 			&existingIncomeType, &existingAmount, &existingCurrency,
-			&existingExchangeRate, &existingAmountInPrimaryCurrency, &existingDate)
+			&existingExchangeRate, &existingAmountInPrimaryCurrency, &existingDate, &deletedAt)
 
 		if err == pgx.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": "income not found or does not belong to this account"})
@@ -65,6 +66,11 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check income: " + err.Error()})
+			return
+		}
+
+		if deletedAt != nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "income is deleted and cannot be updated"})
 			return
 		}
 
@@ -245,7 +251,7 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 				exchange_rate = COALESCE($11, exchange_rate),
 				amount_in_primary_currency = COALESCE($12, amount_in_primary_currency),
 				updated_at = CURRENT_TIMESTAMP
-			WHERE id = $9 AND account_id = $10
+			WHERE id = $9 AND account_id = $10 AND deleted_at IS NULL
 			RETURNING id, account_id, family_member_id, category_id, description, 
 			          amount, currency, exchange_rate, amount_in_primary_currency,
 			          income_type, date, end_date, created_at
@@ -287,6 +293,11 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 			&endDate,
 			&createdAt,
 		)
+
+		if err == pgx.ErrNoRows {
+			c.JSON(http.StatusConflict, gin.H{"error": "income is deleted and cannot be updated"})
+			return
+		}
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update income: " + err.Error()})

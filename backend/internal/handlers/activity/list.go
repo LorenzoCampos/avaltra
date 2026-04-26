@@ -142,6 +142,7 @@ func ListActivity(db *pgxpool.Pool) gin.HandlerFunc {
 			FROM incomes i
 			LEFT JOIN income_categories ic ON i.category_id = ic.id
 			WHERE i.account_id = $1 
+				AND i.deleted_at IS NULL
 				` + dateFilter + `
 
 			UNION ALL
@@ -161,6 +162,7 @@ func ListActivity(db *pgxpool.Pool) gin.HandlerFunc {
 			FROM expenses e
 			LEFT JOIN expense_categories ec ON e.category_id = ec.id
 			WHERE e.account_id = $1 
+				AND e.deleted_at IS NULL
 				` + dateFilter + `
 
 			UNION ALL

@@ -5,6 +5,12 @@ import { toast } from 'sonner';
 import type { Income, CreateIncomeRequest, UpdateIncomeRequest, IncomeListResponse, IncomeListParams } from '@/types/income';
 import type { IncomeCategory } from '@/types/category';
 
+const invalidateIncomeQueries = (queryClient: ReturnType<typeof useQueryClient>, activeAccountId: string | null) => {
+  queryClient.invalidateQueries({ queryKey: ['incomes', activeAccountId] });
+  queryClient.invalidateQueries({ queryKey: ['dashboard', activeAccountId] });
+  queryClient.invalidateQueries({ queryKey: ['activity', activeAccountId] });
+};
+
 /**
  * Hook for Incomes with Optimistic Updates
  * 
@@ -83,12 +89,8 @@ export const useIncomes = (params?: IncomeListParams) => {
         description: (err as any).response?.data?.error || 'Please try again',
       });
     },
-    onSuccess: () => {
-      toast.success('Income created successfully!');
-    },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['incomes', activeAccountId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', activeAccountId] });
+      invalidateIncomeQueries(queryClient, activeAccountId);
     },
   });
 
@@ -128,13 +130,9 @@ export const useIncomes = (params?: IncomeListParams) => {
         description: (err as any).response?.data?.error || 'Please try again',
       });
     },
-    onSuccess: () => {
-      toast.success('Income updated successfully!');
-    },
     onSettled: (_, __, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['incomes', activeAccountId] });
+      invalidateIncomeQueries(queryClient, activeAccountId);
       queryClient.invalidateQueries({ queryKey: ['income', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', activeAccountId] });
     },
   });
 
@@ -172,12 +170,42 @@ export const useIncomes = (params?: IncomeListParams) => {
         description: (err as any).response?.data?.error || 'Please try again',
       });
     },
-    onSuccess: () => {
-      toast.success('Income deleted successfully!');
-    },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['incomes', activeAccountId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', activeAccountId] });
+      invalidateIncomeQueries(queryClient, activeAccountId);
+    },
+  });
+
+  const restoreIncomeMutation = useMutation({
+    mutationFn: async (income: Income) => {
+      if (!activeAccountId) throw new Error('No active account selected');
+      await api.patch(`/incomes/${income.id}/restore`, undefined, {
+        headers: { 'X-Account-ID': activeAccountId },
+      });
+      return income;
+    },
+    onMutate: async (income) => {
+      await queryClient.cancelQueries({ queryKey: ['incomes', activeAccountId] });
+
+      const previousIncomes = queryClient.getQueryData<IncomeListResponse>(['incomes', activeAccountId]);
+
+      if (previousIncomes && !previousIncomes.incomes.some((item) => item.id === income.id)) {
+        queryClient.setQueryData<IncomeListResponse>(['incomes', activeAccountId], {
+          ...previousIncomes,
+          incomes: [income, ...previousIncomes.incomes],
+          count: previousIncomes.count + 1,
+        });
+      }
+
+      return { previousIncomes };
+    },
+    onError: (_err, _income, context) => {
+      if (context?.previousIncomes) {
+        queryClient.setQueryData(['incomes', activeAccountId], context.previousIncomes);
+      }
+    },
+    onSettled: (_, __, income) => {
+      invalidateIncomeQueries(queryClient, activeAccountId);
+      queryClient.invalidateQueries({ queryKey: ['income', income.id] });
     },
   });
 
@@ -193,18 +221,24 @@ export const useIncomes = (params?: IncomeListParams) => {
     
     // Mutations
     createIncome: createIncomeMutation.mutate,
+    createIncomeAsync: createIncomeMutation.mutateAsync,
     isCreatingIncome: createIncomeMutation.isPending,
     createIncomeError: createIncomeMutation.error,
     createIncomeSuccess: createIncomeMutation.isSuccess,
     
     updateIncome: updateIncomeMutation.mutate,
+    updateIncomeAsync: updateIncomeMutation.mutateAsync,
     isUpdatingIncome: updateIncomeMutation.isPending,
     updateIncomeError: updateIncomeMutation.error,
     updateIncomeSuccess: updateIncomeMutation.isSuccess,
     
     deleteIncome: deleteIncomeMutation.mutate,
+    deleteIncomeAsync: deleteIncomeMutation.mutateAsync,
     isDeletingIncome: deleteIncomeMutation.isPending,
     deleteIncomeError: deleteIncomeMutation.error,
+    restoreIncome: restoreIncomeMutation.mutate,
+    restoreIncomeAsync: restoreIncomeMutation.mutateAsync,
+    isRestoringIncome: restoreIncomeMutation.isPending,
     
     // Single income query (for edit)
     useIncome: (incomeId?: string) => {

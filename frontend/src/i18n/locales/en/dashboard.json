@@ -37,6 +37,27 @@
     "button": "View Full Reports →"
   },
   
+  "insights": {
+    "title": "Monthly Insights",
+    "spentMore": "You spent {{percent}}% more than last month",
+    "spentLess": "You spent {{percent}}% less than last month",
+    "spentSame": "You spent about the same as last month",
+    "versus": "{{current}} vs {{previous}}",
+    "topCategory": "Top category: {{name}}",
+    "categoryPercentage": "{{amount}} ({{percent}}% of expenses)",
+    "savingsGoal": "Savings: {{name}}",
+    "savingsProgress": "{{current}} / {{target}} ({{percent}}%)",
+    "savingsAlmostThere": "You're almost there!",
+    "savingsCompleted": "Goal completed! 🎉",
+    "savingsRemaining": "You're {{amount}} away!",
+    "upcomingTitle": "Upcoming recurring expenses",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "inDays": "In {{count}} days",
+    "noUpcoming": "No recurring expenses in the next 7 days",
+    "noInsights": "Add some transactions to see your insights"
+  },
+  
   "expensesByCategory": "Expenses by Category",
   "topExpenses": "Top Expenses This Month",
   "recentTransactions": "Recent Transactions",

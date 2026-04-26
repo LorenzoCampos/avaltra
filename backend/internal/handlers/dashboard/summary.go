@@ -1,9 +1,12 @@
 package dashboard
 
 import (
+	"context"
 	"net/http"
+	"sort"
 	"time"
 
+	"github.com/LorenzoCampos/avaltra/pkg/recurrence"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -42,17 +45,48 @@ type RecentTransaction struct {
 	CreatedAt               string  `json:"created_at"`
 }
 
+type UpcomingRecurringItem struct {
+	ID             string  `json:"id"`
+	Description    string  `json:"description"`
+	Amount         float64 `json:"amount"`
+	Currency       string  `json:"currency"`
+	NextOccurrence string  `json:"next_occurrence"`
+	DaysUntil      int     `json:"days_until"`
+}
+
+type UpcomingRecurringSummary struct {
+	Count int                     `json:"count"`
+	Items []UpcomingRecurringItem `json:"items"`
+}
+
 // DashboardSummaryResponse represents the complete dashboard summary
 type DashboardSummaryResponse struct {
-	Period               string              `json:"period"` // YYYY-MM format
-	PrimaryCurrency      string              `json:"primary_currency"`
-	TotalIncome          float64             `json:"total_income"`
-	TotalExpenses        float64             `json:"total_expenses"`
-	TotalAssignedToGoals float64             `json:"total_assigned_to_goals"` // Always 0 for now
-	AvailableBalance     float64             `json:"available_balance"`
-	ExpensesByCategory   []CategoryExpense   `json:"expenses_by_category"`
-	TopExpenses          []TopExpense        `json:"top_expenses"`
-	RecentTransactions   []RecentTransaction `json:"recent_transactions"`
+	Period               string                   `json:"period"` // YYYY-MM format
+	PrimaryCurrency      string                   `json:"primary_currency"`
+	TotalIncome          float64                  `json:"total_income"`
+	TotalExpenses        float64                  `json:"total_expenses"`
+	TotalAssignedToGoals float64                  `json:"total_assigned_to_goals"` // Always 0 for now
+	AvailableBalance     float64                  `json:"available_balance"`
+	ExpensesByCategory   []CategoryExpense        `json:"expenses_by_category"`
+	TopExpenses          []TopExpense             `json:"top_expenses"`
+	RecentTransactions   []RecentTransaction      `json:"recent_transactions"`
+	UpcomingRecurring    UpcomingRecurringSummary `json:"upcoming_recurring"`
+}
+
+type recurringExpenseTemplateRow struct {
+	ID                   string
+	Description          string
+	Amount               float64
+	Currency             string
+	RecurrenceFrequency  string
+	RecurrenceInterval   int
+	RecurrenceDayOfMonth *int
+	RecurrenceDayOfWeek  *int
+	StartDate            time.Time
+	EndDate              *time.Time
+	TotalOccurrences     *int
+	CurrentOccurrence    int
+	IsActive             bool
 }
 
 // GetSummary handles GET /api/dashboard/summary
@@ -77,6 +111,7 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		ctx := c.Request.Context()
+		today := time.Now().UTC().Truncate(24 * time.Hour)
 
 		// Get primary currency of the account
 		var primaryCurrency string
@@ -94,6 +129,7 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 			SELECT COALESCE(SUM(amount_in_primary_currency), 0)
 			FROM incomes
 			WHERE account_id = $1
+			  AND deleted_at IS NULL
 			  AND TO_CHAR(date, 'YYYY-MM') = $2
 		`
 		err = db.QueryRow(ctx, incomeQuery, accountID, month).Scan(&totalIncome)
@@ -110,6 +146,7 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 			SELECT COALESCE(SUM(amount_in_primary_currency), 0)
 			FROM expenses
 			WHERE account_id = $1
+			  AND deleted_at IS NULL
 			  AND TO_CHAR(date, 'YYYY-MM') = $2
 		`
 		err = db.QueryRow(ctx, expensesQuery, accountID, month).Scan(&totalExpenses)
@@ -131,6 +168,7 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 			FROM expenses e
 			LEFT JOIN expense_categories ec ON e.category_id = ec.id
 			WHERE e.account_id = $1
+			  AND e.deleted_at IS NULL
 			  AND TO_CHAR(e.date, 'YYYY-MM') = $2
 			GROUP BY e.category_id, ec.name, ec.icon, ec.color
 			HAVING SUM(e.amount_in_primary_currency) > 0
@@ -183,6 +221,7 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 			FROM expenses e
 			LEFT JOIN expense_categories ec ON e.category_id = ec.id
 			WHERE e.account_id = $1
+			  AND e.deleted_at IS NULL
 			  AND TO_CHAR(e.date, 'YYYY-MM') = $2
 			ORDER BY e.amount_in_primary_currency DESC
 			LIMIT 5
@@ -231,6 +270,7 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 					FROM expenses e
 					LEFT JOIN expense_categories ec ON e.category_id = ec.id
 					WHERE e.account_id = $1
+					  AND e.deleted_at IS NULL
 					  AND TO_CHAR(e.date, 'YYYY-MM') = $2
 				)
 				UNION ALL
@@ -248,6 +288,7 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 					FROM incomes i
 					LEFT JOIN income_categories ic ON i.category_id = ic.id
 					WHERE i.account_id = $1
+					  AND i.deleted_at IS NULL
 					  AND TO_CHAR(i.date, 'YYYY-MM') = $2
 				)
 			) AS combined
@@ -340,6 +381,12 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 		// - Available: $0 - $0 - $0 = $0 ✓ (not negative!)
 		availableBalance := totalIncome - totalExpenses - netSavingsActivity
 
+		upcomingRecurring, err := getUpcomingRecurringExpenses(db, ctx, accountID, today)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get upcoming recurring expenses"})
+			return
+		}
+
 		// ============================================================================
 		// BUILD RESPONSE
 		// ============================================================================
@@ -353,8 +400,97 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 			ExpensesByCategory:   expensesByCategory,
 			TopExpenses:          topExpenses,
 			RecentTransactions:   recentTransactions,
+			UpcomingRecurring:    upcomingRecurring,
 		}
 
 		c.JSON(http.StatusOK, response)
 	}
+}
+
+func getUpcomingRecurringExpenses(db *pgxpool.Pool, ctx context.Context, accountID interface{}, today time.Time) (UpcomingRecurringSummary, error) {
+	query := `
+		SELECT
+			id,
+			description,
+			amount,
+			currency,
+			recurrence_frequency,
+			recurrence_interval,
+			recurrence_day_of_month,
+			recurrence_day_of_week,
+			start_date,
+			end_date,
+			total_occurrences,
+			current_occurrence,
+			is_active
+		FROM recurring_expenses
+		WHERE account_id = $1
+		  AND is_active = true
+	`
+
+	rows, err := db.Query(ctx, query, accountID)
+	if err != nil {
+		return UpcomingRecurringSummary{}, err
+	}
+	defer rows.Close()
+
+	items := make([]UpcomingRecurringItem, 0)
+	for rows.Next() {
+		var template recurringExpenseTemplateRow
+		err := rows.Scan(
+			&template.ID,
+			&template.Description,
+			&template.Amount,
+			&template.Currency,
+			&template.RecurrenceFrequency,
+			&template.RecurrenceInterval,
+			&template.RecurrenceDayOfMonth,
+			&template.RecurrenceDayOfWeek,
+			&template.StartDate,
+			&template.EndDate,
+			&template.TotalOccurrences,
+			&template.CurrentOccurrence,
+			&template.IsActive,
+		)
+		if err != nil {
+			return UpcomingRecurringSummary{}, err
+		}
+
+		nextOccurrence, ok := recurrence.NextOccurrenceWithinWindow(recurrence.Template{
+			IsActive:             template.IsActive,
+			RecurrenceFrequency:  template.RecurrenceFrequency,
+			RecurrenceInterval:   template.RecurrenceInterval,
+			RecurrenceDayOfMonth: template.RecurrenceDayOfMonth,
+			RecurrenceDayOfWeek:  template.RecurrenceDayOfWeek,
+			StartDate:            template.StartDate,
+			EndDate:              template.EndDate,
+			TotalOccurrences:     template.TotalOccurrences,
+			CurrentOccurrence:    template.CurrentOccurrence,
+		}, today, 7)
+		if !ok {
+			continue
+		}
+
+		items = append(items, UpcomingRecurringItem{
+			ID:             template.ID,
+			Description:    template.Description,
+			Amount:         template.Amount,
+			Currency:       template.Currency,
+			NextOccurrence: nextOccurrence.Format("2006-01-02"),
+			DaysUntil:      int(nextOccurrence.Sub(today).Hours() / 24),
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return UpcomingRecurringSummary{}, err
+	}
+
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].NextOccurrence < items[j].NextOccurrence
+	})
+
+	return UpcomingRecurringSummary{
+		Count: len(items),
+		Items: items,
+	}, nil
 }

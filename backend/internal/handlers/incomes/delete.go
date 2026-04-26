@@ -3,10 +3,11 @@ package incomes
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func DeleteIncome(db *pgxpool.Pool) gin.HandlerFunc {
@@ -25,18 +26,44 @@ func DeleteIncome(db *pgxpool.Pool) gin.HandlerFunc {
 			return
 		}
 
-		// Delete the income (only if it belongs to this account)
-		deleteQuery := "DELETE FROM incomes WHERE id = $1 AND account_id = $2"
-		commandTag, err := db.Exec(c.Request.Context(), deleteQuery, incomeID, accountID)
+		deleteQuery := `
+			UPDATE incomes
+			SET deleted_at = NOW()
+			WHERE id = $1 AND account_id = $2 AND deleted_at IS NULL
+			RETURNING id
+		`
 
-		if err != nil {
+		var deletedID string
+		err := db.QueryRow(c.Request.Context(), deleteQuery, incomeID, accountID).Scan(&deletedID)
+
+		if err != nil && err != pgx.ErrNoRows {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete income: " + err.Error()})
 			return
 		}
 
-		// Check if any row was actually deleted
-		if commandTag.RowsAffected() == 0 {
-			c.JSON(http.StatusNotFound, gin.H{"error": "income not found or does not belong to this account"})
+		if err == pgx.ErrNoRows {
+			var alreadyDeleted bool
+			existsQuery := `
+				SELECT deleted_at IS NOT NULL
+				FROM incomes
+				WHERE id = $1 AND account_id = $2
+			`
+
+			err = db.QueryRow(c.Request.Context(), existsQuery, incomeID, accountID).Scan(&alreadyDeleted)
+			if err == pgx.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "income not found or does not belong to this account"})
+				return
+			}
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete income: " + err.Error()})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"message":         "income already deleted",
+				"id":              incomeID,
+				"already_deleted": true,
+			})
 			return
 		}
 

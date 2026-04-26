@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -15,6 +14,7 @@ import { useExpenses, useExpenseCategories, useFamilyMembers } from '@/hooks/use
 import { useAccountStore } from '@/stores/account.store';
 import { useUser } from '@/hooks/useUser';
 import { useAccounts } from '@/hooks/useAccounts';
+import type { ActionFeedbackState } from '@/hooks/useActionFeedback';
 import { expenseSchema } from '@/schemas/expense.schema';
 import type { CreateExpenseRequest } from '@/types/expense';
 import type { Currency } from '@/schemas/account.schema';
@@ -28,14 +28,10 @@ export const ExpenseForm = () => {
   const { data: user } = useUser();
   const { accounts } = useAccounts();
   const {
-    createExpense,
+    createExpenseAsync,
     isCreatingExpense,
-    createExpenseError,
-    createExpenseSuccess,
-    updateExpense,
+    updateExpenseAsync,
     isUpdatingExpense,
-    updateExpenseError,
-    updateExpenseSuccess,
     useExpense,
   } = useExpenses();
 
@@ -44,6 +40,7 @@ export const ExpenseForm = () => {
   const { data: familyMembers, isLoading: isLoadingFamilyMembers } = useFamilyMembers();
 
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const [pendingFeedback, setPendingFeedback] = useState<ActionFeedbackState['actionFeedback']>();
   const isEditing = !!expenseId;
 
   // ============================================================================
@@ -124,45 +121,29 @@ export const ExpenseForm = () => {
     }
   }, [location.state, isEditing, setValue]);
 
-  // Handle success with countdown and redirect
   useEffect(() => {
-    const isSuccess = isEditing ? updateExpenseSuccess : createExpenseSuccess;
-
-    if (isSuccess && redirectCountdown === null) {
-      toast.success(t(`form.success.${isEditing ? 'update' : 'create'}`), {
-        description: t('form.success.redirecting'),
-        duration: 3000,
-      });
-
-      setRedirectCountdown(3);
-
-      const countdownInterval = setInterval(() => {
-        setRedirectCountdown((prev) => {
-          if (prev === null || prev <= 1) {
-            clearInterval(countdownInterval);
-            navigate('/expenses');
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(countdownInterval);
+    if (redirectCountdown === null) {
+      return;
     }
-  }, [createExpenseSuccess, updateExpenseSuccess, isEditing, redirectCountdown, navigate]);
 
-  // Handle errors
-  useEffect(() => {
-    const error = isEditing ? updateExpenseError : createExpenseError;
-    if (error) {
-      const apiError = error as any;
-      toast.error(t('form.error.save'), {
-        description: apiError.response?.data?.error || apiError.message || t('form.error.tryAgain'),
+    const countdownInterval = window.setInterval(() => {
+      setRedirectCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          window.clearInterval(countdownInterval);
+          navigate('/expenses', {
+            state: pendingFeedback ? { actionFeedback: pendingFeedback } : undefined,
+          });
+          return null;
+        }
+
+        return prev - 1;
       });
-    }
-  }, [createExpenseError, updateExpenseError, isEditing, t]);
+    }, 1000);
 
-  const onSubmit = (data: CreateExpenseRequest) => {
+    return () => window.clearInterval(countdownInterval);
+  }, [redirectCountdown, navigate, pendingFeedback]);
+
+  const onSubmit = async (data: CreateExpenseRequest) => {
     // ============================================================================
     // GUARDAR ÚLTIMA CATEGORÍA USADA (para próxima vez)
     // ============================================================================
@@ -170,13 +151,21 @@ export const ExpenseForm = () => {
       localStorage.setItem('lastExpenseCategoryId', data.category_id);
     }
 
-    if (isEditing && expenseId) {
-      updateExpense({
-        id: expenseId,
-        ...data
+    try {
+      const savedExpense = isEditing && expenseId
+        ? await updateExpenseAsync({
+            id: expenseId,
+            ...data,
+          })
+        : await createExpenseAsync(data);
+
+      setPendingFeedback({
+        action: isEditing ? 'updated' : 'created',
+        itemId: savedExpense.id,
       });
-    } else {
-      createExpense(data);
+      setRedirectCountdown(3);
+    } catch {
+      // Error toast is handled in the hook mutation.
     }
   };
 

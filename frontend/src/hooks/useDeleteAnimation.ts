@@ -1,5 +1,13 @@
 import { useState } from 'react';
 
+const prefersReducedMotion = () => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
 /**
  * Hook para manejar animaciones de delete
  * 
@@ -12,24 +20,26 @@ import { useState } from 'react';
  *   </button>
  * </div>
  */
-export const useDeleteAnimation = (animationDuration: number = 300) => {
+export const useDeleteAnimation = (animationDuration: number = 180) => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleDelete = async (
     itemId: string,
     deleteFn: () => void | Promise<void>
   ) => {
-    // Start animation
     setDeletingId(itemId);
 
-    // Wait for animation to complete
-    await new Promise((resolve) => setTimeout(resolve, animationDuration));
+    try {
+      const delay = prefersReducedMotion() ? 0 : animationDuration;
 
-    // Execute actual delete
-    await deleteFn();
+      if (delay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
 
-    // Reset state
-    setDeletingId(null);
+      await deleteFn();
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return {

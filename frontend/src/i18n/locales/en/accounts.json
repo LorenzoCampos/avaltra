@@ -14,6 +14,7 @@
     "errorGeneric": "Failed to load accounts",
     "refreshButton": "Refresh Page",
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "deleteBlockedHint": "If this account still has expenses, incomes, or savings goals attached, deletion may be blocked until you remove them.",
     "activeLabel": "Active",
     "personalType": "👤 Personal",
     "familyType": "👨‍👩‍👧‍👦 Family",
@@ -71,6 +72,21 @@
     "deleted": "Account deleted successfully!",
     "activated": "Account activated",
     "error": "Failed to save account"
+  },
+  "delete": {
+    "success": "Account deleted successfully!",
+    "errorTitle": "Couldn't delete account",
+    "errorFallback": "Check whether the account still has associated data and try again.",
+    "blockedTitle": "This account can't be deleted yet",
+    "blockedDescription": "This account still has associated data.",
+    "conflictsLabel": "Blocking items: {{conflicts}}.",
+    "suggestionLabel": "What to do: {{suggestion}}.",
+    "conflicts": {
+      "expenses": "expenses",
+      "incomes": "incomes",
+      "savingsGoals": "savings goals",
+      "other": "{{item}}"
+    }
   },
   "tooltips": {
     "accountName": "Give it a name that helps you identify it easily. For example: 'My Finances', 'Household Expenses', 'Savings'.",

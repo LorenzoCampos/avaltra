@@ -13,6 +13,7 @@ import { FormSkeleton } from '@/components/ui/Skeleton';
 import { InfoTooltip } from '@/components/InfoTooltip';
 
 import { useAccounts } from '@/hooks/useAccounts';
+import type { ActionFeedbackState } from '@/hooks/useActionFeedback';
 import type { FamilyMember } from '@/types/account';
 import { accountSchema } from '@/schemas/account.schema';
 import type { Currency } from '@/schemas/account.schema';
@@ -32,20 +33,17 @@ export const AccountForm = ({ onSubmitSuccess }: AccountFormProps) => {
   const { accountId } = useParams<{ accountId: string }>();
   const navigate = useNavigate();
   const { 
-    createAccount, 
+    createAccountAsync, 
     isCreatingAccount, 
-    updateAccount, 
+    updateAccountAsync, 
     isUpdatingAccount, 
-    createAccountError, 
-    updateAccountError, 
-    createAccountSuccess, 
-    updateAccountSuccess,
     fetchAccount
   } = useAccounts();
   
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([{ id: '', name: '', email: null, isActive: true }]);
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const [pendingFeedback, setPendingFeedback] = useState<ActionFeedbackState['actionFeedback']>();
 
   const isEditing = !!accountId;
 
@@ -91,77 +89,69 @@ export const AccountForm = ({ onSubmitSuccess }: AccountFormProps) => {
     }
   }, [isEditing, accountId, fetchAccount, setValue]);
 
-  // Handle success with countdown and redirect
   useEffect(() => {
-    const isSuccess = isEditing ? updateAccountSuccess : createAccountSuccess;
+    if (redirectCountdown === null) {
+      return;
+    }
 
-    if (isSuccess && redirectCountdown === null) {
-      const successMessage = isEditing ? t('form.successUpdate') : t('form.successCreate');
-      
-      toast.success(successMessage, {
-        description: t('form.successRedirect'),
-        duration: 3000,
-      });
-
-      // Start countdown
-      setRedirectCountdown(3);
-
-      const countdownInterval = setInterval(() => {
-        setRedirectCountdown((prev) => {
-          if (prev === null || prev <= 1) {
-            clearInterval(countdownInterval);
-            if (onSubmitSuccess) {
-              onSubmitSuccess();
-            }
-            navigate('/dashboard');
-            return null;
+    const countdownInterval = window.setInterval(() => {
+      setRedirectCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          window.clearInterval(countdownInterval);
+          if (onSubmitSuccess) {
+            onSubmitSuccess();
           }
-          return prev - 1;
+          navigate('/accounts', {
+            state: pendingFeedback ? { actionFeedback: pendingFeedback } : undefined,
+          });
+          return null;
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(countdownInterval);
+  }, [redirectCountdown, onSubmitSuccess, navigate, pendingFeedback]);
+
+  const onSubmit = async (data: FormData) => {
+    try {
+      let savedAccount;
+
+      if (isEditing && accountId) {
+        savedAccount = await updateAccountAsync({
+          id: accountId,
+          name: data.name,
+          currency: data.currency,
         });
-      }, 1000);
-
-      return () => clearInterval(countdownInterval);
-    }
-  }, [createAccountSuccess, updateAccountSuccess, isEditing, redirectCountdown, onSubmitSuccess, navigate]);
-
-  // Handle errors
-  useEffect(() => {
-    const error = isEditing ? updateAccountError : createAccountError;
-    if (error) {
-      const apiError = error as any;
-      toast.error(t('form.errorSave'), {
-        description: apiError.response?.data?.error || apiError.message || t('form.errorLoadDescription'),
-      });
-    }
-  }, [createAccountError, updateAccountError, isEditing, t]);
-
-  const onSubmit = (data: FormData) => {
-    if (isEditing && accountId) {
-      updateAccount({
-        id: accountId,
-        name: data.name,
-        currency: data.currency,
-      });
-    } else {
-      if (data.type === 'family') {
+      } else if (data.type === 'family') {
         const validMembers = familyMembers.filter(m => m.name.trim() !== '');
         if (validMembers.length === 0) {
           toast.error(t('form.familyMembersError'));
           return;
         }
-        createAccount({
+
+        savedAccount = await createAccountAsync({
           name: data.name,
           type: 'family',
           currency: data.currency,
           members: validMembers.map(m => ({ name: m.name, email: m.email || undefined })),
         });
       } else {
-        createAccount({
+        savedAccount = await createAccountAsync({
           name: data.name,
           type: 'personal',
           currency: data.currency,
         });
       }
+
+      setPendingFeedback({
+        action: isEditing ? 'updated' : 'created',
+        itemId: savedAccount.id,
+      });
+      setRedirectCountdown(3);
+    } catch {
+      // Error toast is handled in the hook mutation.
     }
   };
 

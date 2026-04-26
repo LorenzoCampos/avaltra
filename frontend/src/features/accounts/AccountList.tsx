@@ -3,9 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useDeleteAnimation } from '@/hooks/useDeleteAnimation';
 import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { CardSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useAccountStore } from '@/stores/account.store';
+import { useActionFeedback } from '@/hooks/useActionFeedback';
+import { cn } from '@/lib/utils';
 import type { Account } from '@/types/account';
 
 export const AccountList = () => {
@@ -14,6 +17,7 @@ export const AccountList = () => {
   const { accounts, isLoading, error, deleteAccount, isDeletingAccount } = useAccounts();
   const { setActiveAccount, activeAccountId } = useAccountStore();
   const { handleDelete, isDeleting } = useDeleteAnimation();
+  const { getFeedbackClassName } = useActionFeedback();
 
   const handleSetActiveAccount = (account: Account) => {
     setActiveAccount(account.id, account);
@@ -21,7 +25,12 @@ export const AccountList = () => {
 
   const handleDeleteAccount = (e: React.MouseEvent, accountId: string, accountName: string) => {
     e.stopPropagation();
-    if (window.confirm(t('list.deleteConfirm', { name: accountName }))) {
+    const confirmMessage = [
+      t('list.deleteConfirm', { name: accountName }),
+      t('list.deleteBlockedHint'),
+    ].join('\n\n');
+
+    if (window.confirm(confirmMessage)) {
       handleDelete(accountId, () => deleteAccount(accountId));
     }
   };
@@ -81,33 +90,32 @@ export const AccountList = () => {
       </div>
 
       {!Array.isArray(accounts) || accounts.length === 0 ? (
-        <div className="text-center py-10">
-          <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-800 mb-2">{t('list.empty')}</h3>
-            <p className="text-gray-600 mb-4">{t('list.emptyMessage')}</p>
-            <Button onClick={() => navigate('/accounts/new')}>
-              {t('list.createButton')}
-            </Button>
-          </div>
-        </div>
+        <Card>
+          <CardContent>
+            <EmptyState
+              icon="🏦"
+              title={t('common:emptyState.accounts.title')}
+              description={t('common:emptyState.accounts.description')}
+              action={{
+                label: t('common:emptyState.accounts.action'),
+                onClick: () => navigate('/accounts/new'),
+              }}
+            />
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {accounts.map((account, index) => (
+          {accounts.map((account) => (
             <Card 
               key={account.id} 
               padding="md" 
-              className={`cursor-pointer transition-all border-2 ${
-                isDeleting(account.id) ? 'animate-slide-out-left' : 'animate-slide-up'
-              } ${
-                index === 0 ? '' : 
-                index === 1 ? 'animation-delay-100' :
-                index === 2 ? 'animation-delay-200' :
-                index === 3 ? 'animation-delay-300' : 'animation-delay-400'
-              } ${
+              className={cn(
+                'cursor-pointer border-2 transition-colors-smooth transition-transform-smooth',
+                isDeleting(account.id) ? 'animate-feedback-exit-fast' : getFeedbackClassName(account.id),
                 activeAccountId === account.id 
                   ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50/30' 
                   : 'border-gray-200 hover:border-blue-300 hover:shadow-lg hover:scale-[1.02]'
-              }`}
+              )}
               onClick={() => handleSetActiveAccount(account)}
             >
               <CardHeader className="flex justify-between items-start mb-0 pb-0">

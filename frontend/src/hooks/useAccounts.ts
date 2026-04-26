@@ -2,9 +2,65 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { api } from '@/api/axios';
+import i18n from '@/i18n';
 import type { Account, CreateAccountRequest, UpdateAccountRequest } from '@/types/account';
 import { useAccountStore } from '@/stores/account.store';
 import { useAuthStore } from '@/stores/auth.store';
+
+type DeleteAccountErrorResponse = {
+  error?: string;
+  conflicts?: string[];
+  suggestion?: string;
+};
+
+const CONFLICT_TRANSLATION_KEYS: Record<string, string> = {
+  gastos: 'delete.conflicts.expenses',
+  expenses: 'delete.conflicts.expenses',
+  ingresos: 'delete.conflicts.incomes',
+  incomes: 'delete.conflicts.incomes',
+  'metas de ahorro': 'delete.conflicts.savingsGoals',
+  'savings goals': 'delete.conflicts.savingsGoals',
+};
+
+const getDeleteAccountErrorMessage = (error: unknown) => {
+  const response = (error as { response?: { data?: DeleteAccountErrorResponse } })?.response?.data;
+  const fallbackDescription = i18n.t('accounts:delete.errorFallback');
+
+  if (!response) {
+    return {
+      title: i18n.t('accounts:delete.errorTitle'),
+      description: fallbackDescription,
+    };
+  }
+
+  const conflicts = Array.isArray(response.conflicts)
+    ? response.conflicts
+        .map((conflict) => i18n.t(`accounts:${CONFLICT_TRANSLATION_KEYS[conflict] || 'delete.conflicts.other'}`, { item: conflict }))
+        .filter(Boolean)
+    : [];
+
+  if (conflicts.length > 0 || response.suggestion) {
+    const details: string[] = [i18n.t('accounts:delete.blockedDescription')];
+
+    if (conflicts.length > 0) {
+      details.push(i18n.t('accounts:delete.conflictsLabel', { conflicts: conflicts.join(', ') }));
+    }
+
+    if (response.suggestion) {
+      details.push(i18n.t('accounts:delete.suggestionLabel', { suggestion: response.suggestion }));
+    }
+
+    return {
+      title: i18n.t('accounts:delete.blockedTitle'),
+      description: details.join(' '),
+    };
+  }
+
+  return {
+    title: i18n.t('accounts:delete.errorTitle'),
+    description: response.error || fallbackDescription,
+  };
+};
 
 export const useAccounts = () => {
   const queryClient = useQueryClient();
@@ -104,7 +160,6 @@ export const useAccounts = () => {
     onSuccess: (newAccount) => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       setActiveAccount(newAccount.id, newAccount);
-      toast.success('Account created successfully!');
     },
   });
 
@@ -148,7 +203,6 @@ export const useAccounts = () => {
       if (activeAccountId === updatedAccount.id) {
         setActiveAccount(updatedAccount.id, updatedAccount);
       }
-      toast.success('Account updated successfully!');
     },
   });
 
@@ -176,8 +230,9 @@ export const useAccounts = () => {
       if (context?.previousAccounts) {
         queryClient.setQueryData(['accounts'], context.previousAccounts);
       }
-      toast.error('Failed to delete account', {
-        description: (err as any).response?.data?.error || 'The account may have associated data',
+      const message = getDeleteAccountErrorMessage(err);
+      toast.error(message.title, {
+        description: message.description,
       });
     },
     onSuccess: (accountId) => {
@@ -185,7 +240,7 @@ export const useAccounts = () => {
       if (activeAccountId === accountId) {
         setActiveAccount(null, null);
       }
-      toast.success('Account deleted successfully!');
+      toast.success(i18n.t('accounts:delete.success'));
     },
   });
 
@@ -200,10 +255,12 @@ export const useAccounts = () => {
     error,
     fetchAccount,
     createAccount: createAccountMutation.mutate,
+    createAccountAsync: createAccountMutation.mutateAsync,
     isCreatingAccount: createAccountMutation.isPending,
     createAccountError: createAccountMutation.error,
     createAccountSuccess: createAccountMutation.isSuccess,
     updateAccount: updateAccountMutation.mutate,
+    updateAccountAsync: updateAccountMutation.mutateAsync,
     isUpdatingAccount: updateAccountMutation.isPending,
     updateAccountError: updateAccountMutation.error,
     updateAccountSuccess: updateAccountMutation.isSuccess,

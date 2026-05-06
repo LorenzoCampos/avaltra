@@ -15,6 +15,19 @@
     },
     "date": "Date",
     "category": "Category (Optional)",
+    "paymentMethod": {
+      "label": "Payment Method (Optional)",
+      "help": "Describes HOW the money moved. The account still tells you WHERE the transaction belongs.",
+      "empty": "Unspecified",
+      "options": {
+        "cash": "Cash",
+        "bank_transfer": "Bank transfer",
+        "debit_card": "Debit card",
+        "credit_card": "Credit card",
+        "digital_wallet": "Digital wallet",
+        "other": "Other"
+      }
+    },
     "familyMember": "Family Member (Optional)",
     "noMember": "No Member",
     "loadingCategories": "Loading categories...",
@@ -50,6 +63,21 @@
     "expenses": "💸 Expenses",
     "recurring": "🔁 Recurring Templates"
   },
+  "quickAdd": {
+    "title": "Quick add expense",
+    "today": "Today",
+    "amount": "Amount",
+    "amountPlaceholder": "0.00",
+    "description": "Description",
+    "descriptionPlaceholder": "e.g. Coffee, Lunch, Uber",
+    "category": "Category (Optional)",
+    "noCategory": "No category",
+    "familyMember": "Family Member",
+    "selectFamilyMember": "Select a family member",
+    "submit": "Add expense",
+    "submitting": "Adding...",
+    "moreOptions": "Need more options?"
+  },
   
   "list": {
     "title": "Expenses",
@@ -84,6 +112,7 @@
       "date": "Date",
       "description": "Description",
       "category": "Category",
+      "paymentMethod": "Method",
       "member": "Member",
       "amount": "Amount",
       "actions": "Actions",

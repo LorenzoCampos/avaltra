@@ -15,6 +15,19 @@
     },
     "date": "Date",
     "category": "Category (Optional)",
+    "paymentMethod": {
+      "label": "Payment Method (Optional)",
+      "help": "Describes HOW the money came in. The account still tells you WHERE the transaction belongs.",
+      "empty": "Unspecified",
+      "options": {
+        "cash": "Cash",
+        "bank_transfer": "Bank transfer",
+        "debit_card": "Debit card",
+        "credit_card": "Credit card",
+        "digital_wallet": "Digital wallet",
+        "other": "Other"
+      }
+    },
     "familyMember": "Family Member (Optional)",
     "noMember": "No Member",
     "loadingCategories": "Loading categories...",
@@ -84,6 +97,8 @@
       "date": "Date",
       "description": "Description",
       "category": "Category",
+      "paymentMethod": "Method",
+      "emptyPaymentMethod": "Unspecified",
       "member": "Member",
       "amount": "Amount",
       "actions": "Actions",

@@ -1,4 +1,5 @@
 import type { Currency, TransactionType } from './api';
+import type { PaymentMethod } from './paymentMethod';
 
 export interface Income {
   id: string;
@@ -14,6 +15,7 @@ export interface Income {
   income_type: TransactionType;
   date: string; // YYYY-MM-DD
   end_date?: string | null;
+  payment_method: PaymentMethod | null;
   recurring_income_id?: string | null;
   created_at: string;
 }
@@ -28,6 +30,7 @@ export interface CreateIncomeRequest {
   family_member_id?: string | null;
   income_type?: TransactionType; // Default: "one-time"
   end_date?: string;
+  payment_method?: PaymentMethod | null;
   // Multi-Currency Modo 3 (preferido)
   exchange_rate?: number;
   amount_in_primary_currency?: number;
@@ -42,6 +45,7 @@ export interface UpdateIncomeRequest {
   category_id?: string | null;
   family_member_id?: string | null;
   end_date?: string | null;
+  payment_method?: PaymentMethod | null;
   exchange_rate?: number;
   amount_in_primary_currency?: number;
 }

@@ -35,6 +35,7 @@ type ExpenseListItem struct {
 	ExpenseType             string  `json:"expense_type"`
 	Date                    string  `json:"date"`
 	EndDate                 *string `json:"end_date,omitempty"`
+	PaymentMethod           *string `json:"payment_method"`
 	CreatedAt               string  `json:"created_at"`
 }
 
@@ -47,6 +48,10 @@ type ListExpensesResponse struct {
 }
 
 func ListExpenses(db *pgxpool.Pool) gin.HandlerFunc {
+	return listExpensesHandler(db)
+}
+
+func listExpensesHandler(db expenseStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context (set by AccountMiddleware)
 		accountID, exists := c.Get("account_id")
@@ -170,7 +175,7 @@ func ListExpenses(db *pgxpool.Pool) gin.HandlerFunc {
 		mainQuery := `
 			SELECT e.id, e.family_member_id, e.category_id, ec.name as category_name,
 			       e.description, e.amount, e.currency, e.exchange_rate, e.amount_in_primary_currency,
-			       e.expense_type, e.date, e.end_date, e.created_at
+			       e.expense_type, e.date, e.end_date, e.payment_method, e.created_at
 			FROM expenses e
 			LEFT JOIN expense_categories ec ON e.category_id = ec.id
 			WHERE ` + whereClause + `
@@ -191,7 +196,7 @@ func ListExpenses(db *pgxpool.Pool) gin.HandlerFunc {
 		expenses := []ExpenseListItem{}
 		for rows.Next() {
 			var expense ExpenseListItem
-			var familyMemberID, categoryID, categoryName *string
+			var familyMemberID, categoryID, categoryName, paymentMethod *string
 			var date, endDate *time.Time
 			var createdAt time.Time
 
@@ -208,6 +213,7 @@ func ListExpenses(db *pgxpool.Pool) gin.HandlerFunc {
 				&expense.ExpenseType,
 				&date,
 				&endDate,
+				&paymentMethod,
 				&createdAt,
 			)
 			if err != nil {
@@ -218,6 +224,7 @@ func ListExpenses(db *pgxpool.Pool) gin.HandlerFunc {
 			expense.FamilyMemberID = familyMemberID
 			expense.CategoryID = categoryID
 			expense.CategoryName = categoryName
+			expense.PaymentMethod = paymentMethod
 
 			if date != nil {
 				dateStr := date.Format("2006-01-02")

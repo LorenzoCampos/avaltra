@@ -1,4 +1,5 @@
 import type { Currency } from '@/schemas/account.schema';
+import type { PaymentMethod } from './paymentMethod';
 
 // Base Expense interface
 export interface Expense {
@@ -15,6 +16,7 @@ export interface Expense {
   expense_type: 'one-time' | 'recurring';
   date: string; // YYYY-MM-DD
   end_date: string | null; // Can be present on response, even for one-time if it was generated from recurring
+  payment_method: PaymentMethod | null;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +29,7 @@ export interface CreateExpenseRequest {
   date: string; // YYYY-MM-DD
   category_id?: string | null; // Use null to clear category
   family_member_id?: string | null; // Use null to clear member
+  payment_method?: PaymentMethod | null;
   // For multi-currency Mode 3 (optional)
   exchange_rate?: number;
   amount_in_primary_currency?: number;
@@ -41,6 +44,7 @@ export interface UpdateExpenseRequest {
   date?: string; // YYYY-MM-DD
   category_id?: string | null; // Use null to clear category
   family_member_id?: string | null; // Use null to clear member
+  payment_method?: PaymentMethod | null;
   // For multi-currency Mode 3 (optional)
   exchange_rate?: number;
   amount_in_primary_currency?: number;

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { QuickAddExpenseModal } from './QuickAddExpenseModal';
 import { useExpenses } from '@/hooks/useExpenses';
 import type { Currency } from '@/schemas/account.schema';
+import type { PaymentMethod } from '@/types/paymentMethod';
 
 export const QuickAddExpenseFAB = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,6 +17,7 @@ export const QuickAddExpenseFAB = () => {
     date: string;
     category_id?: string | null;
     family_member_id?: string | null;
+    payment_method?: PaymentMethod | null;
   }) => {
     createExpense(data, {
       onSuccess: () => {

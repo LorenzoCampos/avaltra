@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/axios';
+import type { PaymentMethod } from '@/types/paymentMethod';
 
 // Types
 export type ActivityType = 'income' | 'expense' | 'savings_deposit' | 'savings_withdrawal';
@@ -10,6 +11,7 @@ export interface ActivityItem {
   description: string;
   amount: number;
   currency: string;
+  payment_method: PaymentMethod | null;
   category_name: string | null;
   goal_name: string | null;
   goal_id: string | null;

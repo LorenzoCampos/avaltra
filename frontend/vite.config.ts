@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -76,5 +76,8 @@ export default defineConfig({
     strictPort: true,
     open: false, // No abrir browser automáticamente
     // https: true, // Comentado - descomenta en producción para PWA
+  },
+  test: {
+    include: ['src/**/*.test.ts'],
   },
 })

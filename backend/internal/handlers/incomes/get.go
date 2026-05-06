@@ -10,6 +10,10 @@ import (
 )
 
 func GetIncome(db *pgxpool.Pool) gin.HandlerFunc {
+	return getIncomeHandler(db)
+}
+
+func getIncomeHandler(db incomeStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context (set by AccountMiddleware)
 		accountID, exists := c.Get("account_id")
@@ -27,14 +31,14 @@ func GetIncome(db *pgxpool.Pool) gin.HandlerFunc {
 
 		// Query income ensuring it belongs to the user's account
 		var income IncomeResponse
-		var familyMemberID, categoryID, categoryName *string
+		var familyMemberID, categoryID, categoryName, paymentMethod *string
 		var date, endDate *time.Time
 		var createdAt time.Time
 
 		query := `
 			SELECT i.id, i.account_id, i.family_member_id, i.category_id, ic.name as category_name, i.description, 
 			       i.amount, i.currency, i.exchange_rate, i.amount_in_primary_currency,
-			       i.income_type, i.date, i.end_date, i.created_at
+			       i.income_type, i.date, i.end_date, i.payment_method, i.created_at
 			FROM incomes i
 			LEFT JOIN income_categories ic ON i.category_id = ic.id
 			WHERE i.id = $1 AND i.account_id = $2 AND i.deleted_at IS NULL
@@ -54,6 +58,7 @@ func GetIncome(db *pgxpool.Pool) gin.HandlerFunc {
 			&income.IncomeType,
 			&date,
 			&endDate,
+			&paymentMethod,
 			&createdAt,
 		)
 
@@ -71,6 +76,7 @@ func GetIncome(db *pgxpool.Pool) gin.HandlerFunc {
 		income.FamilyMemberID = familyMemberID
 		income.CategoryID = categoryID
 		income.CategoryName = categoryName
+		income.PaymentMethod = paymentMethod
 
 		if date != nil {
 			dateStr := date.Format("2006-01-02")

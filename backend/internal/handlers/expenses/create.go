@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/internal/transactions"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,6 +21,7 @@ type CreateExpenseRequest struct {
 	ExpenseType    *string `json:"expense_type" binding:"omitempty,oneof=one-time recurring"` // Optional: defaults to "one-time"
 	Date           string  `json:"date" binding:"required"`                                   // Format: YYYY-MM-DD
 	EndDate        *string `json:"end_date"`                                                  // Optional for recurring
+	PaymentMethod  *string `json:"payment_method"`
 
 	// Multi-currency fields (Modo 3: Flexibilidad Total)
 	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`              // Optional: tasa de conversión
@@ -40,10 +42,15 @@ type ExpenseResponse struct {
 	ExpenseType             string  `json:"expense_type"`
 	Date                    string  `json:"date"`
 	EndDate                 *string `json:"end_date,omitempty"`
+	PaymentMethod           *string `json:"payment_method"`
 	CreatedAt               string  `json:"created_at"`
 }
 
 func CreateExpense(db *pgxpool.Pool) gin.HandlerFunc {
+	return createExpenseHandler(db)
+}
+
+func createExpenseHandler(db expenseStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req CreateExpenseRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -90,6 +97,11 @@ func CreateExpense(db *pgxpool.Pool) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "end_date must be after or equal to date"})
 				return
 			}
+		}
+
+		if err := transactions.ValidateOptionalPaymentMethod(req.PaymentMethod); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 
 		// If family_member_id is provided, validate it belongs to this account
@@ -188,12 +200,12 @@ func CreateExpense(db *pgxpool.Pool) gin.HandlerFunc {
 			`INSERT INTO expenses (
 			account_id, family_member_id, category_id, description, 
 			amount, currency, exchange_rate, amount_in_primary_currency,
-			expense_type, date, end_date
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			expense_type, date, end_date, payment_method
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id, created_at`,
 			accountID, req.FamilyMemberID, req.CategoryID, req.Description,
 			req.Amount, req.Currency, exchangeRate, amountInPrimaryCurrency,
-			expenseType, req.Date, req.EndDate,
+			expenseType, req.Date, req.EndDate, req.PaymentMethod,
 		).Scan(&expenseID, &createdAt)
 
 		if err != nil {
@@ -245,6 +257,7 @@ func CreateExpense(db *pgxpool.Pool) gin.HandlerFunc {
 			ExpenseType:             expenseType,
 			Date:                    req.Date,
 			EndDate:                 req.EndDate,
+			PaymentMethod:           req.PaymentMethod,
 			CreatedAt:               createdAt.Format(time.RFC3339),
 		}
 

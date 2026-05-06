@@ -90,6 +90,9 @@ Son compras que ocurren una sola vez: supermercado, cena en restaurante, compra 
 **Campos opcionales:**
 - Categoría
 - Family member (obligatorio si la cuenta es tipo `family`)
+- Medio de pago (`payment_method`): `cash`, `bank_transfer`, `debit_card`, `credit_card`, `digital_wallet`, `other`
+
+`payment_method` es **separado de `account`**: la cuenta te dice dónde vive el movimiento; el medio de pago te dice cómo salió la plata. En MVP es totalmente opcional, así que si no lo cargás queda en `null` y no rompe el flujo rápido.
 
 #### Gastos Recurrentes (Recurring)
 
@@ -205,6 +208,8 @@ Un ingreso puede tener **categoría o no** (opcional). Puede ser **único (`one-
 #### Ingresos Únicos (One-Time)
 
 Dinero que entra una sola vez: venta de un artículo, bono único, reembolso, regalo en efectivo. Estos ingresos se registran en el mes en que ocurrieron.
+
+También podés guardar un **medio de cobro opcional** (`payment_method`) usando el mismo catálogo MVP que gastos. Acá también `account` y `payment_method` significan cosas distintas: la cuenta marca el contexto/propiedad; el medio marca cómo entró la plata.
 
 #### Ingresos Recurrentes (Recurring)
 

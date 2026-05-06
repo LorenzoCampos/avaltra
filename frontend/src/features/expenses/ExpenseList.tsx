@@ -13,6 +13,7 @@ import { TableSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useActionFeedback } from '@/hooks/useActionFeedback';
 import { cn } from '@/lib/utils';
+import { getPaymentMethodLabel } from '@/lib/paymentMethods';
 
 export const ExpenseList = () => {
   const { t } = useTranslation('expenses');
@@ -54,6 +55,7 @@ export const ExpenseList = () => {
           currency: expense.currency,
           category_id: expense.category_id,
           family_member_id: expense.family_member_id,
+          payment_method: expense.payment_method,
           // Date is NOT included - will use today's date
         }
       }
@@ -222,6 +224,9 @@ export const ExpenseList = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           {t('list.table.category')}
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          {t('list.table.paymentMethod')}
+                        </th>
                         {isFamilyAccount && (
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             {t('list.table.member')}
@@ -252,6 +257,9 @@ export const ExpenseList = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                           {expense.category_name || t('common:common.noCategory')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                          {expense.payment_method ? getPaymentMethodLabel(t, expense.payment_method) : '—'}
                         </td>
                         {isFamilyAccount && (
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -349,6 +357,11 @@ export const ExpenseList = () => {
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
                     {expense.category_name || t('common:common.noCategory')}
                   </span>
+                  {expense.payment_method && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">
+                      {getPaymentMethodLabel(t, expense.payment_method)}
+                    </span>
+                  )}
                   {isFamilyAccount && expense.family_member_id && (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                       {familyMembers?.find(m => m.id === expense.family_member_id)?.name || t('list.table.na')}

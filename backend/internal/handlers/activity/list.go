@@ -1,13 +1,20 @@
 package activity
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type activityStore interface {
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
 
 type ListActivityQuery struct {
 	DateFrom string `form:"date_from"` // YYYY-MM-DD
@@ -18,16 +25,17 @@ type ListActivityQuery struct {
 }
 
 type ActivityItem struct {
-	ID           string  `json:"id"`
-	Type         string  `json:"type"` // income, expense, savings_deposit, savings_withdrawal
-	Description  string  `json:"description"`
-	Amount       float64 `json:"amount"`
-	Currency     string  `json:"currency"`
-	CategoryName *string `json:"category_name,omitempty"` // For incomes/expenses
-	GoalName     *string `json:"goal_name,omitempty"`     // For savings transactions
-	GoalID       *string `json:"goal_id,omitempty"`       // For savings transactions
-	Date         string  `json:"date"`
-	CreatedAt    string  `json:"created_at"`
+	ID            string  `json:"id"`
+	Type          string  `json:"type"` // income, expense, savings_deposit, savings_withdrawal
+	Description   string  `json:"description"`
+	Amount        float64 `json:"amount"`
+	Currency      string  `json:"currency"`
+	PaymentMethod *string `json:"payment_method"`
+	CategoryName  *string `json:"category_name,omitempty"` // For incomes/expenses
+	GoalName      *string `json:"goal_name,omitempty"`     // For savings transactions
+	GoalID        *string `json:"goal_id,omitempty"`       // For savings transactions
+	Date          string  `json:"date"`
+	CreatedAt     string  `json:"created_at"`
 }
 
 type ActivitySummary struct {
@@ -48,6 +56,10 @@ type ListActivityResponse struct {
 }
 
 func ListActivity(db *pgxpool.Pool) gin.HandlerFunc {
+	return listActivityHandler(db)
+}
+
+func listActivityHandler(db activityStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context (set by AccountMiddleware)
 		accountID, exists := c.Get("account_id")
@@ -134,6 +146,7 @@ func ListActivity(db *pgxpool.Pool) gin.HandlerFunc {
 				i.description,
 				i.amount_in_primary_currency as amount,
 				i.currency,
+				i.payment_method,
 				ic.name as category_name,
 				NULL::TEXT as goal_name,
 				NULL::UUID as goal_id,
@@ -154,6 +167,7 @@ func ListActivity(db *pgxpool.Pool) gin.HandlerFunc {
 				e.description,
 				e.amount_in_primary_currency as amount,
 				e.currency,
+				e.payment_method,
 				ec.name as category_name,
 				NULL::TEXT as goal_name,
 				NULL::UUID as goal_id,
@@ -177,6 +191,7 @@ func ListActivity(db *pgxpool.Pool) gin.HandlerFunc {
 				COALESCE(st.description, 'Savings ' || st.transaction_type) as description,
 				st.amount,
 				sg.currency,
+				NULL::TEXT as payment_method,
 				NULL::TEXT as category_name,
 				sg.name as goal_name,
 				sg.id as goal_id,
@@ -278,7 +293,7 @@ func ListActivity(db *pgxpool.Pool) gin.HandlerFunc {
 
 		for rows.Next() {
 			var activity ActivityItem
-			var categoryName, goalName *string
+			var paymentMethod, categoryName, goalName *string
 			var goalID *string
 			var date time.Time
 			var createdAt time.Time
@@ -289,6 +304,7 @@ func ListActivity(db *pgxpool.Pool) gin.HandlerFunc {
 				&activity.Description,
 				&activity.Amount,
 				&activity.Currency,
+				&paymentMethod,
 				&categoryName,
 				&goalName,
 				&goalID,
@@ -300,6 +316,7 @@ func ListActivity(db *pgxpool.Pool) gin.HandlerFunc {
 				return
 			}
 
+			activity.PaymentMethod = paymentMethod
 			activity.CategoryName = categoryName
 			activity.GoalName = goalName
 			activity.GoalID = goalID

@@ -64,12 +64,13 @@ export const useIncomes = (params?: IncomeListParams) => {
           amount: newIncomeData.amount,
           currency: newIncomeData.currency,
           exchange_rate: newIncomeData.exchange_rate || 1,
-          amount_in_primary_currency: newIncomeData.amount_in_primary_currency || newIncomeData.amount,
-          income_type: 'one-time',
-          date: newIncomeData.date,
-          end_date: null,
-          created_at: new Date().toISOString(),
-        };
+            amount_in_primary_currency: newIncomeData.amount_in_primary_currency || newIncomeData.amount,
+            income_type: 'one-time',
+            date: newIncomeData.date,
+            end_date: null,
+            payment_method: newIncomeData.payment_method ?? null,
+            created_at: new Date().toISOString(),
+          };
 
         queryClient.setQueryData<IncomeListResponse>(['incomes', activeAccountId], {
           ...previousIncomes,

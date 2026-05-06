@@ -18,6 +18,25 @@ import type { ActionFeedbackState } from '@/hooks/useActionFeedback';
 import { expenseSchema } from '@/schemas/expense.schema';
 import type { CreateExpenseRequest } from '@/types/expense';
 import type { Currency } from '@/schemas/account.schema';
+import { getPaymentMethodOptions } from '@/lib/paymentMethods';
+import {
+  normalizePaymentMethodForCreate,
+  normalizePaymentMethodForForm,
+  normalizePaymentMethodForUpdate,
+} from '@/types/paymentMethod';
+
+export const getExpenseFormPaymentMethodValue = normalizePaymentMethodForForm;
+
+export const buildExpenseSubmitPayload = (
+  data: CreateExpenseRequest,
+  isEditing: boolean,
+  existingPaymentMethod?: CreateExpenseRequest['payment_method'],
+): CreateExpenseRequest => ({
+  ...data,
+  payment_method: isEditing
+    ? normalizePaymentMethodForUpdate(data.payment_method, existingPaymentMethod)
+    : normalizePaymentMethodForCreate(data.payment_method),
+});
 
 export const ExpenseForm = () => {
   const { t } = useTranslation('expenses');
@@ -65,6 +84,7 @@ export const ExpenseForm = () => {
       date: defaultDate,
       category_id: lastCategoryId ?? undefined,
       family_member_id: undefined,
+      payment_method: undefined,
     },
     mode: 'onChange',
   });
@@ -90,6 +110,7 @@ export const ExpenseForm = () => {
       setValue('date', expenseData.date);
       setValue('category_id', expenseData.category_id ?? undefined);
       setValue('family_member_id', expenseData.family_member_id ?? undefined);
+      setValue('payment_method', normalizePaymentMethodForForm(expenseData.payment_method));
       
       // Load amount_in_primary_currency if it exists (for multi-currency expenses)
       // Set with a small delay to ensure the multi-currency field is rendered first
@@ -116,6 +137,9 @@ export const ExpenseForm = () => {
       }
       if (duplicateData.family_member_id) {
         setValue('family_member_id', duplicateData.family_member_id);
+      }
+      if (duplicateData.payment_method) {
+        setValue('payment_method', duplicateData.payment_method);
       }
       // Date uses default (today) - not copied from original
     }
@@ -152,12 +176,14 @@ export const ExpenseForm = () => {
     }
 
     try {
+      const payload = buildExpenseSubmitPayload(data, isEditing, expenseData?.payment_method);
+
       const savedExpense = isEditing && expenseId
         ? await updateExpenseAsync({
             id: expenseId,
-            ...data,
+            ...payload,
           })
-        : await createExpenseAsync(data);
+        : await createExpenseAsync(payload);
 
       setPendingFeedback({
         action: isEditing ? 'updated' : 'created',
@@ -176,6 +202,11 @@ export const ExpenseForm = () => {
     { label: t('form.currency.ars'), value: 'ARS' },
     { label: t('form.currency.usd'), value: 'USD' },
     { label: t('form.currency.eur'), value: 'EUR' },
+  ];
+
+  const paymentMethodOptions = [
+    { label: t('form.paymentMethod.empty'), value: '' },
+    ...getPaymentMethodOptions(t),
   ];
 
   if (isLoadingExpense || isLoadingCategories || isLoadingFamilyMembers) {
@@ -335,6 +366,20 @@ export const ExpenseForm = () => {
                 helperText={isLoadingCategories ? t('form.loadingCategories') : undefined}
               />
             </div>
+
+            <div>
+				  <div className="flex items-center gap-2 mb-2">
+				    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				      {t('form.paymentMethod.label')}
+				    </label>
+				    <InfoTooltip content={t('form.paymentMethod.help')} />
+				  </div>
+				  <Select
+				    options={paymentMethodOptions}
+				    error={errors.payment_method?.message}
+				    {...register('payment_method')}
+				  />
+				</div>
 
             {activeAccount?.type === 'family' && (
               <div>

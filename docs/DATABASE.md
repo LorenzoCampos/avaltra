@@ -197,6 +197,7 @@ CREATE TABLE expenses (
     currency currency NOT NULL,
     exchange_rate DECIMAL(15, 6) NOT NULL,
     amount_in_primary_currency DECIMAL(15, 2) NOT NULL,
+    payment_method TEXT,
     expense_type expense_type NOT NULL DEFAULT 'one-time',
     date DATE NOT NULL,
     end_date DATE,
@@ -215,6 +216,10 @@ CREATE TABLE expenses (
 - `exchange_rate` - Tasa de conversión (snapshot)
 - `amount_in_primary_currency` - Monto convertido a moneda de la cuenta
 
+**Campo de payment method:**
+- `payment_method` - `TEXT NULL` con catálogo fijo MVP: `cash`, `bank_transfer`, `debit_card`, `credit_card`, `digital_wallet`, `other`
+- `NULL` significa “sin especificar”
+
 **Campos de recurrencia:**
 - `recurring_expense_id` - FK al template si fue auto-generado. NULL para one-time o recurring legacy
 
@@ -223,6 +228,7 @@ CREATE TABLE expenses (
 - Recurring puede tener `end_date` opcional (null = infinito)
 - `amount` debe ser positivo
 - `end_date` >= `date` si existe
+- `payment_method` debe ser `NULL` o uno de los 6 valores del catálogo MVP
 
 **Notas:**
 - `expense_type = 'recurring'` con `recurring_expense_id = NULL` = sistema legacy (sin template)
@@ -246,6 +252,7 @@ CREATE TABLE incomes (
     currency currency NOT NULL,
     exchange_rate DECIMAL(15, 6) NOT NULL,
     amount_in_primary_currency DECIMAL(15, 2) NOT NULL,
+    payment_method TEXT,
     income_type income_type NOT NULL DEFAULT 'one-time',
     date DATE NOT NULL,
     end_date DATE,
@@ -258,6 +265,19 @@ CREATE TABLE incomes (
     )
 );
 ```
+
+**Campo de payment method:**
+- `payment_method` - `TEXT NULL` con el mismo catálogo MVP que `expenses`
+- `NULL` significa “sin especificar”
+
+**Constraints:**
+- `payment_method` debe ser `NULL` o uno de los 6 valores del catálogo MVP
+
+**Semántica API asociada:**
+- POST omitido o `null` → se persiste `NULL`
+- PUT omitido → mantiene el valor actual
+- PUT `null` → limpia el valor (`NULL`)
+- PUT string válido → reemplaza el valor actual
 
 ---
 
@@ -582,6 +602,14 @@ psql -d bolsillo_claro -f 011_update_savings_goals_and_create_transactions.sql
 - Crea ENUM `transaction_type`
 - Crea tabla `savings_goal_transactions`
 - Triggers para actualizar `current_amount` automáticamente
+
+### 021 - Add Payment Method to Transactions
+```bash
+psql -d bolsillo_claro -f 021_add_payment_method_to_transactions.sql
+```
+- Agrega `payment_method TEXT NULL` a `expenses` e `incomes`
+- Aplica `CHECK` con catálogo fijo MVP (`cash`, `bank_transfer`, `debit_card`, `credit_card`, `digital_wallet`, `other`)
+- Semántica API esperada: POST omitido/null → `NULL`; PUT omitido → mantiene, `null` → limpia, string válido → reemplaza
 
 ---
 

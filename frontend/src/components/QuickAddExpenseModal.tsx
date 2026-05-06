@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -11,6 +12,13 @@ import { useAccountStore } from '@/stores/account.store';
 import { useUser } from '@/hooks/useUser';
 import { useAccounts } from '@/hooks/useAccounts';
 import type { Currency } from '@/schemas/account.schema';
+import { PAYMENT_METHODS, normalizePaymentMethodForCreate, type PaymentMethod } from '@/types/paymentMethod';
+import { getPaymentMethodOptions } from '@/lib/paymentMethods';
+
+const optionalPaymentMethodSchema = z.preprocess(
+  (value) => (value === '' ? undefined : value),
+  z.enum(PAYMENT_METHODS).nullable().optional(),
+);
 
 // Schema simplificado para quick add (sin validación de family_member)
 // La validación se hará dinámicamente en el componente
@@ -19,6 +27,7 @@ const quickAddSchemaBase = z.object({
   description: z.string().min(1, 'Description is required'),
   category_id: z.string().nullable().optional(),
   family_member_id: z.string().nullable().optional(),
+  payment_method: optionalPaymentMethodSchema,
 });
 
 // Schema con family_member obligatorio para cuentas familiares
@@ -27,9 +36,21 @@ const quickAddSchemaWithFamilyMember = z.object({
   description: z.string().min(1, 'Description is required'),
   category_id: z.string().nullable().optional(),
   family_member_id: z.string().min(1, 'Family member is required for family accounts'),
+  payment_method: optionalPaymentMethodSchema,
 });
 
 type QuickAddFormData = z.infer<typeof quickAddSchemaBase>;
+
+export const buildQuickAddExpensePayload = (
+  data: QuickAddFormData,
+  defaultCurrency: Currency,
+  defaultDate: string,
+) => ({
+  ...data,
+  currency: defaultCurrency,
+  date: defaultDate,
+  payment_method: normalizePaymentMethodForCreate(data.payment_method),
+});
 
 interface QuickAddExpenseModalProps {
   isOpen: boolean;
@@ -41,11 +62,13 @@ interface QuickAddExpenseModalProps {
     date: string;
     category_id?: string | null;
     family_member_id?: string | null;
+    payment_method?: PaymentMethod | null;
   }) => void;
   isSubmitting: boolean;
 }
 
 export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }: QuickAddExpenseModalProps) => {
+  const { t } = useTranslation('expenses');
   const { activeAccount } = useAccountStore();
   const { data: user } = useUser();
   const { accounts } = useAccounts();
@@ -72,6 +95,7 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
       description: '',
       category_id: lastCategoryId,
       family_member_id: null,
+      payment_method: null,
     },
   });
 
@@ -89,11 +113,7 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
     }
 
     // Combinar con defaults
-    onSubmit({
-      ...data,
-      currency: defaultCurrency,
-      date: defaultDate,
-    });
+    onSubmit(buildQuickAddExpensePayload(data, defaultCurrency, defaultDate));
 
     // Reset form después del submit
     reset();
@@ -105,6 +125,11 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
   };
 
   if (!isOpen) return null;
+
+  const paymentMethodOptions = [
+    { label: t('form.paymentMethod.empty'), value: '' },
+    ...getPaymentMethodOptions(t),
+  ];
 
   return (
     <>
@@ -119,7 +144,7 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
         <div className="bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl max-h-[85vh] overflow-y-auto">
           {/* Header */}
           <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quick Add Expense</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('quickAdd.title')}</h2>
             <button
               onClick={handleClose}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
@@ -137,19 +162,19 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
                 {' · '}
                 <span>{defaultCurrency}</span>
                 {' · '}
-                <span>Today</span>
+                <span>{t('quickAdd.today')}</span>
               </p>
             </div>
 
             {/* Amount */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Amount <span className="text-red-500">*</span>
+                {t('quickAdd.amount')} <span className="text-red-500">*</span>
               </label>
               <Input
                 type="number"
                 step="0.01"
-                placeholder="0.00"
+                placeholder={t('quickAdd.amountPlaceholder')}
                 {...register('amount', { valueAsNumber: true })}
                 error={errors.amount?.message}
                 className="text-lg"
@@ -160,11 +185,11 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Description <span className="text-red-500">*</span>
+                {t('quickAdd.description')} <span className="text-red-500">*</span>
               </label>
               <Input
                 type="text"
-                placeholder="e.g., Coffee, Lunch, Uber"
+                placeholder={t('quickAdd.descriptionPlaceholder')}
                 {...register('description')}
                 error={errors.description?.message}
               />
@@ -173,10 +198,10 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
             {/* Category */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Category (optional)
+                {t('quickAdd.category')}
               </label>
               <Select {...register('category_id')} disabled={isLoadingCategories}>
-                <option value="">No Category</option>
+                  <option value="">{t('quickAdd.noCategory')}</option>
                 {categories?.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -185,14 +210,21 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
               </Select>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('form.paymentMethod.label')}
+              </label>
+              <Select {...register('payment_method')} options={paymentMethodOptions} />
+            </div>
+
             {/* Family Member (obligatorio si la cuenta tiene members) */}
             {hasFamilyMembers && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Family Member <span className="text-red-500">*</span>
+                  {t('quickAdd.familyMember')} <span className="text-red-500">*</span>
                 </label>
                 <Select {...register('family_member_id')} disabled={isLoadingFamilyMembers} error={errors.family_member_id?.message}>
-                  <option value="">Select a family member</option>
+                    <option value="">{t('quickAdd.selectFamilyMember')}</option>
                   {familyMembers?.map((member) => (
                     <option key={member.id} value={member.id}>
                       {member.name}
@@ -210,7 +242,7 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
                 disabled={isSubmitting}
                 className="text-lg py-3"
               >
-                {isSubmitting ? 'Adding...' : 'Add Expense'}
+                {isSubmitting ? t('quickAdd.submitting') : t('quickAdd.submit')}
               </Button>
 
               <button
@@ -218,7 +250,7 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
                 onClick={() => window.location.href = '/expenses/new'}
                 className="w-full text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
-                Need more options?
+                {t('quickAdd.moreOptions')}
               </button>
             </div>
           </form>

@@ -5,6 +5,39 @@ import autoTable from 'jspdf-autotable';
 import type { ActivityItem } from './useActivity';
 import type { Currency } from '@/schemas/account.schema';
 
+export const buildActivityExportRows = (transactions: ActivityItem[]) => {
+  return transactions.map((t) => ({
+    Date: t.date,
+    Type: t.type === 'expense' ? 'Expense' : t.type === 'income' ? 'Income' : t.type === 'savings_deposit' ? 'Savings Deposit' : 'Savings Withdrawal',
+    Description: t.description,
+    Category: t.category_name || (t.goal_name ? `Goal: ${t.goal_name}` : 'No Category'),
+    payment_method: t.payment_method ?? '',
+    Amount: t.amount,
+    Currency: t.currency,
+  }));
+};
+
+export const buildActivityPDFRows = (transactions: ActivityItem[]) => {
+  return transactions.map((t) => {
+    let typeLabel = '';
+    switch (t.type) {
+      case 'expense': typeLabel = 'Expense'; break;
+      case 'income': typeLabel = 'Income'; break;
+      case 'savings_deposit': typeLabel = 'Save +'; break;
+      case 'savings_withdrawal': typeLabel = 'Save -'; break;
+    }
+
+    return [
+      t.date,
+      typeLabel,
+      t.description,
+      t.category_name || (t.goal_name ? `Goal: ${t.goal_name}` : '-'),
+      t.payment_method ?? '-',
+      `${t.currency} ${t.amount.toFixed(2)}`,
+    ];
+  });
+};
+
 interface ExportOptions {
   filename: string;
   accountName: string;
@@ -19,14 +52,7 @@ export const useExport = () => {
     transactions: ActivityItem[],
     options: ExportOptions
   ) => {
-    const data = transactions.map(t => ({
-      Date: t.date,
-      Type: t.type === 'expense' ? 'Expense' : t.type === 'income' ? 'Income' : t.type === 'savings_deposit' ? 'Savings Deposit' : 'Savings Withdrawal',
-      Description: t.description,
-      Category: t.category_name || (t.goal_name ? `Goal: ${t.goal_name}` : 'No Category'),
-      Amount: t.amount,
-      Currency: t.currency,
-    }));
+    const data = buildActivityExportRows(transactions);
 
     const csv = Papa.unparse(data);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -89,26 +115,10 @@ export const useExport = () => {
     }
 
     // Table
-    const tableData = transactions.map(t => {
-      let typeLabel = '';
-      switch (t.type) {
-        case 'expense': typeLabel = 'Expense'; break;
-        case 'income': typeLabel = 'Income'; break;
-        case 'savings_deposit': typeLabel = 'Save +'; break;
-        case 'savings_withdrawal': typeLabel = 'Save -'; break;
-      }
-
-      return [
-        t.date,
-        typeLabel,
-        t.description,
-        t.category_name || (t.goal_name ? `Goal: ${t.goal_name}` : '-'),
-        `${t.currency} ${t.amount.toFixed(2)}`,
-      ];
-    });
+    const tableData = buildActivityPDFRows(transactions);
 
     autoTable(doc, {
-      head: [['Date', 'Type', 'Description', 'Category/Goal', 'Amount']],
+      head: [['Date', 'Type', 'Description', 'Category/Goal', 'Payment Method', 'Amount']],
       body: tableData,
       startY: options.totalSaved !== undefined && options.totalSaved > 0 ? 72 : 65,
       styles: { fontSize: 8, cellPadding: 2 },
@@ -117,9 +127,10 @@ export const useExport = () => {
       columnStyles: {
         0: { cellWidth: 25 },
         1: { cellWidth: 22 },
-        2: { cellWidth: 60 },
-        3: { cellWidth: 45 },
+        2: { cellWidth: 46 },
+        3: { cellWidth: 34 },
         4: { cellWidth: 28 },
+        5: { cellWidth: 28 },
       },
     });
 

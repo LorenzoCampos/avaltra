@@ -35,6 +35,7 @@ type IncomeListItem struct {
 	IncomeType              string  `json:"income_type"`
 	Date                    string  `json:"date"`
 	EndDate                 *string `json:"end_date,omitempty"`
+	PaymentMethod           *string `json:"payment_method"`
 	CreatedAt               string  `json:"created_at"`
 }
 
@@ -47,6 +48,10 @@ type ListIncomesResponse struct {
 }
 
 func ListIncomes(db *pgxpool.Pool) gin.HandlerFunc {
+	return listIncomesHandler(db)
+}
+
+func listIncomesHandler(db incomeStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context (set by AccountMiddleware)
 		accountID, exists := c.Get("account_id")
@@ -170,7 +175,7 @@ func ListIncomes(db *pgxpool.Pool) gin.HandlerFunc {
 		mainQuery := `
 			SELECT i.id, i.family_member_id, i.category_id, ic.name as category_name,
 			       i.description, i.amount, i.currency, i.exchange_rate, i.amount_in_primary_currency,
-			       i.income_type, i.date, i.end_date, i.created_at
+			       i.income_type, i.date, i.end_date, i.payment_method, i.created_at
 			FROM incomes i
 			LEFT JOIN income_categories ic ON i.category_id = ic.id
 			WHERE ` + whereClause + `
@@ -191,7 +196,7 @@ func ListIncomes(db *pgxpool.Pool) gin.HandlerFunc {
 		incomes := []IncomeListItem{}
 		for rows.Next() {
 			var income IncomeListItem
-			var familyMemberID, categoryID, categoryName *string
+			var familyMemberID, categoryID, categoryName, paymentMethod *string
 			var date, endDate *time.Time
 			var createdAt time.Time
 
@@ -208,6 +213,7 @@ func ListIncomes(db *pgxpool.Pool) gin.HandlerFunc {
 				&income.IncomeType,
 				&date,
 				&endDate,
+				&paymentMethod,
 				&createdAt,
 			)
 			if err != nil {
@@ -218,6 +224,7 @@ func ListIncomes(db *pgxpool.Pool) gin.HandlerFunc {
 			income.FamilyMemberID = familyMemberID
 			income.CategoryID = categoryID
 			income.CategoryName = categoryName
+			income.PaymentMethod = paymentMethod
 
 			if date != nil {
 				dateStr := date.Format("2006-01-02")

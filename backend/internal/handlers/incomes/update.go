@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/internal/transactions"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -12,14 +13,15 @@ import (
 )
 
 type UpdateIncomeRequest struct {
-	FamilyMemberID *string  `json:"family_member_id"` // Optional
-	CategoryID     *string  `json:"category_id"`      // Optional: UUID
-	Description    *string  `json:"description"`
-	Amount         *float64 `json:"amount"`
-	Currency       *string  `json:"currency"`
-	IncomeType     *string  `json:"income_type"`
-	Date           *string  `json:"date"`     // Format: YYYY-MM-DD
-	EndDate        *string  `json:"end_date"` // Format: YYYY-MM-DD
+	FamilyMemberID *string                          `json:"family_member_id"` // Optional
+	CategoryID     *string                          `json:"category_id"`      // Optional: UUID
+	Description    *string                          `json:"description"`
+	Amount         *float64                         `json:"amount"`
+	Currency       *string                          `json:"currency"`
+	IncomeType     *string                          `json:"income_type"`
+	Date           *string                          `json:"date"`     // Format: YYYY-MM-DD
+	EndDate        *string                          `json:"end_date"` // Format: YYYY-MM-DD
+	PaymentMethod  transactions.NullableStringField `json:"payment_method"`
 
 	// Multi-currency fields (Modo 3)
 	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`
@@ -27,6 +29,10 @@ type UpdateIncomeRequest struct {
 }
 
 func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
+	return updateIncomeHandler(db)
+}
+
+func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context (set by AccountMiddleware)
 		accountID, exists := c.Get("account_id")
@@ -234,6 +240,12 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		// Build dynamic UPDATE query
+		paymentMethodSet, paymentMethodValue, err := transactions.ResolvePaymentMethodUpdate(nil, req.PaymentMethod)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
 		updateQuery := `
 			UPDATE incomes SET
 				family_member_id = COALESCE($1, family_member_id),
@@ -248,13 +260,17 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 					WHEN $8::uuid IS NOT NULL THEN $8::date
 					ELSE end_date
 				END,
+				payment_method = CASE
+					WHEN $13 THEN $14::text
+					ELSE payment_method
+				END,
 				exchange_rate = COALESCE($11, exchange_rate),
 				amount_in_primary_currency = COALESCE($12, amount_in_primary_currency),
 				updated_at = CURRENT_TIMESTAMP
 			WHERE id = $9 AND account_id = $10 AND deleted_at IS NULL
 			RETURNING id, account_id, family_member_id, category_id, description, 
 			          amount, currency, exchange_rate, amount_in_primary_currency,
-			          income_type, date, end_date, created_at
+			          income_type, date, end_date, payment_method, created_at
 		`
 
 		// Handle end_date special case: empty string means clear it
@@ -269,7 +285,7 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		var income IncomeResponse
-		var familyMemberID, categoryID *string
+		var familyMemberID, categoryID, paymentMethod *string
 		var date, endDate *time.Time
 		var createdAt time.Time
 
@@ -278,6 +294,7 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 			req.Amount, req.Currency, req.IncomeType, req.Date,
 			endDateParam, incomeID, accountID,
 			finalExchangeRate, finalAmountInPrimaryCurrency,
+			paymentMethodSet, paymentMethodValue,
 		).Scan(
 			&income.ID,
 			&income.AccountID,
@@ -291,6 +308,7 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 			&income.IncomeType,
 			&date,
 			&endDate,
+			&paymentMethod,
 			&createdAt,
 		)
 
@@ -321,6 +339,7 @@ func UpdateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 		income.FamilyMemberID = familyMemberID
 		income.CategoryID = categoryID
 		income.CategoryName = categoryName
+		income.PaymentMethod = paymentMethod
 
 		if date != nil {
 			dateStr := date.Format("2006-01-02")

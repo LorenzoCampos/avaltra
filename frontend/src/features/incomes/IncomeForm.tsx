@@ -18,6 +18,25 @@ import type { ActionFeedbackState } from '@/hooks/useActionFeedback';
 import { incomeSchema } from '@/schemas/income.schema';
 import type { CreateIncomeRequest } from '@/types/income';
 import type { Currency } from '@/schemas/account.schema';
+import { getPaymentMethodOptions } from '@/lib/paymentMethods';
+import {
+  normalizePaymentMethodForCreate,
+  normalizePaymentMethodForForm,
+  normalizePaymentMethodForUpdate,
+} from '@/types/paymentMethod';
+
+export const getIncomeFormPaymentMethodValue = normalizePaymentMethodForForm;
+
+export const buildIncomeSubmitPayload = (
+  data: CreateIncomeRequest,
+  isEditing: boolean,
+  existingPaymentMethod?: CreateIncomeRequest['payment_method'],
+): CreateIncomeRequest => ({
+  ...data,
+  payment_method: isEditing
+    ? normalizePaymentMethodForUpdate(data.payment_method, existingPaymentMethod)
+    : normalizePaymentMethodForCreate(data.payment_method),
+});
 
 export const IncomeForm = () => {
   const { t } = useTranslation('incomes');
@@ -65,6 +84,7 @@ export const IncomeForm = () => {
       date: defaultDate,
       category_id: lastCategoryId ?? undefined,
       family_member_id: undefined,
+      payment_method: undefined,
     },
     mode: 'onChange',
   });
@@ -90,6 +110,7 @@ export const IncomeForm = () => {
       setValue('date', incomeData.date);
       setValue('category_id', incomeData.category_id ?? undefined);
       setValue('family_member_id', incomeData.family_member_id ?? undefined);
+      setValue('payment_method', normalizePaymentMethodForForm(incomeData.payment_method));
       
       // Load amount_in_primary_currency if it exists (multi-currency)
       if (incomeData.amount_in_primary_currency !== null && 
@@ -114,6 +135,9 @@ export const IncomeForm = () => {
       }
       if (duplicateData.family_member_id) {
         setValue('family_member_id', duplicateData.family_member_id);
+      }
+      if (duplicateData.payment_method) {
+        setValue('payment_method', duplicateData.payment_method);
       }
       // Date uses default (today) - not copied from original
     }
@@ -150,12 +174,14 @@ export const IncomeForm = () => {
     }
 
     try {
+      const payload = buildIncomeSubmitPayload(data, isEditing, incomeData?.payment_method);
+
       const savedIncome = isEditing && incomeId
         ? await updateIncomeAsync({
             id: incomeId,
-            ...data,
+            ...payload,
           })
-        : await createIncomeAsync(data);
+        : await createIncomeAsync(payload);
 
       setPendingFeedback({
         action: isEditing ? 'updated' : 'created',
@@ -174,6 +200,11 @@ export const IncomeForm = () => {
     { label: t('form.currency.ars'), value: 'ARS' },
     { label: t('form.currency.usd'), value: 'USD' },
     { label: t('form.currency.eur'), value: 'EUR' },
+  ];
+
+  const paymentMethodOptions = [
+    { label: t('form.paymentMethod.empty'), value: '' },
+    ...getPaymentMethodOptions(t),
   ];
 
   if (isLoadingIncome || isLoadingCategories || isLoadingFamilyMembers) {
@@ -331,6 +362,20 @@ export const IncomeForm = () => {
                 {...register('category_id')}
                 disabled={isLoadingCategories}
                 helperText={isLoadingCategories ? t('form.loadingCategories') : undefined}
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.paymentMethod.label')}
+                </label>
+                <InfoTooltip content={t('form.paymentMethod.help')} />
+              </div>
+              <Select
+                options={paymentMethodOptions}
+                error={errors.payment_method?.message}
+                {...register('payment_method')}
               />
             </div>
 

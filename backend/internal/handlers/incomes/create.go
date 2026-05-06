@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/internal/transactions"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,6 +21,7 @@ type CreateIncomeRequest struct {
 	IncomeType     *string `json:"income_type" binding:"omitempty,oneof=one-time recurring"` // Optional: defaults to "one-time"
 	Date           string  `json:"date" binding:"required"`                                  // Format: YYYY-MM-DD
 	EndDate        *string `json:"end_date"`                                                 // Optional: for recurring
+	PaymentMethod  *string `json:"payment_method"`
 
 	// Multi-currency fields (Modo 3: Flexibilidad Total)
 	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`              // Optional: tasa de conversión
@@ -40,10 +42,15 @@ type IncomeResponse struct {
 	IncomeType              string  `json:"income_type"`
 	Date                    string  `json:"date"`
 	EndDate                 *string `json:"end_date,omitempty"`
+	PaymentMethod           *string `json:"payment_method"`
 	CreatedAt               string  `json:"created_at"`
 }
 
 func CreateIncome(db *pgxpool.Pool) gin.HandlerFunc {
+	return createIncomeHandler(db)
+}
+
+func createIncomeHandler(db incomeStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req CreateIncomeRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -90,6 +97,11 @@ func CreateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "end_date must be after or equal to date"})
 				return
 			}
+		}
+
+		if err := transactions.ValidateOptionalPaymentMethod(req.PaymentMethod); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 
 		// If family_member_id is provided, validate it belongs to this account
@@ -188,12 +200,12 @@ func CreateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 			`INSERT INTO incomes (
 			account_id, family_member_id, category_id, description, 
 			amount, currency, exchange_rate, amount_in_primary_currency,
-			income_type, date, end_date
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			income_type, date, end_date, payment_method
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id, created_at`,
 			accountID, req.FamilyMemberID, req.CategoryID, req.Description,
 			req.Amount, req.Currency, exchangeRate, amountInPrimaryCurrency,
-			incomeType, req.Date, req.EndDate,
+			incomeType, req.Date, req.EndDate, req.PaymentMethod,
 		).Scan(&incomeID, &createdAt)
 
 		if err != nil {
@@ -244,6 +256,7 @@ func CreateIncome(db *pgxpool.Pool) gin.HandlerFunc {
 			IncomeType:              incomeType,
 			Date:                    req.Date,
 			EndDate:                 req.EndDate,
+			PaymentMethod:           req.PaymentMethod,
 			CreatedAt:               createdAt.Format(time.RFC3339),
 		}
 

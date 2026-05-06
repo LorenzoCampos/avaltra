@@ -15,6 +15,19 @@
     },
     "date": "Fecha",
     "category": "Categoría (Opcional)",
+    "paymentMethod": {
+      "label": "Medio de cobro (Opcional)",
+      "help": "Describe CÓMO entró la plata. La cuenta sigue indicando DÓNDE se registra el movimiento.",
+      "empty": "Sin especificar",
+      "options": {
+        "cash": "Efectivo",
+        "bank_transfer": "Transferencia bancaria",
+        "debit_card": "Tarjeta de débito",
+        "credit_card": "Tarjeta de crédito",
+        "digital_wallet": "Billetera digital",
+        "other": "Otro"
+      }
+    },
     "familyMember": "Miembro Familiar (Opcional)",
     "noMember": "Sin Miembro",
     "loadingCategories": "Cargando categorías...",
@@ -84,6 +97,8 @@
       "date": "Fecha",
       "description": "Descripción",
       "category": "Categoría",
+      "paymentMethod": "Medio",
+      "emptyPaymentMethod": "Sin especificar",
       "member": "Miembro",
       "amount": "Monto",
       "actions": "Acciones",

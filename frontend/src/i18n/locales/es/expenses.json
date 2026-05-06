@@ -15,6 +15,19 @@
     },
     "date": "Fecha",
     "category": "Categoría (Opcional)",
+    "paymentMethod": {
+      "label": "Medio de pago (Opcional)",
+      "help": "Describe CÓMO salió la plata. La cuenta sigue indicando DÓNDE vive el movimiento.",
+      "empty": "Sin especificar",
+      "options": {
+        "cash": "Efectivo",
+        "bank_transfer": "Transferencia bancaria",
+        "debit_card": "Tarjeta de débito",
+        "credit_card": "Tarjeta de crédito",
+        "digital_wallet": "Billetera digital",
+        "other": "Otro"
+      }
+    },
     "familyMember": "Miembro Familiar (Opcional)",
     "noMember": "Sin Miembro",
     "loadingCategories": "Cargando categorías...",
@@ -50,6 +63,21 @@
     "expenses": "💸 Gastos",
     "recurring": "🔁 Plantillas Recurrentes"
   },
+  "quickAdd": {
+    "title": "Agregar gasto rápido",
+    "today": "Hoy",
+    "amount": "Monto",
+    "amountPlaceholder": "0.00",
+    "description": "Descripción",
+    "descriptionPlaceholder": "ej. Café, Almuerzo, Uber",
+    "category": "Categoría (Opcional)",
+    "noCategory": "Sin categoría",
+    "familyMember": "Miembro Familiar",
+    "selectFamilyMember": "Seleccioná un miembro",
+    "submit": "Agregar gasto",
+    "submitting": "Agregando...",
+    "moreOptions": "¿Necesitás más opciones?"
+  },
   
   "list": {
     "title": "Gastos",
@@ -84,6 +112,7 @@
       "date": "Fecha",
       "description": "Descripción",
       "category": "Categoría",
+      "paymentMethod": "Medio",
       "member": "Miembro",
       "amount": "Monto",
       "actions": "Acciones",

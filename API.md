@@ -862,6 +862,9 @@ Crear gasto puntual (one-time).
 - `end_date` - Fecha fin (formato: YYYY-MM-DD)
   - Solo para `expense_type: "recurring"` (generado por scheduler)
   - ❌ No se puede usar con `expense_type: "one-time"`
+- `payment_method` - Medio de pago opcional e independiente de `account`
+  - Valores: `"cash"`, `"bank_transfer"`, `"debit_card"`, `"credit_card"`, `"digital_wallet"`, `"other"`
+  - Si se omite o se envía `null`, se guarda como `null`
 
 **Campos opcionales (Multi-Currency - Modo 3):**
 - `exchange_rate` - Tasa de cambio manual (ej: 1575.00)
@@ -893,6 +896,7 @@ Crear gasto puntual (one-time).
   "expense_type": "one-time",
   "date": "2026-01-16",
   "end_date": null,
+  "payment_method": "credit_card",
   "created_at": "2026-01-16T10:00:00Z"
 }
 ```
@@ -905,6 +909,7 @@ Crear gasto puntual (one-time).
 - Si `expense_type` es `"recurring"` y tiene `end_date`, debe ser >= `date`
 - Si `family_member_id` se proporciona, debe pertenecer a la cuenta
 - Si `category_id` se proporciona, debe existir en la DB
+- Si `payment_method` se proporciona, debe pertenecer al catálogo MVP soportado
 
 **Multi-Currency - Modos de cálculo:**
 1. **Modo 1 (Misma moneda):** `currency == primary_currency`
@@ -941,6 +946,8 @@ Listar gastos.
 
 **Headers:** `Authorization`, `X-Account-ID`
 
+Las respuestas de lista y detalle incluyen siempre `payment_method`; cuando no existe valor se devuelve `null`.
+
 **Query Params:**
 - `month` (opcional): `YYYY-MM`
 - `type` (opcional): `'one-time'`, `'recurring'`, `'all'`
@@ -960,7 +967,8 @@ Listar gastos.
       "amount_in_primary_currency": 25000,
       "expense_type": "one-time",
       "date": "2026-01-16",
-      "category_name": "Alimentación"
+      "category_name": "Alimentación",
+      "payment_method": null
     }
   ],
   "count": 1,
@@ -979,6 +987,8 @@ Listar gastos.
 ### GET /expenses/:id
 
 Detalle de gasto.
+
+`payment_method` siempre está presente en la respuesta; cuando no existe valor se devuelve `null`.
 
 **Headers:** `Authorization`, `X-Account-ID`
 
@@ -1028,6 +1038,8 @@ Actualizar gasto. Permite actualización parcial (solo enviás los campos que qu
 - `end_date` - Nueva fecha fin para gastos recurrentes (formato: YYYY-MM-DD o "" para limpiar)
   - Solo válido si `expense_type` es `"recurring"`
   - Debe ser >= `date`
+- `payment_method` - Nuevo medio de pago (`cash` | `bank_transfer` | `debit_card` | `credit_card` | `digital_wallet` | `other` | `null`)
+  - PUT distingue tres casos: campo omitido = mantener valor actual; `null` = limpiar; string válido = reemplazar
 - `exchange_rate` - Nueva tasa de cambio manual (debe ser > 0)
   - Si se proporciona, se usa para recalcular `amount_in_primary_currency`
 - `amount_in_primary_currency` - Nuevo monto en moneda primaria (debe ser > 0)
@@ -1792,6 +1804,9 @@ Registrar un ingreso único (one-time). Para ingresos recurrentes (sueldo, alqui
 - `end_date` - Fecha fin (formato: YYYY-MM-DD)
   - Solo para `income_type: "recurring"` (generado por scheduler)
   - ❌ No se puede usar con `income_type: "one-time"`
+- `payment_method` - Medio de cobro opcional e independiente de `account`
+  - Valores: `"cash"`, `"bank_transfer"`, `"debit_card"`, `"credit_card"`, `"digital_wallet"`, `"other"`
+  - Si se omite o se envía `null`, se guarda como `null`
 
 **Campos opcionales (Multi-Currency - Modo 3):**
 - `exchange_rate` - Tasa de cambio manual (ej: 1575.00)
@@ -1823,6 +1838,7 @@ Registrar un ingreso único (one-time). Para ingresos recurrentes (sueldo, alqui
   "income_type": "one-time",
   "date": "2026-01-20",
   "end_date": null,
+  "payment_method": "bank_transfer",
   "created_at": "2026-01-20T10:00:00Z"
 }
 ```
@@ -1835,6 +1851,7 @@ Registrar un ingreso único (one-time). Para ingresos recurrentes (sueldo, alqui
 - Si `income_type` es `"recurring"` y tiene `end_date`, debe ser >= `date`
 - Si `family_member_id` se proporciona, debe pertenecer a la cuenta
 - Si `category_id` se proporciona, debe existir en la DB
+- Si `payment_method` se proporciona, debe pertenecer al catálogo MVP soportado
 
 **Multi-Currency - Modos de cálculo:**
 1. **Modo 1 (Misma moneda):** `currency == primary_currency`
@@ -1870,11 +1887,15 @@ Ver [docs/MULTI-CURRENCY.md](./docs/MULTI-CURRENCY.md) para más detalles del Mo
 Query params idénticos a expenses:
 - `month`, `type`, `category_id`, `family_member_id`, `currency`
 
+Las respuestas de lista y detalle incluyen siempre `payment_method`; cuando no existe valor se devuelve `null`.
+
 ---
 
 ### GET /incomes/:id
 
 Detalle de ingreso.
+
+`payment_method` siempre está presente en la respuesta; cuando no existe valor se devuelve `null`.
 
 ---
 
@@ -1920,6 +1941,8 @@ Actualizar ingreso. Permite actualización parcial (solo enviás los campos que 
 - `end_date` - Nueva fecha fin para ingresos recurrentes (formato: YYYY-MM-DD o "" para limpiar)
   - Solo válido si `income_type` es `"recurring"`
   - Debe ser >= `date`
+- `payment_method` - Nuevo medio de cobro (`cash` | `bank_transfer` | `debit_card` | `credit_card` | `digital_wallet` | `other` | `null`)
+  - PUT distingue tres casos: campo omitido = mantener valor actual; `null` = limpiar; string válido = reemplazar
 - `exchange_rate` - Nueva tasa de cambio manual (debe ser > 0)
   - Si se proporciona, se usa para recalcular `amount_in_primary_currency`
 - `amount_in_primary_currency` - Nuevo monto en moneda primaria (debe ser > 0)
@@ -2129,6 +2152,7 @@ GET /activity?month=2026-01&page=2&limit=20
       "description": "Salario enero",
       "amount": 500000.00,
       "currency": "ARS",
+      "payment_method": "bank_transfer",
       "category_name": "Salario",
       "goal_name": null,
       "goal_id": null,
@@ -2141,6 +2165,7 @@ GET /activity?month=2026-01&page=2&limit=20
       "description": "Supermercado Carrefour",
       "amount": 25000.00,
       "currency": "ARS",
+      "payment_method": "credit_card",
       "category_name": "Alimentación",
       "goal_name": null,
       "goal_id": null,
@@ -2153,6 +2178,7 @@ GET /activity?month=2026-01&page=2&limit=20
       "description": "Ahorro para vacaciones",
       "amount": 50000.00,
       "currency": "ARS",
+      "payment_method": null,
       "category_name": null,
       "goal_name": "Vacaciones Brasil",
       "goal_id": "uuid-meta-vacaciones",
@@ -2165,6 +2191,7 @@ GET /activity?month=2026-01&page=2&limit=20
       "description": "Retiro para emergencia",
       "amount": 10000.00,
       "currency": "ARS",
+      "payment_method": null,
       "category_name": null,
       "goal_name": "Ahorro General",
       "goal_id": "uuid-meta-general",
@@ -2193,6 +2220,9 @@ GET /activity?month=2026-01&page=2&limit=20
 - `description` (string) - Descripción de la transacción
 - `amount` (number) - Monto en la moneda original
 - `currency` (string) - Moneda de la transacción (ARS | USD | EUR)
+- `payment_method` (string | null) - Medio normalizado del movimiento
+  - Solo para `type: "income"` o `"expense"` cuando exista dato
+  - `null` para savings goals o transacciones sin medio cargado
 - `category_name` (string | null) - Nombre de la categoría
   - Solo para `type: "income"` o `"expense"`
   - `null` para transacciones de savings goals
@@ -2236,6 +2266,9 @@ GET /activity?month=2026-01&page=2&limit=20
 - **Category y Goal son mutuamente excluyentes:**
   - Expenses/Incomes tienen `category_name`, `goal_name` y `goal_id` en `null`
   - Savings transactions tienen `goal_name` y `goal_id`, `category_name` en `null`
+- **Exports consumen este mismo payload de activity:**
+  - CSV/PDF incluyen `payment_method` con el valor normalizado cuando existe
+  - Si el movimiento no tiene medio cargado, exportan vacío/null según el formato
 
 **Use Cases:**
 - Timeline general de todas las transacciones del mes

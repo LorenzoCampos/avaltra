@@ -20,6 +20,16 @@ const optionalPaymentMethodSchema = z.preprocess(
   z.enum(PAYMENT_METHODS).nullable().optional(),
 );
 
+const createQuickAddSchema = (hasFamilyMembers: boolean) => quickAddSchemaBase.superRefine((data, ctx) => {
+  if (hasFamilyMembers && !data.family_member_id) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['family_member_id'],
+      message: 'Family member is required for family accounts',
+    });
+  }
+});
+
 // Schema simplificado para quick add (sin validación de family_member)
 // La validación se hará dinámicamente en el componente
 const quickAddSchemaBase = z.object({
@@ -30,16 +40,8 @@ const quickAddSchemaBase = z.object({
   payment_method: optionalPaymentMethodSchema,
 });
 
-// Schema con family_member obligatorio para cuentas familiares
-const quickAddSchemaWithFamilyMember = z.object({
-  amount: z.number().positive('Amount must be positive'),
-  description: z.string().min(1, 'Description is required'),
-  category_id: z.string().nullable().optional(),
-  family_member_id: z.string().min(1, 'Family member is required for family accounts'),
-  payment_method: optionalPaymentMethodSchema,
-});
-
-type QuickAddFormData = z.infer<typeof quickAddSchemaBase>;
+type QuickAddFormInput = z.input<typeof quickAddSchemaBase>;
+type QuickAddFormData = z.output<typeof quickAddSchemaBase>;
 
 export const buildQuickAddExpensePayload = (
   data: QuickAddFormData,
@@ -83,12 +85,12 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
   const defaultDate = new Date().toISOString().split('T')[0]; // HOY
   const lastCategoryId = localStorage.getItem('lastExpenseCategoryId') || null;
 
-  const hasFamilyMembers = familyMembers && familyMembers.length > 0;
+  const hasFamilyMembers = !!familyMembers?.length;
 
   // Usar schema con validación de family_member si es cuenta familiar
-  const schema = hasFamilyMembers ? quickAddSchemaWithFamilyMember : quickAddSchemaBase;
+  const schema = createQuickAddSchema(hasFamilyMembers);
 
-  const { register, handleSubmit, formState: { errors }, reset, setFocus } = useForm<QuickAddFormData>({
+  const { register, handleSubmit, formState: { errors }, reset, setFocus } = useForm<QuickAddFormInput, unknown, QuickAddFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       amount: 0,

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -26,6 +27,9 @@ import {
 } from '@/types/paymentMethod';
 
 export const getExpenseFormPaymentMethodValue = normalizePaymentMethodForForm;
+
+type ExpenseFormInput = z.input<typeof expenseSchema>;
+type ExpenseFormData = z.output<typeof expenseSchema>;
 
 export const buildExpenseSubmitPayload = (
   data: CreateExpenseRequest,
@@ -75,7 +79,7 @@ export const ExpenseForm = () => {
   const defaultDate = new Date().toISOString().split('T')[0]; // HOY
   const lastCategoryId = localStorage.getItem('lastExpenseCategoryId') || null;
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<CreateExpenseRequest>({
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ExpenseFormInput, unknown, ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       description: '',
@@ -167,7 +171,7 @@ export const ExpenseForm = () => {
     return () => window.clearInterval(countdownInterval);
   }, [redirectCountdown, navigate, pendingFeedback]);
 
-  const onSubmit = async (data: CreateExpenseRequest) => {
+  const onSubmit = async (data: ExpenseFormData) => {
     // ============================================================================
     // GUARDAR ÚLTIMA CATEGORÍA USADA (para próxima vez)
     // ============================================================================

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -26,6 +27,9 @@ import {
 } from '@/types/paymentMethod';
 
 export const getIncomeFormPaymentMethodValue = normalizePaymentMethodForForm;
+
+type IncomeFormInput = z.input<typeof incomeSchema>;
+type IncomeFormData = z.output<typeof incomeSchema>;
 
 export const buildIncomeSubmitPayload = (
   data: CreateIncomeRequest,
@@ -75,7 +79,7 @@ export const IncomeForm = () => {
   const defaultDate = new Date().toISOString().split('T')[0]; // HOY
   const lastCategoryId = localStorage.getItem('lastIncomeCategoryId') || null;
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<CreateIncomeRequest>({
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<IncomeFormInput, unknown, IncomeFormData>({
     resolver: zodResolver(incomeSchema),
     defaultValues: {
       description: '',
@@ -165,7 +169,7 @@ export const IncomeForm = () => {
     return () => window.clearInterval(countdownInterval);
   }, [redirectCountdown, navigate, pendingFeedback]);
 
-  const onSubmit = async (data: CreateIncomeRequest) => {
+  const onSubmit = async (data: IncomeFormData) => {
     // ============================================================================
     // GUARDAR ÚLTIMA CATEGORÍA USADA (para próxima vez)
     // ============================================================================

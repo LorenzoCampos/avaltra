@@ -20,6 +20,7 @@ import {
 import type { Currency } from '@/types/api';
 import type { Account } from '@/types/account';
 import type {
+  ImportExcelTemplateCategoryMappingItem,
   ImportExcelTemplateCommitResponse,
   ImportExcelTemplatePreviewResponse,
   ImportExcelTemplatePreviewRow,

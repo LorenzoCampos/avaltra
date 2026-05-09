@@ -8,4 +8,5 @@ printf '\n==> Running backend verification\n'
 (cd "$ROOT_DIR/backend" && go test ./...)
 
 printf '\n==> Running frontend verification\n'
+(cd "$ROOT_DIR/frontend" && pnpm typecheck)
 (cd "$ROOT_DIR/frontend" && pnpm test)

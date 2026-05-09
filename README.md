@@ -348,14 +348,19 @@ Si decidimos publicar en stores, usaremos **Capacitor** en vez de React Native:
 ## 🧪 Testing
 
 ```bash
-# Backend
+# Backend-only changes
 cd backend
 go test ./...
 
-# Frontend
+# Frontend-only changes
 cd frontend
 pnpm test
+
+# Full-stack changes (backend + frontend evidence)
+./scripts/verify-fullstack.sh
 ```
+
+Para cambios full-stack usá `./scripts/verify-fullstack.sh`. Ese runner ejecuta `go test ./...` dentro de `backend/` y `pnpm test` dentro de `frontend/`, así la verificación estricta falla si cualquiera de las dos partes rompe.
 
 ---
 

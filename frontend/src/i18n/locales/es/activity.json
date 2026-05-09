@@ -10,7 +10,27 @@
   "export": {
     "noData": "No hay datos para exportar",
     "csvSuccess": "CSV exportado exitosamente",
-    "pdfSuccess": "PDF exportado exitosamente"
+    "pdfSuccess": "PDF exportado exitosamente",
+    "noCategory": "Sin categoría",
+    "goalLabel": "Meta: {{goal}}",
+    "columns": {
+      "date": "Fecha",
+      "type": "Tipo",
+      "description": "Descripción",
+      "category": "Categoría / Meta",
+      "paymentMethod": "Medio de pago",
+      "amount": "Monto",
+      "currency": "Moneda"
+    },
+    "pdf": {
+      "title": "Reporte de actividad - {{accountName}}",
+      "generatedAt": "Generado: {{date}}",
+      "totalIncome": "Ingresos totales: {{amount}}",
+      "totalExpenses": "Gastos totales: {{amount}}",
+      "netBalance": "Balance neto: {{amount}}",
+      "totalSaved": "Total ahorrado en metas: {{amount}}",
+      "page": "Página {{current}} de {{total}}"
+    }
   },
   "summary": {
     "income": "Ingresos",

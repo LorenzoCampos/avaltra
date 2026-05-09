@@ -30,8 +30,8 @@ export function ActivityFeed() {
       // Para filtros: usar category_name como "pseudo category_id" 
       // (no es ideal pero funciona para filtrado por texto)
       category_id: activity.category_name || activity.goal_name || null,
-      // Activity ya viene en moneda primaria (ARS) desde el backend
-      amount_in_primary_currency: activity.amount,
+      // Activity ahora expone monto original y monto en moneda primaria por separado
+      amount_in_primary_currency: activity.amount_in_primary_currency,
     }));
   }, [data?.activities]);
 

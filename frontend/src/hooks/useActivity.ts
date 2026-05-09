@@ -11,6 +11,7 @@ export interface ActivityItem {
   description: string;
   amount: number;
   currency: string;
+  amount_in_primary_currency: number;
   payment_method: PaymentMethod | null;
   category_name: string | null;
   goal_name: string | null;

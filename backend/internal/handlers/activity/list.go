@@ -25,17 +25,18 @@ type ListActivityQuery struct {
 }
 
 type ActivityItem struct {
-	ID            string  `json:"id"`
-	Type          string  `json:"type"` // income, expense, savings_deposit, savings_withdrawal
-	Description   string  `json:"description"`
-	Amount        float64 `json:"amount"`
-	Currency      string  `json:"currency"`
-	PaymentMethod *string `json:"payment_method"`
-	CategoryName  *string `json:"category_name,omitempty"` // For incomes/expenses
-	GoalName      *string `json:"goal_name,omitempty"`     // For savings transactions
-	GoalID        *string `json:"goal_id,omitempty"`       // For savings transactions
-	Date          string  `json:"date"`
-	CreatedAt     string  `json:"created_at"`
+	ID                      string  `json:"id"`
+	Type                    string  `json:"type"` // income, expense, savings_deposit, savings_withdrawal
+	Description             string  `json:"description"`
+	Amount                  float64 `json:"amount"`
+	Currency                string  `json:"currency"`
+	AmountInPrimaryCurrency float64 `json:"amount_in_primary_currency"`
+	PaymentMethod           *string `json:"payment_method"`
+	CategoryName            *string `json:"category_name,omitempty"` // For incomes/expenses
+	GoalName                *string `json:"goal_name,omitempty"`     // For savings transactions
+	GoalID                  *string `json:"goal_id,omitempty"`       // For savings transactions
+	Date                    string  `json:"date"`
+	CreatedAt               string  `json:"created_at"`
 }
 
 type ActivitySummary struct {
@@ -144,8 +145,9 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				i.id,
 				'income' as type,
 				i.description,
-				i.amount_in_primary_currency as amount,
+				i.amount,
 				i.currency,
+				i.amount_in_primary_currency,
 				i.payment_method,
 				ic.name as category_name,
 				NULL::TEXT as goal_name,
@@ -165,8 +167,9 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				e.id,
 				'expense' as type,
 				e.description,
-				e.amount_in_primary_currency as amount,
+				e.amount,
 				e.currency,
+				e.amount_in_primary_currency,
 				e.payment_method,
 				ec.name as category_name,
 				NULL::TEXT as goal_name,
@@ -191,6 +194,7 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				COALESCE(st.description, 'Savings ' || st.transaction_type) as description,
 				st.amount,
 				sg.currency,
+				st.amount as amount_in_primary_currency,
 				NULL::TEXT as payment_method,
 				NULL::TEXT as category_name,
 				sg.name as goal_name,
@@ -224,7 +228,7 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 		summaryQuery := `
 			SELECT 
 				type,
-				SUM(amount) as total
+				SUM(amount_in_primary_currency) as total
 			FROM (` + unionQuery + `) as all_activities
 			GROUP BY type
 		`
@@ -304,6 +308,7 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				&activity.Description,
 				&activity.Amount,
 				&activity.Currency,
+				&activity.AmountInPrimaryCurrency,
 				&paymentMethod,
 				&categoryName,
 				&goalName,

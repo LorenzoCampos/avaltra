@@ -25,6 +25,7 @@ import { CategoriesList } from '@/features/categories/CategoriesList';
 import { CategoryForm } from '@/features/categories/CategoryForm';
 import UserSettings from '@/features/settings/UserSettings';
 import { OnboardingWizard } from '@/features/onboarding/OnboardingWizard';
+import { ImportExcelTemplatePage } from '@/features/imports/ImportExcelTemplatePage';
 
 import { useAuthStore, selectIsAuthenticated } from '@/stores/auth.store';
 
@@ -123,6 +124,7 @@ function App() {
 
               {/* Settings Route */}
               <Route path="/settings" element={<UserSettings />} />
+              <Route path="/imports/excel-template" element={<ImportExcelTemplatePage />} />
             </Route>
           </Route>
 

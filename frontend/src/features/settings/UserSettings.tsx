@@ -42,9 +42,14 @@ export default function UserSettings() {
             {t('subtitle')}
           </p>
         </div>
-        <Button variant="secondary" onClick={() => navigate(-1)}>
-          ← {t('common:buttons.back')}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => navigate('/imports/excel-template')}>
+            Import Excel template
+          </Button>
+          <Button variant="secondary" onClick={() => navigate(-1)}>
+            ← {t('common:buttons.back')}
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -124,28 +129,6 @@ function ProfileTab() {
   const { t } = useTranslation('settings');
   const { data: user, isLoading } = useUser();
   const updateProfile = useUpdateProfile();
-  const [name, setName] = useState('');
-
-  // Cargar nombre del usuario cuando se obtiene
-  useEffect(() => {
-    if (user) {
-      setName(user.name);
-    }
-  }, [user]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!name.trim()) {
-      return;
-    }
-
-    const data: UpdateProfileRequest = {
-      name: name.trim(),
-    };
-
-    updateProfile.mutate(data);
-  };
 
   if (isLoading) {
     return (
@@ -168,7 +151,53 @@ function ProfileTab() {
         <CardTitle>{t('profile.title')}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <ProfileTabForm
+          key={`${user?.id ?? 'anonymous'}:${user?.name ?? ''}`}
+          userEmail={user?.email ?? ''}
+          initialName={user?.name ?? ''}
+          memberSince={user?.created_at ? new Date(user.created_at).toLocaleDateString() : ''}
+          isPending={updateProfile.isPending}
+          onSubmit={(name) => {
+            const data: UpdateProfileRequest = {
+              name: name.trim(),
+            };
+
+            updateProfile.mutate(data);
+          }}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProfileTabForm({
+  userEmail,
+  initialName,
+  memberSince,
+  isPending,
+  onSubmit,
+}: {
+  userEmail: string;
+  initialName: string;
+  memberSince: string;
+  isPending: boolean;
+  onSubmit: (name: string) => void;
+}) {
+  const { t } = useTranslation('settings');
+  const [name, setName] = useState(initialName);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim()) {
+      return;
+    }
+
+    onSubmit(name);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email (Read-only) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -176,7 +205,7 @@ function ProfileTab() {
             </label>
             <Input
               type="email"
-              value={user?.email || ''}
+              value={userEmail}
               disabled
               className="bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
             />
@@ -206,7 +235,7 @@ function ProfileTab() {
             </label>
             <Input
               type="text"
-              value={user?.created_at ? new Date(user.created_at).toLocaleDateString() : ''}
+              value={memberSince}
               disabled
               className="bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
             />
@@ -216,14 +245,12 @@ function ProfileTab() {
           <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={updateProfile.isPending || !name.trim() || name.trim() === user?.name}
+              disabled={isPending || !name.trim() || name.trim() === initialName}
             >
-              {updateProfile.isPending ? t('profile.saving') : t('profile.save')}
+              {isPending ? t('profile.saving') : t('profile.save')}
             </Button>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+    </form>
   );
 }
 

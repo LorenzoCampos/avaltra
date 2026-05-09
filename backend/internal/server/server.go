@@ -13,6 +13,7 @@ import (
 	categoriesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/categories"
 	dashboardHandler "github.com/LorenzoCampos/avaltra/internal/handlers/dashboard"
 	expensesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/expenses"
+	importsHandler "github.com/LorenzoCampos/avaltra/internal/handlers/imports"
 	incomesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/incomes"
 	recurringExpensesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/recurring_expenses"
 	recurringIncomesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/recurring_incomes"
@@ -169,6 +170,14 @@ func (s *Server) setupRoutes() {
 			incomesRoutes.DELETE("/:id", incomesHandler.DeleteIncome(s.db.Pool)) // Eliminar ingreso
 			incomesRoutes.PATCH("/:id/restore", incomesHandler.RestoreIncome(s.db.Pool))
 			incomesRoutes.GET("", incomesHandler.ListIncomes(s.db.Pool)) // Listar ingresos
+		}
+
+		importsRoutes := api.Group("/imports")
+		importsRoutes.Use(authMiddleware)
+		importsRoutes.Use(accountMiddleware)
+		{
+			importsRoutes.POST("/excel-template/preview", importsHandler.PreviewExcelTemplate(s.db.Pool))
+			importsRoutes.POST("/excel-template/commit", importsHandler.CommitExcelTemplate(s.db.Pool))
 		}
 
 		// Rutas de categorías de gastos (protegidas - requieren auth + account)

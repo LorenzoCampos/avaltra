@@ -33,6 +33,7 @@
 - `Ahorro` rows are reported as excluded and are never imported in this MVP.
 - Each distinct Excel `CATEGORIA` used by importable rows needs an explicit destination category mapping before commit.
 - Preview is read-only; commit re-uploads the workbook plus approved row IDs and category decisions.
+- Commit stores a deterministic `import_fingerprint` on imported expenses/incomes. Re-uploading or retrying the same imported row skips it as `duplicate_import` instead of creating another transaction.
 
 ## Visibility
 

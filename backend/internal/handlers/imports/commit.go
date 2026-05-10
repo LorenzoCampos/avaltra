@@ -2,6 +2,8 @@ package imports
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -117,9 +119,15 @@ func commitHandler(db importStore) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
-			if err := insertImportedRow(c.Request.Context(), tx, accountID.(string), currency, exchangeRate, amountInPrimary, row); err != nil {
+			created, err := insertImportedRow(c.Request.Context(), tx, accountID.(string), currency, exchangeRate, amountInPrimary, row)
+			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to persist imported rows"})
 				return
+			}
+			if !created {
+				response.Skipped.Total++
+				response.Skipped.ByReason["duplicate_import"]++
+				continue
 			}
 			if *row.NormalizedType == normalizedTypeExpense {
 				response.Created.Expense++
@@ -162,23 +170,51 @@ func resolveImportAmounts(ctx context.Context, db rowQueryer, accountID, currenc
 	return exchangeRate, amount * exchangeRate, nil
 }
 
-func insertImportedRow(ctx context.Context, tx pgx.Tx, accountID, currency string, exchangeRate, amountInPrimary float64, row PreviewRow) error {
+func insertImportedRow(ctx context.Context, tx pgx.Tx, accountID, currency string, exchangeRate, amountInPrimary float64, row PreviewRow) (bool, error) {
 	date := mustParseDate(*row.Date).Format("2006-01-02")
+	fingerprint := importedRowFingerprint(accountID, currency, row)
 	var createdID string
 	switch *row.NormalizedType {
 	case normalizedTypeExpense:
-		return tx.QueryRow(ctx, `INSERT INTO expenses (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		RETURNING id`, accountID, row.SuggestedCategoryID, row.Description, *row.Amount, currency, exchangeRate, amountInPrimary, "one-time", date, row.PaymentMethod).Scan(&createdID)
+		err := tx.QueryRow(ctx, `INSERT INTO expenses (
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
+		RETURNING id`, accountID, row.SuggestedCategoryID, row.Description, *row.Amount, currency, exchangeRate, amountInPrimary, "one-time", date, row.PaymentMethod, fingerprint).Scan(&createdID)
+		if err == pgx.ErrNoRows {
+			return false, nil
+		}
+		return err == nil, err
 	case normalizedTypeIncome:
-		return tx.QueryRow(ctx, `INSERT INTO incomes (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, income_type, date, payment_method
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		RETURNING id`, accountID, row.SuggestedCategoryID, row.Description, *row.Amount, currency, exchangeRate, amountInPrimary, "one-time", date, row.PaymentMethod).Scan(&createdID)
+		err := tx.QueryRow(ctx, `INSERT INTO incomes (
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, income_type, date, payment_method, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
+		RETURNING id`, accountID, row.SuggestedCategoryID, row.Description, *row.Amount, currency, exchangeRate, amountInPrimary, "one-time", date, row.PaymentMethod, fingerprint).Scan(&createdID)
+		if err == pgx.ErrNoRows {
+			return false, nil
+		}
+		return err == nil, err
 	default:
-		return fmt.Errorf("unsupported normalized type")
+		return false, fmt.Errorf("unsupported normalized type")
 	}
+}
+
+func importedRowFingerprint(accountID, currency string, row PreviewRow) string {
+	categoryID := derefString(row.SuggestedCategoryID)
+	paymentMethod := derefString(row.PaymentMethod)
+	date := derefString(row.Date)
+	sourceRowID := row.RowID
+	if sourceRowID == "" && row.Sheet != "" && row.SheetRow > 0 {
+		sourceRowID = fmt.Sprintf("%s:%d", row.Sheet, row.SheetRow)
+	}
+	amount := 0.0
+	if row.Amount != nil {
+		amount = *row.Amount
+	}
+	token := fmt.Sprintf("%s|%s|%s|%s|%s|%s|%.2f|%s|%s", accountID, sourceRowID, *row.NormalizedType, currency, date, row.Description, amount, categoryID, paymentMethod)
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
 }
 
 func mustParseDate(value string) time.Time {

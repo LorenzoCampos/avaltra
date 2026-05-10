@@ -2014,7 +2014,7 @@ Eliminar ingreso.
 
 ### GET /dashboard/summary
 
-Resumen financiero del mes.
+Resumen financiero del mes con separación explícita entre métricas mensuales (flujo) y saldo actual acumulado (stock).
 
 **Headers:** `Authorization`, `X-Account-ID`
 
@@ -2026,10 +2026,11 @@ Resumen financiero del mes.
 {
   "period": "2026-01",
   "primary_currency": "ARS",
-  "total_income": 200000.00,
-  "total_expenses": 120000.00,
-  "total_assigned_to_goals": 30000.00,
-  "available_balance": 50000.00,
+  "total_income": 120000.00,
+  "total_expenses": 80000.00,
+  "total_assigned_to_goals": 60000.00,
+  "available_balance": 30000.00,
+  "current_available_balance": 240000.00,
   "expenses_by_category": [
     {
       "category_id": "uuid",
@@ -2086,15 +2087,21 @@ Resumen financiero del mes.
 
 **Campos importantes:**
 - `total_assigned_to_goals`: Total de fondos en metas activas (capital inmovilizado). Representa la suma del `current_amount` de todas las metas de ahorro activas, NO solo fondos agregados este mes.
-- `available_balance`: Dinero disponible para gastar = `total_income - total_expenses - total_assigned_to_goals`
+- `available_balance`: Campo legacy con semántica mensual. Representa el neto del período pedido: `total_income - total_expenses - net_savings_activity_del_mes`.
+- `current_available_balance`: Campo recomendado para UI nueva. Representa el saldo disponible actual acumulado de la cuenta: ingresos históricos - gastos históricos - movimientos netos históricos hacia metas.
 
-**Cálculo:**
+**Cálculos:**
 ```
-available_balance = total_income - total_expenses - total_assigned_to_goals
+monthly_net_savings_activity = monthly_deposits_to_goals - monthly_withdrawals_from_goals
+available_balance = total_income - total_expenses - monthly_net_savings_activity
+
+historical_net_savings_activity = historical_deposits_to_goals - historical_withdrawals_from_goals
+current_available_balance = historical_income - historical_expenses - historical_net_savings_activity
 ```
 
 **Notas:**
 - Todos los montos en moneda primaria (conversión automática vía `amount_in_primary_currency`)
+- La tarjeta principal del dashboard usa `current_available_balance`; ingresos y gastos siguen siendo métricas mensuales del `month` solicitado.
 - `top_expenses`: Máximo 5 gastos más grandes del mes (incluye info de categoría si existe)
 - `recent_transactions`: Máximo 10 transacciones (expenses + incomes mezclados, ordenados por `created_at DESC`)
 

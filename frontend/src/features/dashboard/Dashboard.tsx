@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/Button';
 import { QuickAddExpenseFAB } from '@/components/QuickAddExpenseFAB';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import { InsightsCard } from './InsightsCard';
+import { getDashboardErrorMessage } from './dashboardErrorMessage';
+import { getDashboardCardAmounts } from './dashboardSummaryCards';
 import type { Currency } from '@/schemas/account.schema';
 
 export const Dashboard = () => {
@@ -96,7 +98,7 @@ export const Dashboard = () => {
   }
 
   if (error) {
-    const errorMessage = (error as any)?.response?.data?.error || (error as any)?.message || t('error.message');
+    const errorMessage = getDashboardErrorMessage(error, t('error.message'));
     return (
       <div className="space-y-6">
         <div>
@@ -120,13 +122,12 @@ export const Dashboard = () => {
   const {
     period,
     primary_currency,
-    total_income,
-    total_expenses,
-    available_balance,
     expenses_by_category,
     top_expenses,
     recent_transactions,
   } = dashboard || {};
+
+  const { currentAvailableBalance, totalExpenses, totalIncome } = getDashboardCardAmounts(dashboard);
 
   const primaryCurrency = (primary_currency || activeAccount.currency) as Currency;
 
@@ -153,7 +154,7 @@ export const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                {formatCurrency(available_balance || 0, primaryCurrency)}
+                {formatCurrency(currentAvailableBalance, primaryCurrency)}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('cards.availableBalance.subtitle')}</p>
             </CardContent>
@@ -168,7 +169,7 @@ export const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-                {formatCurrency(total_expenses || 0, primaryCurrency)}
+                {formatCurrency(totalExpenses, primaryCurrency)}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {t('cards.expenses.subtitle', { count: top_expenses?.length || 0 })}
@@ -185,7 +186,7 @@ export const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(total_income || 0, primaryCurrency)}
+                {formatCurrency(totalIncome, primaryCurrency)}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('cards.income.subtitle')}</p>
             </CardContent>

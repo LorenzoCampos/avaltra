@@ -146,16 +146,19 @@ Esto captura perfectamente el "dólar tarjeta" argentino con impuestos incluidos
 
 ### Impacto en el Balance
 
-Cada gasto **se descuenta de los ingresos** en el cálculo del balance disponible que muestra el dashboard:
+Cada gasto impacta dos lecturas distintas del dashboard:
 
 ```
-available_balance = total_income - total_expenses - total_assigned_to_goals
+available_balance = total_income - total_expenses - movimientos_netos_del_mes_hacia_metas
+current_available_balance = ingresos_históricos - gastos_históricos - movimientos_netos_históricos_hacia_metas
 ```
 
 **Cómo funciona:**
 - El dashboard suma todos los gastos del mes (one-time + recurring activos)
 - Los gastos recurring **NO se crean físicamente cada mes**, se calculan virtualmente
 - Al consultar gastos de febrero, el sistema devuelve gastos recurring que estén activos en febrero
+- `available_balance` queda como neto mensual legacy del período pedido
+- `current_available_balance` es el saldo acumulado real que usa la tarjeta principal del dashboard
 
 ### Gestionar Gastos Recurrentes
 
@@ -314,17 +317,19 @@ Cada operación:
 
 ### Impacto en el Balance
 
-Cuando agregás fondos a una meta, **esto se descuenta del balance disponible**:
+Cuando agregás fondos a una meta, eso afecta tanto el neto mensual como el saldo acumulado:
 
 ```
-available_balance = total_income - total_expenses - total_assigned_to_goals
+available_balance = total_income - total_expenses - movimientos_netos_del_mes_hacia_metas
+current_available_balance = ingresos_históricos - gastos_históricos - movimientos_netos_históricos_hacia_metas
 ```
 
 **Cómo funciona:**
 - Las metas NO crean gastos reales (expenses)
 - El dashboard calcula `total_assigned_to_goals` sumando el `current_amount` de todas tus metas activas
 - Este monto representa el "capital inmovilizado" total (dinero que tenés pero no está disponible)
-- Se resta del balance disponible
+- Los depósitos del mes reducen `available_balance` y también el `current_available_balance`
+- Los retiros del mes hacen el efecto inverso
 
 **Ejemplo:**
 ```
@@ -334,7 +339,7 @@ Metas activas: "Vacaciones" $30,000 + "Auto" $20,000 = $50,000
 → Balance disponible: 200,000 - 120,000 - 50,000 = $30,000
 ```
 
-**⚠️ Punto no claro:** Si retirás fondos de una meta, ¿se suma al available_balance? La documentación no lo especifica claramente.
+La UI nueva no muestra `available_balance` como tarjeta principal: usa `current_available_balance` para reflejar la plata acumulada realmente disponible hoy, mientras ingresos y gastos siguen siendo métricas del mes consultado.
 
 ### Historial y Gestión
 
@@ -420,7 +425,8 @@ Si no especificás `month`, usa el mes actual.
 - `total_income`: Suma de todos los ingresos del mes en la moneda primaria
 - `total_expenses`: Suma de todos los gastos del mes en la moneda primaria
 - `total_assigned_to_goals`: Total de fondos en metas de ahorro activas (capital inmovilizado)
-- `available_balance`: Cálculo automático = `total_income - total_expenses - total_assigned_to_goals`
+- `available_balance`: Campo legacy mensual = `total_income - total_expenses - movimientos_netos_del_mes_hacia_metas`
+- `current_available_balance`: Nuevo saldo disponible actual acumulado = `ingresos_históricos - gastos_históricos - movimientos_netos_históricos_hacia_metas`
 - `primary_currency`: La moneda primaria de la cuenta (ARS o USD)
 
 **Análisis de gastos:**
@@ -446,7 +452,9 @@ Cuenta en ARS:
 - Total expenses mostrado: $50,000 ARS
 ```
 
-Si no hay datos para el mes solicitado, los totales son 0 y los arrays están vacíos.
+La tarjeta principal del dashboard usa `current_available_balance` para mostrar el saldo actual acumulado. Las tarjetas de ingresos y gastos siguen mostrando únicamente el flujo mensual del `month` pedido.
+
+Si no hay datos para el mes solicitado, los totales mensuales son 0 y los arrays están vacíos. El `current_available_balance` puede seguir mostrando saldo acumulado histórico si la cuenta ya tenía movimientos previos.
 
 ---
 
@@ -784,17 +792,19 @@ Podés:
 
 ### ¿Si agrego fondos a una meta de ahorro, esto se descuenta de mis ingresos?
 
-**SÍ**, pero de forma virtual/calculada:
+**SÍ**, pero ojo con la semántica: el dashboard hoy distingue flujo mensual vs saldo acumulado.
 
 Cuando agregás $30,000 a una meta:
 - NO se crea un gasto (expense)
 - El dashboard calcula `total_assigned_to_goals` sumando el `current_amount` de todas tus metas activas
 - Este monto representa el "capital inmovilizado" (dinero que tenés pero no está disponible para gastar)
-- Se resta en el cálculo de `available_balance`
+- Se resta del neto mensual `available_balance` si el movimiento ocurrió en el mes consultado
+- También reduce el `current_available_balance` porque inmoviliza plata real de la cuenta
 
 **Fórmula:**
 ```
-available_balance = total_income - total_expenses - total_assigned_to_goals
+available_balance = total_income - total_expenses - movimientos_netos_del_mes_hacia_metas
+current_available_balance = ingresos_históricos - gastos_históricos - movimientos_netos_históricos_hacia_metas
 ```
 
 **Ejemplo:**
@@ -805,7 +815,7 @@ Metas activas: "Vacaciones" $30,000 + "Auto" $20,000 = $50,000
 → Balance disponible: $30,000
 ```
 
-**Nota:** `total_assigned_to_goals` refleja el capital TOTAL inmovilizado en metas activas, no solo lo agregado este mes. Esto te muestra cuánto dinero real tenés "congelado" en objetivos de ahorro.
+**Nota:** `total_assigned_to_goals` refleja el capital TOTAL inmovilizado en metas activas, no solo lo agregado este mes. Esto te muestra cuánto dinero real tenés "congelado" en objetivos de ahorro. La tarjeta principal usa `current_available_balance` para reflejar ese efecto acumulado.
 
 ---
 
@@ -863,7 +873,7 @@ El gasto desaparece completamente del sistema.
 
 ---
 
-### ¿Qué pasa si retiro fondos de una meta? ¿Se suma al available_balance?
+### ¿Qué pasa si retiro fondos de una meta? ¿Se suma al available_balance y al current_available_balance?
 
 **SÍ**, automáticamente:
 
@@ -872,7 +882,8 @@ El gasto desaparece completamente del sistema.
 - La meta actualiza su `current_amount` (resta el monto retirado)
 - El dashboard calcula `total_assigned_to_goals` sumando el `current_amount` de todas las metas activas
 - Como el `current_amount` de la meta disminuyó, `total_assigned_to_goals` también disminuye
-- Por lo tanto, el `available_balance` aumenta automáticamente
+- Por lo tanto, el `available_balance` mensual aumenta si el retiro ocurrió dentro del mes consultado
+- Y el `current_available_balance` también aumenta porque volvés a liberar plata para gastar hoy
 
 **Ejemplo:**
 ```

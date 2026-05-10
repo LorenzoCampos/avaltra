@@ -8,8 +8,13 @@ import (
 
 	"github.com/LorenzoCampos/avaltra/pkg/recurrence"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
 )
+
+type dashboardQuerier interface {
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+	QueryRow(context.Context, string, ...any) pgx.Row
+}
 
 // CategoryExpense represents expenses grouped by category
 type CategoryExpense struct {
@@ -61,16 +66,17 @@ type UpcomingRecurringSummary struct {
 
 // DashboardSummaryResponse represents the complete dashboard summary
 type DashboardSummaryResponse struct {
-	Period               string                   `json:"period"` // YYYY-MM format
-	PrimaryCurrency      string                   `json:"primary_currency"`
-	TotalIncome          float64                  `json:"total_income"`
-	TotalExpenses        float64                  `json:"total_expenses"`
-	TotalAssignedToGoals float64                  `json:"total_assigned_to_goals"` // Always 0 for now
-	AvailableBalance     float64                  `json:"available_balance"`
-	ExpensesByCategory   []CategoryExpense        `json:"expenses_by_category"`
-	TopExpenses          []TopExpense             `json:"top_expenses"`
-	RecentTransactions   []RecentTransaction      `json:"recent_transactions"`
-	UpcomingRecurring    UpcomingRecurringSummary `json:"upcoming_recurring"`
+	Period                  string                   `json:"period"` // YYYY-MM format
+	PrimaryCurrency         string                   `json:"primary_currency"`
+	TotalIncome             float64                  `json:"total_income"`
+	TotalExpenses           float64                  `json:"total_expenses"`
+	TotalAssignedToGoals    float64                  `json:"total_assigned_to_goals"` // Informational only
+	AvailableBalance        float64                  `json:"available_balance"`       // Legacy monthly net
+	CurrentAvailableBalance float64                  `json:"current_available_balance"`
+	ExpensesByCategory      []CategoryExpense        `json:"expenses_by_category"`
+	TopExpenses             []TopExpense             `json:"top_expenses"`
+	RecentTransactions      []RecentTransaction      `json:"recent_transactions"`
+	UpcomingRecurring       UpcomingRecurringSummary `json:"upcoming_recurring"`
 }
 
 type recurringExpenseTemplateRow struct {
@@ -89,9 +95,11 @@ type recurringExpenseTemplateRow struct {
 	IsActive             bool
 }
 
+var loadUpcomingRecurringExpenses = getUpcomingRecurringExpenses
+
 // GetSummary handles GET /api/dashboard/summary
 // Returns a complete summary of the user's financial data for a given month
-func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
+func GetSummary(db dashboardQuerier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context (set by AccountMiddleware)
 		accountID, exists := c.Get("account_id")
@@ -152,6 +160,32 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 		err = db.QueryRow(ctx, expensesQuery, accountID, month).Scan(&totalExpenses)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to calculate total expenses"})
+			return
+		}
+
+		var historicalIncome float64
+		historicalIncomeQuery := `
+			SELECT COALESCE(SUM(amount_in_primary_currency), 0)
+			FROM incomes
+			WHERE account_id = $1
+			  AND deleted_at IS NULL
+		`
+		err = db.QueryRow(ctx, historicalIncomeQuery, accountID).Scan(&historicalIncome)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to calculate historical income"})
+			return
+		}
+
+		var historicalExpenses float64
+		historicalExpensesQuery := `
+			SELECT COALESCE(SUM(amount_in_primary_currency), 0)
+			FROM expenses
+			WHERE account_id = $1
+			  AND deleted_at IS NULL
+		`
+		err = db.QueryRow(ctx, historicalExpensesQuery, accountID).Scan(&historicalExpenses)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to calculate historical expenses"})
 			return
 		}
 
@@ -345,7 +379,24 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		// Net savings activity (deposits - withdrawals)
-		netSavingsActivity := monthlyDeposits - monthlyWithdrawals
+		netSavingsActivity := calculateNetSavingsActivity(monthlyDeposits, monthlyWithdrawals)
+
+		var historicalDeposits, historicalWithdrawals float64
+		historicalSavingsActivityQuery := `
+		SELECT 
+			COALESCE(SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END), 0) as deposits,
+			COALESCE(SUM(CASE WHEN transaction_type = 'withdrawal' THEN amount ELSE 0 END), 0) as withdrawals
+		FROM savings_goal_transactions sgt
+		INNER JOIN savings_goals sg ON sgt.savings_goal_id = sg.id
+		WHERE sg.account_id = $1
+	`
+		err = db.QueryRow(ctx, historicalSavingsActivityQuery, accountID).Scan(&historicalDeposits, &historicalWithdrawals)
+		if err != nil {
+			historicalDeposits = 0
+			historicalWithdrawals = 0
+		}
+
+		historicalSavingsNet := calculateNetSavingsActivity(historicalDeposits, historicalWithdrawals)
 
 		// ============================================================================
 		// 7. CALCULATE TOTAL ACCUMULATED IN SAVINGS (FOR DISPLAY)
@@ -379,9 +430,10 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 		// - Expenses: $0
 		// - Saved this month: $0
 		// - Available: $0 - $0 - $0 = $0 ✓ (not negative!)
-		availableBalance := totalIncome - totalExpenses - netSavingsActivity
+		availableBalance := calculateCurrentAvailableBalance(totalIncome, totalExpenses, netSavingsActivity)
+		currentAvailableBalance := calculateCurrentAvailableBalance(historicalIncome, historicalExpenses, historicalSavingsNet)
 
-		upcomingRecurring, err := getUpcomingRecurringExpenses(db, ctx, accountID, today)
+		upcomingRecurring, err := loadUpcomingRecurringExpenses(db, ctx, accountID, today)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get upcoming recurring expenses"})
 			return
@@ -391,23 +443,24 @@ func GetSummary(db *pgxpool.Pool) gin.HandlerFunc {
 		// BUILD RESPONSE
 		// ============================================================================
 		response := DashboardSummaryResponse{
-			Period:               month,
-			PrimaryCurrency:      primaryCurrency,
-			TotalIncome:          totalIncome,
-			TotalExpenses:        totalExpenses,
-			TotalAssignedToGoals: totalAssignedToGoals,
-			AvailableBalance:     availableBalance,
-			ExpensesByCategory:   expensesByCategory,
-			TopExpenses:          topExpenses,
-			RecentTransactions:   recentTransactions,
-			UpcomingRecurring:    upcomingRecurring,
+			Period:                  month,
+			PrimaryCurrency:         primaryCurrency,
+			TotalIncome:             totalIncome,
+			TotalExpenses:           totalExpenses,
+			TotalAssignedToGoals:    totalAssignedToGoals,
+			AvailableBalance:        availableBalance,
+			CurrentAvailableBalance: currentAvailableBalance,
+			ExpensesByCategory:      expensesByCategory,
+			TopExpenses:             topExpenses,
+			RecentTransactions:      recentTransactions,
+			UpcomingRecurring:       upcomingRecurring,
 		}
 
 		c.JSON(http.StatusOK, response)
 	}
 }
 
-func getUpcomingRecurringExpenses(db *pgxpool.Pool, ctx context.Context, accountID interface{}, today time.Time) (UpcomingRecurringSummary, error) {
+func getUpcomingRecurringExpenses(db dashboardQuerier, ctx context.Context, accountID interface{}, today time.Time) (UpcomingRecurringSummary, error) {
 	query := `
 		SELECT
 			id,
@@ -493,4 +546,12 @@ func getUpcomingRecurringExpenses(db *pgxpool.Pool, ctx context.Context, account
 		Count: len(items),
 		Items: items,
 	}, nil
+}
+
+func calculateNetSavingsActivity(deposits, withdrawals float64) float64 {
+	return deposits - withdrawals
+}
+
+func calculateCurrentAvailableBalance(income, expenses, savingsNet float64) float64 {
+	return income - expenses - savingsNet
 }

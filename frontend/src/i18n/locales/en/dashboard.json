@@ -18,16 +18,16 @@
   
   "cards": {
     "availableBalance": {
-      "title": "Available Balance",
-      "subtitle": "Money you can spend"
+      "title": "Current Available Balance",
+      "subtitle": "Accumulated money you can spend today"
     },
     "expenses": {
       "title": "This Month's Expenses",
-      "subtitle": "{{count}} transactions"
+      "subtitle": "{{count}} transactions recorded this month"
     },
     "income": {
       "title": "This Month's Income",
-      "subtitle": "Total earned"
+      "subtitle": "Total recorded this month"
     }
   },
   
@@ -73,7 +73,7 @@
   },
   
   "tooltips": {
-    "availableBalance": "This is how much money you have left after subtracting your expenses from your income. This is what you can actually spend.",
+    "availableBalance": "This is your current accumulated balance: historical income minus historical expenses and net savings-goal movements. It shows what you can actually spend today.",
     "expenses": "All the expenses you've recorded this month. Includes purchases, services, and any money you've spent.",
     "income": "The income you've recorded this month. This could be your salary, side work, or any money you've received.",
     "expensesByCategory": "Here you can see which categories you spend the most on. It helps you identify where you can save.",

@@ -18,16 +18,16 @@
   
   "cards": {
     "availableBalance": {
-      "title": "Saldo Disponible",
-      "subtitle": "Dinero que podés gastar"
+      "title": "Saldo Disponible Actual",
+      "subtitle": "Dinero acumulado que hoy podés gastar"
     },
     "expenses": {
       "title": "Gastos del Mes",
-      "subtitle": "{{count}} transacciones"
+      "subtitle": "{{count}} transacciones registradas este mes"
     },
     "income": {
       "title": "Ingresos del Mes",
-      "subtitle": "Total ganado"
+      "subtitle": "Total registrado este mes"
     }
   },
   
@@ -73,7 +73,7 @@
   },
   
   "tooltips": {
-    "availableBalance": "Es cuánta plata te queda después de restar tus gastos de tus ingresos. Esto es lo que realmente podés gastar.",
+    "availableBalance": "Es tu saldo acumulado actual: ingresos históricos menos gastos históricos y movimientos netos hacia metas de ahorro. Esto muestra lo que hoy realmente podés gastar.",
     "expenses": "Son todos los gastos que registraste este mes. Incluye compras, servicios, y cualquier dinero que hayas gastado.",
     "income": "Son los ingresos que registraste este mes. Puede ser tu sueldo, un trabajo extra, o cualquier dinero que hayas recibido.",
     "expensesByCategory": "Acá podés ver en qué categorías gastás más plata. Te ayuda a identificar dónde podés ahorrar.",

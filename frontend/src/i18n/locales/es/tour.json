@@ -3,7 +3,7 @@
   "start": "Sí, mostrame",
   "skip": "No, lo descubro solo",
   "steps": {
-    "availableBalance": "Acá ves tu Saldo Disponible: cuánta plata te queda después de restar gastos de ingresos",
+    "availableBalance": "Acá ves tu saldo disponible actual: la plata acumulada que te queda hoy después de ingresos, gastos y movimientos netos hacia metas",
     "quickActions": "Usá estos botones para agregar gastos e ingresos rápidamente",
     "bottomNav": "Usá el menú de abajo para navegar entre: Inicio, Actividad, Gastos, Ingresos y Más opciones. Tocá 'Más' para acceder a Reportes, Configuración y cerrar sesión.",
     "expenses": "Acá administrás todos tus Gastos: puntuales y recurrentes (como Netflix, alquiler)",

@@ -3,7 +3,7 @@
   "start": "Yes, show me",
   "skip": "No, I'll explore on my own",
   "steps": {
-    "availableBalance": "Here you see your Available Balance: how much money you have left after subtracting expenses from income",
+    "availableBalance": "Here you see your current available balance: the accumulated money you have left today after income, expenses, and net goal movements",
     "quickActions": "Use these buttons to quickly add expenses and incomes",
     "bottomNav": "Use the bottom menu to navigate between: Home, Activity, Expenses, Incomes, and More. Tap 'More' to access Reports, Settings, and logout.",
     "expenses": "Here you manage all your Expenses: one-time and recurring (like Netflix, rent)",

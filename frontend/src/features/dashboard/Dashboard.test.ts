@@ -1,0 +1,114 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
+import { describe, expect, it } from 'vitest';
+
+import dashboardEn from '@/i18n/locales/en/dashboard.json';
+import tourEn from '@/i18n/locales/en/tour.json';
+import dashboardEs from '@/i18n/locales/es/dashboard.json';
+import tourEs from '@/i18n/locales/es/tour.json';
+import { getDashboardErrorMessage } from './dashboardErrorMessage';
+import { getDashboardCardAmounts } from './dashboardSummaryCards';
+
+const apiDocPath = path.resolve(__dirname, '../../../../API.md');
+const featuresDocPath = path.resolve(__dirname, '../../../../FEATURES.md');
+const apiDoc = readFileSync(apiDocPath, 'utf8');
+const featuresDoc = readFileSync(featuresDocPath, 'utf8');
+
+describe('dashboard summary card semantics', () => {
+	it('uses current_available_balance for the main balance card and keeps monthly flows unchanged', () => {
+		expect(
+			getDashboardCardAmounts({
+				available_balance: 150,
+				current_available_balance: 1300,
+				total_expenses: 400,
+				total_income: 1000,
+			}),
+		).toEqual({
+			currentAvailableBalance: 1300,
+			totalExpenses: 400,
+			totalIncome: 1000,
+		});
+	});
+
+	it('falls back to zeroes when dashboard data is missing', () => {
+		expect(getDashboardCardAmounts()).toEqual({
+			currentAvailableBalance: 0,
+			totalExpenses: 0,
+			totalIncome: 0,
+		});
+	});
+
+	it('falls back to legacy available_balance when current_available_balance is absent', () => {
+		expect(
+			getDashboardCardAmounts({
+				available_balance: 725,
+				total_expenses: 120,
+				total_income: 845,
+			}),
+		).toEqual({
+			currentAvailableBalance: 725,
+			totalExpenses: 120,
+			totalIncome: 845,
+		});
+	});
+});
+
+describe('dashboard copy clarifies current balance vs monthly flow', () => {
+	it('updates Spanish dashboard and tour copy', () => {
+		expect(dashboardEs.cards.availableBalance.title).toContain('Actual');
+		expect(dashboardEs.cards.availableBalance.subtitle).toContain('acumulado');
+		expect(dashboardEs.cards.availableBalance.subtitle).toContain('hoy');
+		expect(dashboardEs.cards.expenses.title).toContain('Mes');
+		expect(dashboardEs.cards.income.title).toContain('Mes');
+		expect(dashboardEs.tooltips.availableBalance).toContain('acumulado');
+		expect(tourEs.steps.availableBalance).toContain('actual');
+	});
+
+	it('updates English dashboard and tour copy', () => {
+		expect(dashboardEn.cards.availableBalance.title).toContain('Current');
+		expect(dashboardEn.cards.expenses.title).toContain("Month");
+		expect(dashboardEn.cards.income.title).toContain("Month");
+		expect(dashboardEn.cards.expenses.subtitle).toContain('this month');
+		expect(dashboardEn.cards.income.subtitle).toContain('this month');
+		expect(dashboardEn.tooltips.availableBalance).toContain('accumulated');
+		expect(tourEn.steps.availableBalance).toContain('current');
+	});
+});
+
+describe('dashboard error messaging', () => {
+	it('prefers API error details before generic fallback copy', () => {
+		expect(
+			getDashboardErrorMessage(
+				{
+					response: {
+						data: {
+							error: 'Backend exploded',
+						},
+					},
+					message: 'Network failed',
+				},
+				'Fallback message',
+			),
+		).toBe('Backend exploded');
+	});
+
+	it('falls back to generic copy when the error is unknown', () => {
+		expect(getDashboardErrorMessage(null, 'Fallback message')).toBe('Fallback message');
+	});
+});
+
+describe('dashboard docs explain current balance vs monthly flow', () => {
+	it('documents the API semantics and UI usage', () => {
+		expect(apiDoc).toContain('`available_balance`: Campo legacy con semántica mensual.');
+		expect(apiDoc).toContain('`current_available_balance`: Campo recomendado para UI nueva.');
+		expect(apiDoc).toContain('La tarjeta principal del dashboard usa `current_available_balance`; ingresos y gastos siguen siendo métricas mensuales');
+	});
+
+	it('documents the product semantics in FEATURES', () => {
+		expect(featuresDoc).toContain('La tarjeta principal del dashboard usa `current_available_balance` para mostrar el saldo actual acumulado.');
+		expect(featuresDoc).toContain('Las tarjetas de ingresos y gastos siguen mostrando únicamente el flujo mensual del `month` pedido.');
+		expect(featuresDoc).toContain('Campo legacy mensual');
+		expect(featuresDoc).toContain('saldo disponible actual acumulado');
+	});
+});

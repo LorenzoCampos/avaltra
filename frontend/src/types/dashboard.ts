@@ -43,6 +43,7 @@ export interface DashboardSummary {
   total_expenses: number;
   total_assigned_to_goals: number;
   available_balance: number;
+  current_available_balance: number;
   expenses_by_category: ExpenseByCategory[];
   top_expenses: Expense[];
   recent_transactions: Transaction[];

@@ -28,7 +28,7 @@ Este documento explica de forma narrativa y entendible qué hace cada módulo de
 
 El sistema de autenticación permite registrar usuarios nuevos e iniciar sesión. Al registrarte, proporcionás email, contraseña (mínimo 8 caracteres) y nombre. El sistema hashea la contraseña con bcrypt y devuelve automáticamente tokens JWT (access + refresh), lo que significa que quedás logueado inmediatamente sin necesidad de hacer login después del registro.
 
-Al hacer login, ingresás email y contraseña, y si son correctos recibís un access token (válido por 15 minutos) y un refresh token (válido por 7 días). El refresh token se almacena en una cookie httpOnly por seguridad. Cuando el access token expira, podés usar el refresh token para obtener uno nuevo sin tener que volver a ingresar credenciales.
+Al hacer login, ingresás email y contraseña, y si son correctos recibís un access token (válido por 15 minutos) y un refresh token (válido por 7 días). Ambos tokens se devuelven en JSON y se distinguen con el claim `token_type`; los endpoints protegidos aceptan solo access tokens y `/auth/refresh` acepta solo refresh tokens. Cuando el access token expira, podés usar el refresh token para obtener uno nuevo sin tener que volver a ingresar credenciales.
 
 Todos los endpoints excepto register y login requieren el header `Authorization: Bearer <token>`. Si el token es inválido o expiró, obtenés error 401.
 

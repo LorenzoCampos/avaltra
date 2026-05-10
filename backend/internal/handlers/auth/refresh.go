@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/LorenzoCampos/avaltra/pkg/auth"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/gin-gonic/gin"
 )
 
 // RefreshRequest representa el JSON que el cliente envía para renovar el token
@@ -36,7 +36,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 	}
 
 	// Validar el refresh token
-	claims, err := auth.ValidateToken(req.RefreshToken, h.config.JWTSecret)
+	claims, err := auth.ValidateRefreshToken(req.RefreshToken, h.config.JWTSecret)
 	if err != nil {
 		logger.LogRefreshFailed(c.ClientIP(), "invalid_token")
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -125,7 +125,7 @@ func (h *Handler) RefreshFromHeader(c *gin.Context) {
 	refreshToken := parts[1]
 
 	// Validar el refresh token
-	claims, err := auth.ValidateToken(refreshToken, h.config.JWTSecret)
+	claims, err := auth.ValidateRefreshToken(refreshToken, h.config.JWTSecret)
 	if err != nil {
 		logger.LogRefreshFailed(c.ClientIP(), "invalid_token")
 		c.JSON(http.StatusUnauthorized, gin.H{

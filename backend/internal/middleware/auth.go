@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/LorenzoCampos/avaltra/pkg/auth"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/gin-gonic/gin"
 )
 
 // AuthMiddleware es un middleware que valida JWT tokens
@@ -37,7 +37,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		tokenString := parts[1]
 
 		// Validar el token
-		claims, err := auth.ValidateToken(tokenString, jwtSecret)
+		claims, err := auth.ValidateAccessToken(tokenString, jwtSecret)
 		if err != nil {
 			logger.LogInvalidToken(c.ClientIP(), err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{

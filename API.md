@@ -187,8 +187,9 @@ Renovar tokens usando el refresh token (evita re-login).
 ```
 
 **Notas:**
-- El refresh token viejo queda invalidado (rotación automática)
-- Siempre devuelve un PAR nuevo de tokens (access + refresh)
+- El endpoint acepta solamente JWT con `token_type: "refresh"`; access tokens y tokens antiguos sin `token_type` se rechazan.
+- Siempre devuelve un PAR nuevo de tokens (access + refresh).
+- El backend no guarda refresh tokens ni revoca el token anterior; el cliente debe reemplazar el refresh token localmente.
 - Verifica que el usuario siga existiendo en la DB antes de renovar
 
 **Errors:**

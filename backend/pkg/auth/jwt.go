@@ -10,18 +10,25 @@ import (
 // Claims representa los datos que guardamos dentro del JWT
 // jwt.RegisteredClaims incluye campos estándar como ExpiresAt, IssuedAt, etc.
 type Claims struct {
-	UserID string `json:"user_id"` // ID del usuario autenticado
-	Email  string `json:"email"`   // Email del usuario (útil para debugging)
+	UserID    string `json:"user_id"`    // ID del usuario autenticado
+	Email     string `json:"email"`      // Email del usuario (útil para debugging)
+	TokenType string `json:"token_type"` // Tipo explícito: access o refresh
 	jwt.RegisteredClaims
 }
+
+const (
+	TokenTypeAccess  = "access"
+	TokenTypeRefresh = "refresh"
+)
 
 // GenerateAccessToken genera un JWT de corta duración (access token)
 // Este token se usa en cada petición HTTP para autenticar al usuario
 func GenerateAccessToken(userID, email, secret string, expiry time.Duration) (string, error) {
 	// Crear los claims (datos del token)
 	claims := Claims{
-		UserID: userID,
-		Email:  email,
+		UserID:    userID,
+		Email:     email,
+		TokenType: TokenTypeAccess,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -47,7 +54,8 @@ func GenerateRefreshToken(userID, secret string, expiry time.Duration) (string, 
 	// El refresh token solo necesita el userID
 	// No incluimos datos adicionales para reducir tamaño
 	claims := Claims{
-		UserID: userID,
+		UserID:    userID,
+		TokenType: TokenTypeRefresh,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -62,6 +70,27 @@ func GenerateRefreshToken(userID, secret string, expiry time.Duration) (string, 
 	}
 
 	return tokenString, nil
+}
+
+// ValidateAccessToken valida un JWT y exige que sea un access token.
+func ValidateAccessToken(tokenString, secret string) (*Claims, error) {
+	return validateTokenType(tokenString, secret, TokenTypeAccess)
+}
+
+// ValidateRefreshToken valida un JWT y exige que sea un refresh token.
+func ValidateRefreshToken(tokenString, secret string) (*Claims, error) {
+	return validateTokenType(tokenString, secret, TokenTypeRefresh)
+}
+
+func validateTokenType(tokenString, secret, expectedType string) (*Claims, error) {
+	claims, err := ValidateToken(tokenString, secret)
+	if err != nil {
+		return nil, err
+	}
+	if claims.TokenType != expectedType {
+		return nil, fmt.Errorf("tipo de token inválido: %q", claims.TokenType)
+	}
+	return claims, nil
 }
 
 // ValidateToken valida un JWT y retorna los claims si es válido

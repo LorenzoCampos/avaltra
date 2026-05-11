@@ -66,8 +66,9 @@ func New(cfg *config.Config, db *database.DB) *Server {
 
 // setupRoutes configura todas las rutas de la API
 func (s *Server) setupRoutes() {
-	// Crear email sender (LogSender en dev cuando SMTP_HOST está vacío, SMTPSender en prod)
+	// Crear email sender (Brevo API si BREVO_API_KEY está seteada, SMTP fallback, LogSender en dev)
 	emailSender := email.NewSender(
+		s.config.BrevoAPIKey,
 		s.config.SMTPHost,
 		s.config.SMTPPort,
 		s.config.SMTPUser,

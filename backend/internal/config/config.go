@@ -19,7 +19,8 @@ type Config struct {
 	JWTSecret          string   // Clave secreta para firmar tokens JWT
 	JWTAccessExpiry    string   // Duración del access token (ej: "15m")
 	JWTRefreshExpiry   string   // Duración del refresh token (ej: "7d")
-	// Email / SMTP — vacío = modo dev (imprime a stdout)
+	// Email — BREVO_API_KEY tiene prioridad; SMTP queda como fallback; ambos vacíos = modo dev (stdout)
+	BrevoAPIKey string // API key transaccional de Brevo (preferida en producción)
 	SMTPHost    string // Host SMTP (ej: "smtp.sendgrid.net")
 	SMTPPort    string // Puerto SMTP (ej: "587")
 	SMTPUser    string // Usuario SMTP
@@ -56,7 +57,8 @@ func Load() (*Config, error) {
 		JWTSecret:          getEnv("JWT_SECRET", ""),
 		JWTAccessExpiry:    getEnv("JWT_ACCESS_EXPIRY", "15m"),
 		JWTRefreshExpiry:   getEnv("JWT_REFRESH_EXPIRY", "7d"),
-		// SMTP — empty string = dev mode (log to stdout), required in production
+		// Email delivery — Brevo API preferred, SMTP fallback, empty = dev mode (log to stdout)
+		BrevoAPIKey: getEnv("BREVO_API_KEY", ""),
 		SMTPHost:    getEnv("SMTP_HOST", ""),
 		SMTPPort:    getEnv("SMTP_PORT", ""),
 		SMTPUser:    getEnv("SMTP_USER", ""),

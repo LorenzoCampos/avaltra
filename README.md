@@ -124,6 +124,13 @@ PORT="8080"
 FRONTEND_URL="http://localhost:5173"
 ```
 
+**Emails transaccionales (verificación y reset):**
+- Si `BREVO_API_KEY` está seteada, el backend envía por la API HTTPS de Brevo.
+- Si `BREVO_API_KEY` está vacía y `SMTP_HOST` está seteada, usa SMTP como fallback.
+- Si ambas están vacías, usa `LogSender` para desarrollo y escribe los links en stdout.
+
+En producción/Render configurar `BREVO_API_KEY`, `SMTP_FROM` y `FRONTEND_URL`. No hace falta configurar SMTP salvo como fallback explícito.
+
 **Crear base de datos y ejecutar migraciones:**
 ```bash
 # Crear database

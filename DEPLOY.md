@@ -86,6 +86,8 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
@@ -104,7 +106,8 @@ services:
    - `DATABASE_URL` = connection string de Neon (paso 1)
    - `CORS_ALLOWED_ORIGINS` = `https://avaltra.app`
    - `FRONTEND_URL` = `https://avaltra.app`
-   - Variables SMTP segun tu proveedor
+   - `BREVO_API_KEY` = API key transaccional de Brevo (recomendado para producción)
+   - Variables SMTP solo si necesitás fallback y no seteás `BREVO_API_KEY`
 5. Deploy y esperar ~3 min
 6. Copiar la URL asignada (ej: `https://mi-app-api.onrender.com`)
 
@@ -283,11 +286,14 @@ CORS_ALLOWED_ORIGINS=https://avaltra.app
 | `COOKIE_SECURE` | `true` | Si |
 | `CORS_ALLOWED_ORIGINS` | `https://avaltra.app` | Si |
 | `FRONTEND_URL` | `https://avaltra.app` | Si |
-| `SMTP_HOST` | `smtp.mailtrap.io` | Si (si envia emails) |
-| `SMTP_PORT` | `2525` | Si (si envia emails) |
-| `SMTP_USER` | `xxx` | Si (si envia emails) |
-| `SMTP_PASS` | `xxx` | Si (si envia emails) |
-| `SMTP_FROM` | `Avaltra <auth@avaltra.app>` | Si (si envia emails) |
+| `BREVO_API_KEY` | `xkeysib-...` | Si (emails por Brevo API) |
+| `SMTP_FROM` | `Avaltra <auth@avaltra.app>` | Si (emails por Brevo API o SMTP) |
+| `SMTP_HOST` | `smtp-relay.brevo.com` | No; fallback SMTP si `BREVO_API_KEY` está vacío |
+| `SMTP_PORT` | `587` | No; fallback SMTP |
+| `SMTP_USER` | `xxx` | No; fallback SMTP |
+| `SMTP_PASS` | `xxx` | No; fallback SMTP |
+
+**Selección de envío de emails:** el backend usa `BREVO_API_KEY` si está seteada; si no, usa SMTP cuando `SMTP_HOST` existe; si ambos están vacíos usa `LogSender` y solo imprime los emails en logs. En Render preferimos `BREVO_API_KEY` porque sale por HTTPS y evita timeouts de SMTP/587.
 
 > `PORT` es inyectado automaticamente por Render. No configurar manualmente.
 

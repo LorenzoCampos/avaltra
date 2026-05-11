@@ -4,20 +4,25 @@ import (
 	"bytes"
 	"crypto/tls"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"net/smtp"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 )
 
 const (
 	smtpConnectTimeout   = 10 * time.Second
 	smtpReadWriteTimeout = 30 * time.Second
+	brevoEndpoint        = "https://api.brevo.com/v3/smtp/email"
+	brevoTimeout         = 10 * time.Second
 )
 
 //go:embed templates/verify.html
@@ -42,9 +47,19 @@ type Sender interface {
 }
 
 // NewSender returns the appropriate Sender based on configuration.
-// When host is empty, returns a LogSender (dev fallback that prints to stdout).
-// When host is set, returns an SMTPSender for real delivery.
-func NewSender(host, port, user, pass, from string) Sender {
+// Selection priority:
+//  1. BREVO_API_KEY set: Brevo HTTP API sender (production preferred path)
+//  2. SMTP_HOST set: SMTP sender (backwards-compatible fallback)
+//  3. neither set: LogSender (dev fallback that prints to stdout)
+func NewSender(brevoAPIKey, host, port, user, pass, from string) Sender {
+	if brevoAPIKey != "" {
+		return &BrevoAPISender{
+			apiKey:     brevoAPIKey,
+			from:       from,
+			endpoint:   brevoEndpoint,
+			httpClient: &http.Client{Timeout: brevoTimeout},
+		}
+	}
 	if host == "" {
 		return &LogSender{logWriter: os.Stdout}
 	}
@@ -55,6 +70,122 @@ func NewSender(host, port, user, pass, from string) Sender {
 		pass: pass,
 		from: from,
 	}
+}
+
+// ─── BrevoAPISender ──────────────────────────────────────────────────────────
+
+// BrevoAPISender sends transactional emails through Brevo's HTTPS API.
+type BrevoAPISender struct {
+	apiKey     string
+	from       string
+	endpoint   string
+	httpClient *http.Client
+}
+
+type brevoEmailAddress struct {
+	Name  string `json:"name,omitempty"`
+	Email string `json:"email"`
+}
+
+type brevoEmailRequest struct {
+	Sender      brevoEmailAddress   `json:"sender"`
+	To          []brevoEmailAddress `json:"to"`
+	Subject     string              `json:"subject"`
+	HTMLContent string              `json:"htmlContent"`
+}
+
+type brevoEmailResponse struct {
+	MessageID string `json:"messageId"`
+}
+
+// SendVerificationEmail sends an email with a verification link through Brevo.
+func (s *BrevoAPISender) SendVerificationEmail(to, token, frontendURL string) error {
+	link := fmt.Sprintf("%s/verify-email?token=%s", frontendURL, token)
+	subject := "Verifica tu email - Avaltra"
+	body, err := renderTemplate(verifyTemplate, templateData{Name: to, Link: link})
+	if err != nil {
+		return fmt.Errorf("email: render verify template: %w", err)
+	}
+	return s.send("verification", to, subject, body)
+}
+
+// SendPasswordResetEmail sends a password-reset email through Brevo.
+func (s *BrevoAPISender) SendPasswordResetEmail(to, token, frontendURL string) error {
+	link := fmt.Sprintf("%s/reset-password?token=%s", frontendURL, token)
+	subject := "Restablecer contraseña - Avaltra"
+	body, err := renderTemplate(resetTemplate, templateData{Name: to, Link: link})
+	if err != nil {
+		return fmt.Errorf("email: render reset template: %w", err)
+	}
+	return s.send("password_reset", to, subject, body)
+}
+
+func (s *BrevoAPISender) send(kind, to, subject, htmlBody string) error {
+	endpoint := s.endpoint
+	if endpoint == "" {
+		endpoint = brevoEndpoint
+	}
+	client := s.httpClient
+	if client == nil {
+		client = &http.Client{Timeout: brevoTimeout}
+	}
+
+	payload := brevoEmailRequest{
+		Sender:      parseEmailAddress(s.from),
+		To:          []brevoEmailAddress{{Email: to}},
+		Subject:     subject,
+		HTMLContent: htmlBody,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("email: brevo marshal request: %w", err)
+	}
+
+	log.Printf("[email] provider=brevo kind=%s status=start to=%s", kind, to)
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("email: brevo create request: %w", err)
+	}
+	req.Header.Set("api-key", s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		logBrevoResult(kind, "failure", to, 0, "", err)
+		return fmt.Errorf("email: brevo request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, readErr := io.ReadAll(io.LimitReader(resp.Body, 4096))
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		logBrevoResult(kind, "failure", to, resp.StatusCode, "", nil)
+		if readErr != nil {
+			return fmt.Errorf("email: brevo status=%d read response: %w", resp.StatusCode, readErr)
+		}
+		return fmt.Errorf("email: brevo status=%d response=%s", resp.StatusCode, strings.TrimSpace(string(respBody)))
+	}
+	if readErr != nil {
+		logBrevoResult(kind, "failure", to, resp.StatusCode, "", readErr)
+		return fmt.Errorf("email: brevo read response: %w", readErr)
+	}
+
+	var brevoResp brevoEmailResponse
+	_ = json.Unmarshal(respBody, &brevoResp)
+	logBrevoResult(kind, "success", to, resp.StatusCode, brevoResp.MessageID, nil)
+	return nil
+}
+
+func logBrevoResult(kind, status, to string, httpStatus int, messageID string, err error) {
+	if err != nil {
+		log.Printf("[email] provider=brevo kind=%s status=%s to=%s http_status=%d error=%v", kind, status, to, httpStatus, err)
+		return
+	}
+	if messageID != "" {
+		log.Printf("[email] provider=brevo kind=%s status=%s to=%s http_status=%d message_id=%s", kind, status, to, httpStatus, messageID)
+		return
+	}
+	log.Printf("[email] provider=brevo kind=%s status=%s to=%s http_status=%d", kind, status, to, httpStatus)
 }
 
 // ─── SMTPSender ──────────────────────────────────────────────────────────────
@@ -358,4 +489,13 @@ func extractEmail(from string) string {
 	}
 	// No angle brackets, assume it's already just the email
 	return from
+}
+
+func parseEmailAddress(from string) brevoEmailAddress {
+	re := regexp.MustCompile(`^\s*(.*?)\s*<([^>]+)>\s*$`)
+	matches := re.FindStringSubmatch(from)
+	if len(matches) >= 3 {
+		return brevoEmailAddress{Name: strings.TrimSpace(matches[1]), Email: strings.TrimSpace(matches[2])}
+	}
+	return brevoEmailAddress{Email: strings.TrimSpace(from)}
 }

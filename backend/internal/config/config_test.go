@@ -145,6 +145,7 @@ func TestLoad_JWTSecretPresent(t *testing.T) {
 
 func TestLoad_SMTPFieldsFromEnv(t *testing.T) {
 	t.Setenv("JWT_SECRET", "test-secret")
+	t.Setenv("BREVO_API_KEY", "brevo-secret")
 	t.Setenv("SMTP_HOST", "smtp.example.com")
 	t.Setenv("SMTP_PORT", "587")
 	t.Setenv("SMTP_USER", "user@example.com")
@@ -159,6 +160,9 @@ func TestLoad_SMTPFieldsFromEnv(t *testing.T) {
 
 	if cfg.SMTPHost != "smtp.example.com" {
 		t.Errorf("SMTPHost = %q, want %q", cfg.SMTPHost, "smtp.example.com")
+	}
+	if cfg.BrevoAPIKey != "brevo-secret" {
+		t.Errorf("BrevoAPIKey = %q, want %q", cfg.BrevoAPIKey, "brevo-secret")
 	}
 	if cfg.SMTPPort != "587" {
 		t.Errorf("SMTPPort = %q, want %q", cfg.SMTPPort, "587")
@@ -180,6 +184,7 @@ func TestLoad_SMTPFieldsFromEnv(t *testing.T) {
 func TestLoad_SMTPFieldsDefaultEmpty(t *testing.T) {
 	t.Setenv("JWT_SECRET", "test-secret")
 	// SMTP fields not set — should default to empty string (disabled)
+	t.Setenv("BREVO_API_KEY", "")
 	t.Setenv("SMTP_HOST", "")
 	t.Setenv("SMTP_PORT", "")
 	t.Setenv("SMTP_USER", "")
@@ -194,6 +199,9 @@ func TestLoad_SMTPFieldsDefaultEmpty(t *testing.T) {
 
 	if cfg.SMTPHost != "" {
 		t.Errorf("SMTPHost = %q, want empty string (disabled)", cfg.SMTPHost)
+	}
+	if cfg.BrevoAPIKey != "" {
+		t.Errorf("BrevoAPIKey = %q, want empty string (disabled)", cfg.BrevoAPIKey)
 	}
 	if cfg.FrontendURL != "" {
 		t.Errorf("FrontendURL = %q, want empty string", cfg.FrontendURL)

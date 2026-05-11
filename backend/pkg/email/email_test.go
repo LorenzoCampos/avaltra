@@ -1,9 +1,24 @@
 package email
 
 import (
+	"log"
+	"net"
 	"strings"
 	"testing"
+	"time"
 )
+
+type deadlineRecorderConn struct {
+	net.Conn
+	deadline time.Time
+	called   bool
+}
+
+func (c *deadlineRecorderConn) SetDeadline(t time.Time) error {
+	c.called = true
+	c.deadline = t
+	return nil
+}
 
 // TestNewSender_ReturnsLogSenderWhenNoHost verifies that when SMTP_HOST is empty,
 // NewSender returns a LogSender (dev fallback) rather than an SMTPSender.
@@ -127,5 +142,45 @@ func TestExtractEmail(t *testing.T) {
 				t.Errorf("extractEmail(%q) = %q, want %q", tt.input, got, tt.expected)
 			}
 		})
+	}
+}
+
+// TestSetSMTPDeadline_AppliesReadWriteTimeout verifies SMTP operations get a
+// bounded read/write deadline before blocking net/smtp calls.
+func TestSetSMTPDeadline_AppliesReadWriteTimeout(t *testing.T) {
+	conn := &deadlineRecorderConn{}
+	before := time.Now().Add(smtpReadWriteTimeout)
+
+	setSMTPDeadline(conn)
+
+	if !conn.called {
+		t.Fatal("setSMTPDeadline should call SetDeadline")
+	}
+	after := time.Now().Add(smtpReadWriteTimeout)
+	if conn.deadline.Before(before) || conn.deadline.After(after) {
+		t.Fatalf("deadline = %v, want between %v and %v", conn.deadline, before, after)
+	}
+}
+
+// TestLogSMTPStage_DoesNotLeakSecrets verifies SMTP instrumentation keeps logs
+// production-safe by logging stage metadata only, not passwords or token links.
+func TestLogSMTPStage_DoesNotLeakSecrets(t *testing.T) {
+	var logOutput strings.Builder
+	oldOutput := log.Writer()
+	log.SetOutput(&logOutput)
+	t.Cleanup(func() { log.SetOutput(oldOutput) })
+
+	logSMTPStage("auth", "start", "user@example.com", "smtp.example.com:587", nil)
+
+	output := logOutput.String()
+	for _, forbidden := range []string{"smtp-password", "token=", "reset-password?token=", "verify-email?token="} {
+		if strings.Contains(output, forbidden) {
+			t.Fatalf("SMTP stage log leaked %q in %q", forbidden, output)
+		}
+	}
+	for _, expected := range []string{"stage=auth", "status=start", "to=user@example.com", "via=smtp.example.com:587"} {
+		if !strings.Contains(output, expected) {
+			t.Fatalf("SMTP stage log missing %q in %q", expected, output)
+		}
 	}
 }

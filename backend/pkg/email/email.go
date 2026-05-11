@@ -12,6 +12,12 @@ import (
 	"net/smtp"
 	"os"
 	"regexp"
+	"time"
+)
+
+const (
+	smtpConnectTimeout   = 10 * time.Second
+	smtpReadWriteTimeout = 30 * time.Second
 )
 
 //go:embed templates/verify.html
@@ -112,101 +118,179 @@ func (s *SMTPSender) sendWithImplicitTLS(addr, from, to, msg string) error {
 		ServerName: s.host,
 	}
 
-	conn, err := tls.Dial("tcp", addr, tlsConfig)
+	logSMTPStage("connect", "start", to, addr, nil)
+	dialer := &net.Dialer{Timeout: smtpConnectTimeout}
+	conn, err := tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
 	if err != nil {
+		logSMTPStage("connect", "failure", to, addr, err)
 		return fmt.Errorf("email: tls dial %s: %w", addr, err)
 	}
 	defer conn.Close()
 
+	setSMTPDeadline(conn)
 	client, err := smtp.NewClient(conn, s.host)
 	if err != nil {
+		logSMTPStage("connect", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp client: %w", err)
 	}
 	defer client.Close()
+	logSMTPStage("connect", "success", to, addr, nil)
 
 	// Authenticate
 	auth := smtp.PlainAuth("", s.user, s.pass, s.host)
+	logSMTPStage("auth", "start", to, addr, nil)
+	setSMTPDeadline(conn)
 	if err := client.Auth(auth); err != nil {
+		logSMTPStage("auth", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp auth: %w", err)
 	}
+	logSMTPStage("auth", "success", to, addr, nil)
 
 	// Set envelope sender and recipient
+	logSMTPStage("mail_from", "start", to, addr, nil)
+	setSMTPDeadline(conn)
 	if err := client.Mail(from); err != nil {
+		logSMTPStage("mail_from", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp MAIL FROM: %w", err)
 	}
+	logSMTPStage("mail_from", "success", to, addr, nil)
+	logSMTPStage("rcpt_to", "start", to, addr, nil)
+	setSMTPDeadline(conn)
 	if err := client.Rcpt(to); err != nil {
+		logSMTPStage("rcpt_to", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp RCPT TO: %w", err)
 	}
+	logSMTPStage("rcpt_to", "success", to, addr, nil)
 
 	// Send message body
+	logSMTPStage("data", "start", to, addr, nil)
+	setSMTPDeadline(conn)
 	w, err := client.Data()
 	if err != nil {
+		logSMTPStage("data", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp DATA: %w", err)
 	}
+	setSMTPDeadline(conn)
 	_, err = w.Write([]byte(msg))
 	if err != nil {
+		logSMTPStage("data", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp write body: %w", err)
 	}
+	setSMTPDeadline(conn)
 	err = w.Close()
 	if err != nil {
+		logSMTPStage("data", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp close body: %w", err)
 	}
+	logSMTPStage("data", "success", to, addr, nil)
 
-	return client.Quit()
+	setSMTPDeadline(conn)
+	if err := client.Quit(); err != nil {
+		return err
+	}
+	logSMTPStage("success", "complete", to, addr, nil)
+	return nil
 }
 
 // sendWithSTARTTLS connects plain and upgrades to TLS (port 587).
 func (s *SMTPSender) sendWithSTARTTLS(addr, from, to, msg string) error {
 	// Connect plain first
-	conn, err := net.Dial("tcp", addr)
+	logSMTPStage("connect", "start", to, addr, nil)
+	dialer := &net.Dialer{Timeout: smtpConnectTimeout}
+	conn, err := dialer.Dial("tcp", addr)
 	if err != nil {
+		logSMTPStage("connect", "failure", to, addr, err)
 		return fmt.Errorf("email: dial %s: %w", addr, err)
 	}
 	defer conn.Close()
 
+	setSMTPDeadline(conn)
 	client, err := smtp.NewClient(conn, s.host)
 	if err != nil {
+		logSMTPStage("connect", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp client: %w", err)
 	}
 	defer client.Close()
+	logSMTPStage("connect", "success", to, addr, nil)
 
 	// Upgrade to TLS
 	tlsConfig := &tls.Config{
 		ServerName: s.host,
 	}
+	logSMTPStage("starttls", "start", to, addr, nil)
+	setSMTPDeadline(conn)
 	if err := client.StartTLS(tlsConfig); err != nil {
+		logSMTPStage("starttls", "failure", to, addr, err)
 		return fmt.Errorf("email: STARTTLS: %w", err)
 	}
+	logSMTPStage("starttls", "success", to, addr, nil)
 
 	// Authenticate
 	auth := smtp.PlainAuth("", s.user, s.pass, s.host)
+	logSMTPStage("auth", "start", to, addr, nil)
+	setSMTPDeadline(conn)
 	if err := client.Auth(auth); err != nil {
+		logSMTPStage("auth", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp auth: %w", err)
 	}
+	logSMTPStage("auth", "success", to, addr, nil)
 
 	// Set envelope sender and recipient
+	logSMTPStage("mail_from", "start", to, addr, nil)
+	setSMTPDeadline(conn)
 	if err := client.Mail(from); err != nil {
+		logSMTPStage("mail_from", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp MAIL FROM: %w", err)
 	}
+	logSMTPStage("mail_from", "success", to, addr, nil)
+	logSMTPStage("rcpt_to", "start", to, addr, nil)
+	setSMTPDeadline(conn)
 	if err := client.Rcpt(to); err != nil {
+		logSMTPStage("rcpt_to", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp RCPT TO: %w", err)
 	}
+	logSMTPStage("rcpt_to", "success", to, addr, nil)
 
 	// Send message body
+	logSMTPStage("data", "start", to, addr, nil)
+	setSMTPDeadline(conn)
 	w, err := client.Data()
 	if err != nil {
+		logSMTPStage("data", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp DATA: %w", err)
 	}
+	setSMTPDeadline(conn)
 	_, err = w.Write([]byte(msg))
 	if err != nil {
+		logSMTPStage("data", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp write body: %w", err)
 	}
+	setSMTPDeadline(conn)
 	err = w.Close()
 	if err != nil {
+		logSMTPStage("data", "failure", to, addr, err)
 		return fmt.Errorf("email: smtp close body: %w", err)
 	}
+	logSMTPStage("data", "success", to, addr, nil)
 
-	return client.Quit()
+	setSMTPDeadline(conn)
+	if err := client.Quit(); err != nil {
+		return err
+	}
+	logSMTPStage("success", "complete", to, addr, nil)
+	return nil
+}
+
+func setSMTPDeadline(conn net.Conn) {
+	_ = conn.SetDeadline(time.Now().Add(smtpReadWriteTimeout))
+}
+
+func logSMTPStage(stage, status, to, addr string, err error) {
+	if err != nil {
+		log.Printf("[email] stage=%s status=%s to=%s via=%s error=%v", stage, status, to, addr, err)
+		return
+	}
+	log.Printf("[email] stage=%s status=%s to=%s via=%s", stage, status, to, addr)
 }
 
 // ─── LogSender ───────────────────────────────────────────────────────────────

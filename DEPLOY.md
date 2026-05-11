@@ -90,9 +90,9 @@ services:
         sync: false
       - key: SMTP_PORT
         sync: false
-      - key: SMTP_USERNAME
+      - key: SMTP_USER
         sync: false
-      - key: SMTP_PASSWORD
+      - key: SMTP_PASS
         sync: false
       - key: SMTP_FROM
         sync: false
@@ -102,8 +102,8 @@ services:
 3. **New → Blueprint** → seleccionar el repo
 4. Completar las variables marcadas `sync: false` en el dashboard:
    - `DATABASE_URL` = connection string de Neon (paso 1)
-   - `CORS_ALLOWED_ORIGINS` = `https://tu-app.vercel.app`
-   - `FRONTEND_URL` = `https://tu-app.vercel.app`
+   - `CORS_ALLOWED_ORIGINS` = `https://avaltra.app`
+   - `FRONTEND_URL` = `https://avaltra.app`
    - Variables SMTP segun tu proveedor
 5. Deploy y esperar ~3 min
 6. Copiar la URL asignada (ej: `https://mi-app-api.onrender.com`)
@@ -186,7 +186,7 @@ Sin el segundo rewrite, navegar directamente a `/login`, `/dashboard`, etc. devu
 
 ### Verificar que funciona
 
-Abrir `https://tu-app.vercel.app` — deberia cargar la app de React.
+Abrir `https://avaltra.app` — deberia cargar la app de React.
 
 ---
 
@@ -266,7 +266,7 @@ for f in *.sql; do mv "$f" "${f%.sql}.up.sql"; done
 
 **Solucion:** En Render, setear:
 ```
-CORS_ALLOWED_ORIGINS=https://tu-app.vercel.app
+CORS_ALLOWED_ORIGINS=https://avaltra.app
 ```
 
 ---
@@ -281,13 +281,13 @@ CORS_ALLOWED_ORIGINS=https://tu-app.vercel.app
 | `JWT_SECRET` | (auto-generado por Render) | Si |
 | `ENV` | `production` | Si |
 | `COOKIE_SECURE` | `true` | Si |
-| `CORS_ALLOWED_ORIGINS` | `https://tu-app.vercel.app` | Si |
-| `FRONTEND_URL` | `https://tu-app.vercel.app` | Si |
+| `CORS_ALLOWED_ORIGINS` | `https://avaltra.app` | Si |
+| `FRONTEND_URL` | `https://avaltra.app` | Si |
 | `SMTP_HOST` | `smtp.mailtrap.io` | Si (si envia emails) |
 | `SMTP_PORT` | `2525` | Si (si envia emails) |
-| `SMTP_USERNAME` | `xxx` | Si (si envia emails) |
-| `SMTP_PASSWORD` | `xxx` | Si (si envia emails) |
-| `SMTP_FROM` | `App <noreply@dominio>` | Si (si envia emails) |
+| `SMTP_USER` | `xxx` | Si (si envia emails) |
+| `SMTP_PASS` | `xxx` | Si (si envia emails) |
+| `SMTP_FROM` | `Avaltra <auth@avaltra.app>` | Si (si envia emails) |
 
 > `PORT` es inyectado automaticamente por Render. No configurar manualmente.
 
@@ -335,7 +335,7 @@ Los archivos `Dockerfile`, `nginx.conf` y `docker-compose.yml` siguen siendo val
 - [ ] Verificar `curl https://backend.onrender.com/api/health` → `{"status":"ok"}`
 - [ ] Actualizar `frontend/vercel.json` con URL real de Render
 - [ ] Deploy en Vercel → root directory: `frontend`
-- [ ] Verificar que la app carga en `https://app.vercel.app`
+- [ ] Verificar que la app carga en `https://avaltra.app`
 - [ ] Probar registro de usuario
 - [ ] Probar login / logout
 - [ ] Verificar que las migraciones corrieron (logs de Render)

@@ -157,6 +157,14 @@ func updateExpenseHandler(db expenseStore) gin.HandlerFunc {
 			}
 		}
 
+		if ok, err := validateExpenseCategory(c.Request.Context(), db, req.CategoryID, accountID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to validate category"})
+			return
+		} else if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "category_id does not belong to this account"})
+			return
+		}
+
 		// ============================================================================
 		// MULTI-CURRENCY RECALCULATION - Modo 3
 		// ============================================================================

@@ -90,9 +90,9 @@ func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 
 		// Validate currency if provided
 		if req.Currency != nil {
-			validCurrencies := map[string]bool{"ARS": true, "USD": true}
+			validCurrencies := map[string]bool{"ARS": true, "USD": true, "EUR": true}
 			if !validCurrencies[*req.Currency] {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "currency must be ARS or USD"})
+				c.JSON(http.StatusBadRequest, gin.H{"error": "currency must be ARS, USD, or EUR"})
 				return
 			}
 		}
@@ -157,6 +157,14 @@ func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "family_member_id does not belong to this account"})
 				return
 			}
+		}
+
+		if ok, err := validateIncomeCategory(c.Request.Context(), db, req.CategoryID, accountID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to validate category"})
+			return
+		} else if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "category_id does not belong to this account"})
+			return
 		}
 
 		// ============================================================================

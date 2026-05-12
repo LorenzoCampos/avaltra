@@ -41,23 +41,6 @@ export default defineConfig({
       workbox: {
         // Cache de assets estáticos
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // Runtime caching para API calls
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/192\.168\.0\.46:9090\/api\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // 24 horas
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
       },
       devOptions: {
         enabled: true, // Habilitar PWA en dev mode

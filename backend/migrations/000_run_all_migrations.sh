@@ -16,8 +16,10 @@ echo "============================================"
 echo "🚀 Iniciando migraciones de base de datos"
 echo "============================================"
 
-# Directorio donde están las migraciones (dentro del contenedor)
-MIGRATIONS_DIR="/docker-entrypoint-initdb.d"
+# Directorio donde están las migraciones (dentro del contenedor).
+# No usar /docker-entrypoint-initdb.d para los SQL: el entrypoint oficial de
+# Postgres también procesa *.sql ahí y duplicaría el bootstrap.
+MIGRATIONS_DIR="${MIGRATIONS_DIR:-/migrations}"
 
 # Ejecutar todas las migraciones .up.sql en orden numérico
 for migration in $(ls -1 ${MIGRATIONS_DIR}/*.up.sql 2>/dev/null | sort); do

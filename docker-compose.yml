@@ -57,8 +57,10 @@ services:
     # Los datos se guardan en la carpeta ./postgres-data de tu proyecto
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      # También montamos las migraciones para que estén disponibles dentro del contenedor
-      - ./backend/migrations:/docker-entrypoint-initdb.d
+      # Postgres ejecuta solo los scripts en initdb.d; las migraciones SQL se
+      # montan aparte para evitar que el entrypoint las procese una segunda vez.
+      - ./backend/migrations/000_run_all_migrations.sh:/docker-entrypoint-initdb.d/000_run_all_migrations.sh:ro
+      - ./backend/migrations:/migrations:ro
     
     # Health check: Docker va a verificar periódicamente si Postgres está funcionando
     healthcheck:

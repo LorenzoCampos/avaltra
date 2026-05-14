@@ -19,6 +19,7 @@ type Claims struct {
 const (
 	TokenTypeAccess  = "access"
 	TokenTypeRefresh = "refresh"
+	jwtIssuer        = "avaltra"
 )
 
 // GenerateAccessToken genera un JWT de corta duración (access token)
@@ -32,7 +33,7 @@ func GenerateAccessToken(userID, email, secret string, expiry time.Duration) (st
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "avaltra",
+			Issuer:    jwtIssuer,
 		},
 	}
 
@@ -59,7 +60,7 @@ func GenerateRefreshToken(userID, secret string, expiry time.Duration) (string, 
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "avaltra",
+			Issuer:    jwtIssuer,
 		},
 	}
 
@@ -99,11 +100,11 @@ func ValidateToken(tokenString, secret string) (*Claims, error) {
 	// Parsear el token
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		// Verificar que el método de firma sea el esperado
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if token.Method != jwt.SigningMethodHS256 {
 			return nil, fmt.Errorf("método de firma inesperado: %v", token.Header["alg"])
 		}
 		return []byte(secret), nil
-	})
+	}, jwt.WithIssuer(jwtIssuer), jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
 	if err != nil {
 		return nil, fmt.Errorf("error parseando token: %w", err)

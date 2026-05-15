@@ -7,6 +7,7 @@ import autoTable from 'jspdf-autotable';
 import type { ActivityItem } from './useActivity';
 import type { Currency } from '@/schemas/account.schema';
 import { getPaymentMethodLabel } from '@/lib/paymentMethods';
+import { BRAND } from '@/lib/brand';
 
 interface ActivityExportLocaleOptions {
   t: TFunction;
@@ -78,6 +79,13 @@ export const buildActivityPDFRows = (transactions: ActivityItem[], { t, language
   });
 };
 
+export const buildActivityPDFBranding = () => ({
+  title: BRAND.name,
+  titleColor: [...BRAND.pdf.primaryRgb] as [number, number, number],
+  tableHeadFillColor: [...BRAND.pdf.primaryRgb] as [number, number, number],
+  alternateRowFillColor: [245, 247, 250] as [number, number, number],
+});
+
 interface ExportOptions {
   filename: string;
   accountName: string;
@@ -115,11 +123,12 @@ export const useExport = () => {
   ) => {
     const language = i18n.resolvedLanguage || i18n.language || 'es';
     const doc = new jsPDF();
+    const pdfBranding = buildActivityPDFBranding();
 
     // Header
     doc.setFontSize(20);
-    doc.setTextColor(59, 130, 246); // Blue
-    doc.text('Avaltra', 14, 20);
+    doc.setTextColor(...pdfBranding.titleColor);
+    doc.text(pdfBranding.title, 14, 20);
     
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
@@ -170,8 +179,8 @@ export const useExport = () => {
       body: tableData,
       startY: options.totalSaved !== undefined && options.totalSaved > 0 ? 72 : 65,
       styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [59, 130, 246], textColor: 255 },
-      alternateRowStyles: { fillColor: [245, 247, 250] },
+      headStyles: { fillColor: pdfBranding.tableHeadFillColor, textColor: 255 },
+      alternateRowStyles: { fillColor: pdfBranding.alternateRowFillColor },
       columnStyles: {
         0: { cellWidth: 25 },
         1: { cellWidth: 22 },

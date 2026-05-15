@@ -8,6 +8,7 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { BrandLogo } from '@/components/BrandLogo';
 
 interface WelcomeStepProps {
   onStart: () => void;
@@ -25,14 +26,12 @@ export const WelcomeStep = ({ onStart, onSkip }: WelcomeStepProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-brand-surface px-4 py-8">
       <Card className="max-w-2xl w-full animate-slide-up shadow-xl">
         <CardHeader className="text-center pb-4">
           {/* Icon/Logo */}
           <div className="mb-6">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full">
-              <span className="text-4xl">👋</span>
-            </div>
+            <BrandLogo variant="icon" size="lg" className="mx-auto" />
           </div>
 
           {/* Title */}
@@ -88,7 +87,7 @@ export const WelcomeStep = ({ onStart, onSkip }: WelcomeStepProps) => {
                   key={step}
                   className="flex items-center"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-medium text-gray-600 dark:text-gray-400">
+                  <div className="w-8 h-8 rounded-full bg-brand-subtle flex items-center justify-center text-sm font-medium text-brand-primary">
                     {step}
                   </div>
                   {step < 3 && (

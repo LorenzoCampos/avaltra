@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/api/axios';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { BrandLogo } from '@/components/BrandLogo';
 
 type VerifyStatus = 'loading' | 'success' | 'error';
 
@@ -56,14 +57,16 @@ export const VerifyEmail = () => {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Avaltra</CardTitle>
+            <CardTitle className="flex justify-center">
+              <BrandLogo variant="wordmark" size="md" />
+            </CardTitle>
           </CardHeader>
 
           <CardContent>
             {status === 'loading' && (
               <div className="text-center space-y-3">
                 <div className="flex justify-center">
-                  <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
                 </div>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">
                   {t('verifyEmail.loading')}
@@ -98,7 +101,7 @@ export const VerifyEmail = () => {
                 </p>
                 <Link
                   to="/login"
-                  className="block text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+                  className="block text-sm font-medium text-brand-primary hover:text-brand-accent focus-visible-ring-brand rounded-sm"
                 >
                   {t('verifyEmail.goToLogin')}
                 </Link>

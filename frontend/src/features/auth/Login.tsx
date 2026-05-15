@@ -10,6 +10,7 @@ import type { LoginRequest } from '@/types/auth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { BrandLogo } from '@/components/BrandLogo';
 
 export const Login = () => {
   const { t } = useTranslation('auth');
@@ -48,7 +49,9 @@ export const Login = () => {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Avaltra</CardTitle>
+            <CardTitle className="flex justify-center">
+              <BrandLogo variant="wordmark" size="md" />
+            </CardTitle>
             <p className="text-center text-gray-600 dark:text-gray-400 mt-2">
               {t('login.subtitle')}
             </p>
@@ -75,7 +78,7 @@ export const Login = () => {
                 <div className="mt-1 text-right">
                   <Link
                     to="/forgot-password"
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+                    className="text-xs text-brand-primary hover:text-brand-accent focus-visible-ring-brand rounded-sm"
                   >
                     {t('login.forgotPassword')}
                   </Link>
@@ -96,7 +99,7 @@ export const Login = () => {
                 {t('login.noAccount')}{' '}
                 <Link
                   to="/register"
-                  className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+                  className="font-medium text-brand-primary hover:text-brand-accent focus-visible-ring-brand rounded-sm"
                 >
                   {t('login.signUpLink')}
                 </Link>

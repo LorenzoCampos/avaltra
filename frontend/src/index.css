@@ -15,6 +15,14 @@
   --color-text-primary: #111827;
   --color-text-secondary: #6b7280;
   --color-border: #e5e7eb;
+  --color-brand-primary: #003366;
+  --color-brand-primary-hover: #00264d;
+  --color-brand-accent: #008080;
+  --color-brand-accent-hover: #006666;
+  --color-brand-text-primary: #003366;
+  --color-brand-text-accent: #008080;
+  --color-on-brand: #ffffff;
+  --color-brand-focus-ring: #008080;
 }
 
 .dark {
@@ -24,6 +32,14 @@
   --color-text-primary: #f9fafb;
   --color-text-secondary: #d1d5db;
   --color-border: #374151;
+  --color-brand-primary: #005a73;
+  --color-brand-primary-hover: #00718f;
+  --color-brand-accent: #00a0a0;
+  --color-brand-accent-hover: #00b8b8;
+  --color-brand-text-primary: #66e0e0;
+  --color-brand-text-accent: #5eead4;
+  --color-on-brand: #ffffff;
+  --color-brand-focus-ring: #00a0a0;
 }
 
 body {
@@ -32,6 +48,67 @@ body {
   background-color: var(--color-bg-secondary);
   color: var(--color-text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ========================================
+   BRAND SEMANTIC UTILITIES
+   ======================================== */
+
+.bg-brand-primary {
+  background-color: var(--color-brand-primary);
+}
+
+.bg-brand-accent {
+  background-color: var(--color-brand-accent);
+}
+
+.bg-brand-subtle {
+  background-color: color-mix(in srgb, var(--color-brand-primary) 10%, transparent);
+}
+
+.bg-gradient-brand-surface {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-brand-primary) 10%, var(--color-bg-secondary)), color-mix(in srgb, var(--color-brand-accent) 14%, var(--color-bg-primary)));
+}
+
+.text-brand-primary {
+  color: var(--color-brand-text-primary);
+}
+
+.text-brand-accent {
+  color: var(--color-brand-text-accent);
+}
+
+.text-on-brand {
+  color: var(--color-on-brand);
+}
+
+.border-brand-primary {
+  border-color: var(--color-brand-primary);
+}
+
+.border-brand-subtle {
+  border-color: color-mix(in srgb, var(--color-brand-primary) 30%, transparent);
+}
+
+.hover\:bg-brand-primary-hover:hover {
+  background-color: var(--color-brand-primary-hover);
+}
+
+.hover\:bg-brand-accent-hover:hover {
+  background-color: var(--color-brand-accent-hover);
+}
+
+.focus-ring-brand:focus {
+  --tw-ring-color: var(--color-brand-focus-ring);
+}
+
+.focus-visible-ring-brand:focus-visible {
+  outline: 2px solid var(--color-brand-focus-ring);
+  outline-offset: 2px;
+}
+
+.brand-logo--dark-surface-safe {
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.35));
 }
 
 /* ========================================

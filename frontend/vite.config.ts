@@ -5,6 +5,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 // import basicSsl from '@vitejs/plugin-basic-ssl'
 import path from 'path'
 
+import { BRAND } from './src/lib/brand'
+
+const publicAsset = (assetUrl: string) => assetUrl.replace(/^\//, '')
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -13,28 +17,61 @@ export default defineConfig({
     // basicSsl(), // HTTPS comentado - descomenta en producción para PWA
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['pwa-icon.svg'],
+      includeAssets: [publicAsset(BRAND.assets.iconSvg), publicAsset(BRAND.assets.iconPng)],
       manifest: {
-        name: 'Avaltra',
-        short_name: 'Avaltra',
-        description: 'Personal and family finance management',
-        theme_color: '#3B82F6',
-        background_color: '#ffffff',
+        name: BRAND.name,
+        short_name: BRAND.name,
+        description: BRAND.tagline,
+        theme_color: BRAND.colors.trustBlue,
+        background_color: BRAND.colors.white,
         display: 'standalone',
         scope: '/',
         start_url: '/',
         orientation: 'portrait',
         icons: [
           {
-            src: 'pwa-icon.svg',
-            sizes: '512x512',
+            src: publicAsset(BRAND.assets.iconSvg),
+            sizes: 'any',
             type: 'image/svg+xml'
           },
           {
-            src: 'pwa-icon.svg',
-            sizes: '512x512',
+            src: publicAsset(BRAND.assets.iconPng),
+            sizes: '795x620',
+            type: 'image/png'
+          },
+          {
+            src: publicAsset(BRAND.assets.iconSvg),
+            sizes: 'any',
             type: 'image/svg+xml',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: publicAsset(BRAND.assets.iconSvg),
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'maskable'
+          },
+          {
+            src: publicAsset(BRAND.assets.iconPng),
+            sizes: '795x620',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: publicAsset(BRAND.assets.iconPng),
+            sizes: '795x620',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: publicAsset(BRAND.assets.wordmarkSvg),
+            sizes: 'any',
+            type: 'image/svg+xml',
+          },
+          {
+            src: publicAsset(BRAND.assets.wordmarkPng),
+            sizes: '2930x648',
+            type: 'image/png'
           }
         ]
       },

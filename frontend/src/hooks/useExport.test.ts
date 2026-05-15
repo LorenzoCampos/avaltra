@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildActivityExportRows, buildActivityPDFHead, buildActivityPDFRows } from './useExport';
+import { BRAND } from '@/lib/brand';
+import { buildActivityExportRows, buildActivityPDFBranding, buildActivityPDFHead, buildActivityPDFRows } from './useExport';
 import type { ActivityItem } from './useActivity';
 
 const baseActivity = {
@@ -93,5 +94,29 @@ describe('activity export helpers', () => {
     expect(pdfRows[0][4]).toBe('—');
     expect(pdfRows[1][3]).toBe('Meta: Vacaciones');
     expect(String(pdfRows[1][5])).toMatch(/13,00/);
+  });
+
+  it('maps PDF identity and header colors to the approved brand palette without changing csv rows', () => {
+    const csvRows = buildActivityExportRows([
+      { ...baseActivity, type: 'income', payment_method: 'bank_transfer', category_name: 'Salario' },
+    ], { t: esT as never, language: 'es-AR' });
+
+    expect(buildActivityPDFBranding()).toEqual({
+      title: BRAND.name,
+      titleColor: BRAND.pdf.primaryRgb,
+      tableHeadFillColor: BRAND.pdf.primaryRgb,
+      alternateRowFillColor: [245, 247, 250],
+    });
+    expect(csvRows).toEqual([
+      {
+        Fecha: '2026-01-20',
+        Tipo: 'Ingreso',
+        Descripción: 'Movimiento',
+        'Categoría / Meta': 'Salario',
+        'Medio de pago': 'Transferencia bancaria',
+        Monto: 13,
+        Moneda: 'ARS',
+      },
+    ]);
   });
 });

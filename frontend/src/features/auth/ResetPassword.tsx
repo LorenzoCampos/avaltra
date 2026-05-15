@@ -10,6 +10,7 @@ import { api } from '@/api/axios';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { BrandLogo } from '@/components/BrandLogo';
 
 const resetPasswordSchema = z
   .object({
@@ -82,7 +83,9 @@ export const ResetPassword = () => {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Avaltra</CardTitle>
+            <CardTitle className="flex justify-center">
+              <BrandLogo variant="wordmark" size="md" />
+            </CardTitle>
             <p className="text-center text-gray-600 dark:text-gray-400 mt-2">
               {t('resetPassword.subtitle')}
             </p>
@@ -121,7 +124,7 @@ export const ResetPassword = () => {
                 {t('resetPassword.noTokenMessage')}{' '}
                 <Link
                   to="/forgot-password"
-                  className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+                  className="font-medium text-brand-primary hover:text-brand-accent focus-visible-ring-brand rounded-sm"
                 >
                   {t('resetPassword.requestNewLink')}
                 </Link>

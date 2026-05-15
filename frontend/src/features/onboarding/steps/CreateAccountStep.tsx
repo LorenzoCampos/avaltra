@@ -49,7 +49,7 @@ export const CreateAccountStep = ({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-brand-surface px-4 py-8">
       <Card className="max-w-2xl w-full animate-slide-up shadow-xl">
         <CardHeader className="text-center pb-4">
           {/* Progress */}
@@ -61,7 +61,7 @@ export const CreateAccountStep = ({
 
           {/* Icon */}
           <div className="mb-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-subtle rounded-full">
               <span className="text-3xl">💰</span>
             </div>
           </div>
@@ -72,8 +72,8 @@ export const CreateAccountStep = ({
           </CardTitle>
 
           {/* Hint */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-md mx-auto">
-            <p className="text-sm text-blue-900 dark:text-blue-100">
+          <div className="bg-brand-subtle border border-brand-subtle rounded-lg p-4 max-w-md mx-auto">
+            <p className="text-sm text-brand-primary">
               💡 {t('createAccount.hint')}
             </p>
           </div>
@@ -99,7 +99,7 @@ export const CreateAccountStep = ({
               </label>
               <select
                 {...register('currency')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus-ring-brand focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="ARS">🇦🇷 Peso Argentino (ARS)</option>
                 <option value="USD">🇺🇸 Dólar Estadounidense (USD)</option>
@@ -133,7 +133,7 @@ export const CreateAccountStep = ({
           {/* Progress indicator */}
           <div className="mt-8">
             <div className="flex items-center justify-center gap-2">
-              <div className="w-8 h-1 bg-blue-600 rounded-full" />
+              <div className="w-8 h-1 bg-brand-primary rounded-full" />
               <div className="w-8 h-1 bg-gray-200 dark:bg-gray-700 rounded-full" />
               <div className="w-8 h-1 bg-gray-200 dark:bg-gray-700 rounded-full" />
             </div>

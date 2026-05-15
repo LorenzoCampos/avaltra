@@ -40,8 +40,8 @@ export const BottomNav = () => {
                 data-tour={item.dataTour}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                   active
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'
+                    ? 'text-brand-primary'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-brand-primary'
                 }`}
               >
                 <Icon className={`w-6 h-6 ${active ? 'stroke-[2.5]' : 'stroke-2'}`} />
@@ -58,8 +58,8 @@ export const BottomNav = () => {
             data-more-menu-trigger="true"
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
               isMoreActive
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'
+                ? 'text-brand-primary'
+                : 'text-gray-600 dark:text-gray-400 hover:text-brand-primary'
             }`}
           >
             <MoreHorizontal className={`w-6 h-6 ${isMoreActive ? 'stroke-[2.5]' : 'stroke-2'}`} />

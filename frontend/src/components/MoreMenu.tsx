@@ -83,7 +83,7 @@ export const MoreMenu = ({ isOpen, onClose }: MoreMenuProps) => {
             <button
               onClick={handleClose}
               data-more-menu-close="true"
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors focus-visible-ring-brand"
               aria-label={t('common:buttons.close')}
             >
               <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -101,16 +101,16 @@ export const MoreMenu = ({ isOpen, onClose }: MoreMenuProps) => {
                   key={item.to}
                   onClick={() => handleNavigate(item.to)}
                   data-tour={item.dataTour}
-                  className={`w-full flex items-center gap-4 p-4 rounded-lg transition-colors ${
+                  className={`w-full flex items-center gap-4 p-4 rounded-lg transition-colors focus-visible-ring-brand ${
                     active
-                      ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800'
+                      ? 'bg-brand-subtle border border-brand-subtle'
                       : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
                   }`}
                 >
                   <div
                     className={`p-2 rounded-lg ${
                       active
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-brand-primary text-on-brand'
                         : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-300'
                     }`}
                   >
@@ -120,7 +120,7 @@ export const MoreMenu = ({ isOpen, onClose }: MoreMenuProps) => {
                     <p
                       className={`font-semibold ${
                         active
-                          ? 'text-blue-600 dark:text-blue-400'
+                          ? 'text-brand-primary'
                           : 'text-gray-900 dark:text-white'
                       }`}
                     >
@@ -142,8 +142,8 @@ export const MoreMenu = ({ isOpen, onClose }: MoreMenuProps) => {
             {/* User Info + Logout */}
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">
+                <div className="w-10 h-10 bg-brand-primary rounded-full flex items-center justify-center">
+                  <span className="text-on-brand font-bold text-lg">
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
@@ -159,7 +159,7 @@ export const MoreMenu = ({ isOpen, onClose }: MoreMenuProps) => {
               
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors font-semibold"
+                className="w-full flex items-center justify-center gap-2 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors font-semibold focus-visible-ring-brand"
               >
                 <LogOut className="w-5 h-5" />
                 {t('common:buttons.logout')}

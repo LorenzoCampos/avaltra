@@ -8,6 +8,7 @@ import { api } from '@/api/axios';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { BrandLogo } from '@/components/BrandLogo';
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -51,7 +52,9 @@ export const ForgotPassword = () => {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Avaltra</CardTitle>
+            <CardTitle className="flex justify-center">
+              <BrandLogo variant="wordmark" size="md" />
+            </CardTitle>
             <p className="text-center text-gray-600 dark:text-gray-400 mt-2">
               {t('forgotPassword.subtitle')}
             </p>
@@ -65,7 +68,7 @@ export const ForgotPassword = () => {
                 </div>
                 <Link
                   to="/login"
-                  className="block text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+                  className="block text-sm font-medium text-brand-primary hover:text-brand-accent focus-visible-ring-brand rounded-sm"
                 >
                   {t('forgotPassword.backToLogin')}
                 </Link>
@@ -89,7 +92,7 @@ export const ForgotPassword = () => {
                 <div className="mt-6 text-center">
                   <Link
                     to="/login"
-                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+                    className="text-sm font-medium text-brand-primary hover:text-brand-accent focus-visible-ring-brand rounded-sm"
                   >
                     {t('forgotPassword.backToLogin')}
                   </Link>

@@ -7,6 +7,7 @@ import { Button } from './ui/Button';
 import { DarkModeToggle } from './DarkModeToggle';
 import { BottomNav } from './BottomNav';
 import { FeatureTour } from './FeatureTour';
+import { BrandLogo } from './BrandLogo';
 
 export const Layout = () => {
   const { t } = useTranslation('navigation');
@@ -37,8 +38,8 @@ export const Layout = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link to="/dashboard" className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                Avaltra
+              <Link to="/dashboard" className="focus-visible-ring-brand rounded-sm">
+                <BrandLogo variant="wordmark" size="sm" className="h-8 w-auto" />
               </Link>
             </div>
 
@@ -51,8 +52,8 @@ export const Layout = () => {
                   data-tour={link.dataTour}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(link.to)
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-brand-subtle text-brand-primary'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-brand-primary hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   {link.label}
@@ -67,7 +68,7 @@ export const Layout = () => {
                 {activeAccount && (
                   <div className="flex flex-col items-end">
                     <span className="text-[9px] uppercase font-bold text-gray-400 dark:text-gray-500 leading-none">{t('common:common.account')}</span>
-                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 leading-tight">{activeAccount.name}</span>
+                    <span className="text-xs font-semibold text-brand-primary leading-tight">{activeAccount.name}</span>
                   </div>
                 )}
                 <DarkModeToggle />
@@ -80,7 +81,7 @@ export const Layout = () => {
                 {activeAccount && (
                   <div className="flex flex-col items-end">
                     <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 leading-none">{t('common:common.account')}</span>
-                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 leading-tight">{activeAccount.name}</span>
+                    <span className="text-sm font-semibold text-brand-primary leading-tight">{activeAccount.name}</span>
                   </div>
                 )}
                 

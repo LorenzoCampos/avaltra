@@ -31,7 +31,7 @@ export const CompletedStep = ({ onStartTour }: CompletedStepProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-brand-surface px-4 py-8">
       <Card className="max-w-2xl w-full animate-slide-up shadow-xl">
         <CardHeader className="text-center pb-4">
           {/* Success icon with animation */}
@@ -74,21 +74,21 @@ export const CompletedStep = ({ onStartTour }: CompletedStepProps) => {
           </div>
 
           {/* Tips */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-5">
+          <div className="bg-brand-subtle border border-brand-subtle rounded-lg p-5">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
               {t('completed.tips.title')}
             </h3>
             <ul className="space-y-2">
               <li className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                <span className="text-blue-600 dark:text-blue-400 mt-0.5">•</span>
+                <span className="text-brand-primary mt-0.5">•</span>
                 <span>{t('completed.tips.tip1')}</span>
               </li>
               <li className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                <span className="text-blue-600 dark:text-blue-400 mt-0.5">•</span>
+                <span className="text-brand-primary mt-0.5">•</span>
                 <span>{t('completed.tips.tip2')}</span>
               </li>
               <li className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                <span className="text-blue-600 dark:text-blue-400 mt-0.5">•</span>
+                <span className="text-brand-primary mt-0.5">•</span>
                 <span>{t('completed.tips.tip3')}</span>
               </li>
             </ul>

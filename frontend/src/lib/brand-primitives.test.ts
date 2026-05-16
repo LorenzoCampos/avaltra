@@ -144,16 +144,16 @@ describe('semantic brand tokens and primitives', () => {
     const wordmark = BrandLogo({ variant: 'wordmark', darkSurfaceSafe: true });
 
     expect(icon.type).toBe('img');
-    expect(icon.props.src).toBe(BRAND.assets.iconSvg);
+    expect(icon.props.src).toBe(BRAND.assets.iconLightSvg);
     expect(icon.props.alt).toBe(BRAND.name);
     expect(icon.props.width).toBe(32);
     expect(icon.props.height).toBe(32);
 
     expect(wordmark.type).toBe('img');
-    expect(wordmark.props.src).toBe(BRAND.assets.wordmarkSvg);
+    expect(wordmark.props.src).toBe(BRAND.assets.wordmarkDarkSvg);
     expect(wordmark.props.alt).toBe(BRAND.name);
     expect(wordmark.props.width).toBe(180);
     expect(wordmark.props.height).toBe(40);
-    expect(wordmark.props.className).toContain('brand-logo--dark-surface-safe');
+    expect(wordmark.props.className).toBe('inline-block h-auto max-w-full');
   });
 });

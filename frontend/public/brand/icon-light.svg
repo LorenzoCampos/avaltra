@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_2" data-name="Capa 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 198.49 154.76">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#Degradado_sin_nombre_379);
+      }
+
+      .cls-2 {
+        fill: url(#Degradado_sin_nombre_379-2);
+      }
+
+      .cls-3 {
+        fill: url(#Degradado_sin_nombre_379-3);
+      }
+    </style>
+    <linearGradient id="Degradado_sin_nombre_379" data-name="Degradado sin nombre 379" x1="49.67" y1="183.22" x2="166.21" y2="-18.64" gradientUnits="userSpaceOnUse">
+      <stop offset=".28" stop-color="#036"/>
+      <stop offset=".63" stop-color="#005a73"/>
+      <stop offset="1" stop-color="teal"/>
+    </linearGradient>
+    <linearGradient id="Degradado_sin_nombre_379-2" data-name="Degradado sin nombre 379" x1="37.73" y1="141.37" x2="112.45" y2="11.96" xlink:href="#Degradado_sin_nombre_379"/>
+    <linearGradient id="Degradado_sin_nombre_379-3" data-name="Degradado sin nombre 379" x1="139.84" y1="151.35" x2="169.98" y2="99.14" xlink:href="#Degradado_sin_nombre_379"/>
+  </defs>
+  <g id="Capa_1-2" data-name="Capa 1">
+    <g>
+      <path class="cls-1" d="M54.6,116.91l-18.15,37.79-36.45-.16,58.5-62.24c-2.71-6.08-.71-12.55,3.93-16.76,4.87-4.41,12.36-4.87,17.9-1.23,5.44,3.57,7.85,9.85,6.29,17.18l8.05,6.56,18.16-20.59,43.27-46.72-15.18-13.67L198.49,0l-10.91,59.04-16.31-14.41-58.11,62.75c2.16,6.33.46,12.66-4.39,16.72-4.91,4.1-12.15,4.23-17.25,1.09-5.64-3.48-8.36-9.68-6.61-16.88l-6.44-6.67-10.32.16-13.55,15.12Z"/>
+      <path class="cls-2" d="M90.29,39.69l-11.96,25.64c-7.47-1.84-15.09-.11-20.89,5.13-5.24,4.73-8.1,12.02-6.75,20.26L14.37,127.88,77.55,7.31l26.54-.18,22.93,44.68-20.47,22.1-16.26-34.22Z"/>
+      <polygon class="cls-3" points="145.75 154.76 122.67 107.27 144.12 84.2 180.56 154.62 145.75 154.76"/>
+    </g>
+  </g>
+</svg>

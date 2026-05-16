@@ -4,8 +4,16 @@ export const BRAND = {
   assets: {
     iconSvg: '/brand/avaltra-isotipo.svg',
     iconPng: '/brand/avaltra-isotipo.png',
+    iconLightSvg: '/brand/icon-light.svg',
+    iconDarkSvg: '/brand/icon-dark.svg',
+    iconLightPng: '/brand/icon-light.png',
+    iconDarkPng: '/brand/icon-dark.png',
     wordmarkSvg: '/brand/avaltra-imagotipo.svg',
     wordmarkPng: '/brand/avaltra-imagotipo.png',
+    wordmarkLightSvg: '/brand/wordmark-light.svg',
+    wordmarkDarkSvg: '/brand/wordmark-dark.svg',
+    wordmarkLightPng: '/brand/wordmark-light.png',
+    wordmarkDarkPng: '/brand/wordmark-dark.png',
   },
   colors: {
     trustBlue: '#003366',

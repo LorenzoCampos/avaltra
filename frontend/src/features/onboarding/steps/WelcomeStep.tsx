@@ -8,7 +8,7 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { BrandLogo } from '@/components/BrandLogo';
+import { BrandMark } from '@/components/BrandLogo';
 
 interface WelcomeStepProps {
   onStart: () => void;
@@ -31,7 +31,7 @@ export const WelcomeStep = ({ onStart, onSkip }: WelcomeStepProps) => {
         <CardHeader className="text-center pb-4">
           {/* Icon/Logo */}
           <div className="mb-6">
-            <BrandLogo variant="icon" size="lg" className="mx-auto" />
+            <BrandMark markSize="lg" className="justify-center" />
           </div>
 
           {/* Title */}

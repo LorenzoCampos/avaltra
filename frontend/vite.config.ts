@@ -17,7 +17,11 @@ export default defineConfig({
     // basicSsl(), // HTTPS comentado - descomenta en producción para PWA
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: [publicAsset(BRAND.assets.iconSvg), publicAsset(BRAND.assets.iconPng)],
+      includeAssets: [
+        publicAsset(BRAND.assets.iconLightSvg),
+        publicAsset(BRAND.assets.iconDarkSvg),
+        publicAsset(BRAND.assets.iconPng),
+      ],
       manifest: {
         name: BRAND.name,
         short_name: BRAND.name,
@@ -30,7 +34,12 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: publicAsset(BRAND.assets.iconSvg),
+            src: publicAsset(BRAND.assets.iconLightSvg),
+            sizes: 'any',
+            type: 'image/svg+xml'
+          },
+          {
+            src: publicAsset(BRAND.assets.iconDarkSvg),
             sizes: 'any',
             type: 'image/svg+xml'
           },
@@ -40,13 +49,13 @@ export default defineConfig({
             type: 'image/png'
           },
           {
-            src: publicAsset(BRAND.assets.iconSvg),
+            src: publicAsset(BRAND.assets.iconLightSvg),
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'any'
           },
           {
-            src: publicAsset(BRAND.assets.iconSvg),
+            src: publicAsset(BRAND.assets.iconLightSvg),
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'maskable'
@@ -64,7 +73,7 @@ export default defineConfig({
             purpose: 'maskable'
           },
           {
-            src: publicAsset(BRAND.assets.wordmarkSvg),
+            src: publicAsset(BRAND.assets.wordmarkLightSvg),
             sizes: 'any',
             type: 'image/svg+xml',
           },

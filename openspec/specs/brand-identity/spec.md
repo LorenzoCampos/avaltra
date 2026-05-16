@@ -8,7 +8,7 @@ Define a token-first branding behavior that applies approved `branding/` assets 
 
 ### Requirement: Approved Brand Assets and Logo Usage
 
-The system MUST use approved assets from `branding/` as source-of-truth for visible product identity, and MUST NOT introduce ad-hoc logos outside approved variants.
+The system MUST use approved assets from `branding/` as source-of-truth for visible product identity, MUST provide light-surface and dark-surface-safe logo/icon variants for app-chrome usage, and MUST NOT introduce ad-hoc logos outside approved variants. Logo selection SHOULD be deterministic by rendered surface/theme so legibility does not depend only on CSS effects.
 
 #### Scenario: Approved logo appears on key surfaces
 - GIVEN approved `branding/SVG` and required PNG assets are available
@@ -22,7 +22,7 @@ The system MUST use approved assets from `branding/` as source-of-truth for visi
 
 ### Requirement: Favicon and PWA Icon Update Behavior
 
-The system MUST update favicon and PWA metadata to use approved brand icon assets, including compatibility fallbacks for environments with limited SVG launcher support.
+The system MUST update favicon and PWA metadata to use approved brand icon assets, SHOULD provide color-scheme-aware favicon declarations where browser support exists, and MUST include compatibility fallbacks for environments with limited SVG or color-scheme favicon support.
 
 #### Scenario: Manifest and shell metadata reference branded icons
 - GIVEN frontend metadata and manifest are generated

@@ -12,8 +12,9 @@ describe('brand key surface integration', () => {
       readSource('components/MoreMenu.tsx'),
     ]);
 
-    expect(layout).toContain("import { BrandLogo } from './BrandLogo'");
-    expect(layout).toContain('<BrandLogo variant="wordmark" size="sm"');
+    expect(layout).toContain("import { BrandMark } from './BrandLogo'");
+    expect(layout).toContain('<BrandMark showName={!isDesktopSidebarCollapsed} markSize="sm" />');
+    expect(layout).toContain('<BrandMark showName markSize="sm" />');
     expect(`${layout}\n${bottomNav}\n${moreMenu}`).toContain('text-brand-primary');
     expect(`${layout}\n${bottomNav}\n${moreMenu}`).toContain('bg-brand-primary');
     expect(`${layout}\n${bottomNav}\n${moreMenu}`).toContain('focus-visible-ring-brand');
@@ -31,8 +32,8 @@ describe('brand key surface integration', () => {
     const combined = authSources.join('\n');
 
     for (const source of authSources) {
-      expect(source).toContain("import { BrandLogo } from '@/components/BrandLogo'");
-      expect(source).toContain('<BrandLogo variant="wordmark"');
+      expect(source).toContain("import { BrandMark } from '@/components/BrandLogo'");
+      expect(source).toContain('<BrandMark');
     }
     expect(combined).not.toContain('<CardTitle className="text-center">Avaltra</CardTitle>');
     expect(combined).toContain('text-brand-primary');
@@ -51,6 +52,7 @@ describe('brand key surface integration', () => {
     const combined = onboardingSources.join('\n');
 
     expect(combined).toContain('bg-gradient-brand-surface');
+    expect(combined).toContain('<BrandMark');
     expect(combined).toContain('bg-brand-primary');
     expect(combined).toContain('border-brand-primary');
     expect(combined).toContain('text-brand-primary');

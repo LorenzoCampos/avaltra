@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/api/axios';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { BrandLogo } from '@/components/BrandLogo';
+import { BrandMark } from '@/components/BrandLogo';
 
 type VerifyStatus = 'loading' | 'success' | 'error';
 
@@ -58,7 +58,7 @@ export const VerifyEmail = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex justify-center">
-              <BrandLogo variant="wordmark" size="md" />
+              <BrandMark markSize="md" />
             </CardTitle>
           </CardHeader>
 

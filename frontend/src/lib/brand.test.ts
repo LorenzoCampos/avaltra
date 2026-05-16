@@ -17,8 +17,16 @@ describe('brand contract', () => {
       assets: {
         iconSvg: '/brand/avaltra-isotipo.svg',
         iconPng: '/brand/avaltra-isotipo.png',
+        iconLightSvg: '/brand/icon-light.svg',
+        iconDarkSvg: '/brand/icon-dark.svg',
+        iconLightPng: '/brand/icon-light.png',
+        iconDarkPng: '/brand/icon-dark.png',
         wordmarkSvg: '/brand/avaltra-imagotipo.svg',
         wordmarkPng: '/brand/avaltra-imagotipo.png',
+        wordmarkLightSvg: '/brand/wordmark-light.svg',
+        wordmarkDarkSvg: '/brand/wordmark-dark.svg',
+        wordmarkLightPng: '/brand/wordmark-light.png',
+        wordmarkDarkPng: '/brand/wordmark-dark.png',
       },
       colors: {
         trustBlue: '#003366',
@@ -46,12 +54,28 @@ describe('brand contract', () => {
     expect(assets.map(({ assetUrl }) => assetUrl)).toEqual([
       '/brand/avaltra-isotipo.svg',
       '/brand/avaltra-isotipo.png',
+      '/brand/icon-light.svg',
+      '/brand/icon-dark.svg',
+      '/brand/icon-light.png',
+      '/brand/icon-dark.png',
       '/brand/avaltra-imagotipo.svg',
       '/brand/avaltra-imagotipo.png',
+      '/brand/wordmark-light.svg',
+      '/brand/wordmark-dark.svg',
+      '/brand/wordmark-light.png',
+      '/brand/wordmark-dark.png',
     ]);
+    for (const { assetUrl } of assets) {
+      expect(assetUrl.startsWith('/brand/')).toBe(true);
+    }
     for (const { content } of assets) {
       expect(content.byteLength).toBeGreaterThan(0);
     }
+  });
+
+  it('does not expose generated lockup SVGs for key app identity surfaces', () => {
+    expect(BRAND.assets).not.toHaveProperty('lockupLightSvg');
+    expect(BRAND.assets).not.toHaveProperty('lockupDarkSvg');
   });
 });
 
@@ -59,9 +83,11 @@ describe('brand install metadata', () => {
   it('points browser shell metadata at approved SVG and PNG brand assets', async () => {
     const html = await readFrontendFile('index.html');
 
-    expect(html).toContain('<link rel="icon" type="image/svg+xml" href="/brand/avaltra-isotipo.svg" />');
+    expect(html).toContain('<link rel="icon" type="image/svg+xml" href="/brand/icon-light.svg" />');
+    expect(html).toContain('<link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: light)" href="/brand/icon-light.svg" />');
+    expect(html).toContain('<link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: dark)" href="/brand/icon-dark.svg" />');
     expect(html).toContain('<link rel="alternate icon" type="image/png" href="/brand/avaltra-isotipo.png" />');
-    expect(html).toContain('<link rel="apple-touch-icon" href="/brand/avaltra-isotipo.png" />');
+    expect(html).toContain('<link rel="apple-touch-icon" href="/brand/icon-light.png" />');
     expect(html).toContain('<meta name="theme-color" content="#003366" />');
     expect(html).toContain('<title>Avaltra - Personal and family finance management</title>');
   });
@@ -69,10 +95,14 @@ describe('brand install metadata', () => {
   it('configures the PWA manifest with SVG icons and PNG fallbacks', async () => {
     const viteConfig = await readFrontendFile('vite.config.ts');
 
-    expect(viteConfig).toContain('includeAssets: [publicAsset(BRAND.assets.iconSvg), publicAsset(BRAND.assets.iconPng)]');
+    expect(viteConfig).toContain('includeAssets: [');
+    expect(viteConfig).toContain('publicAsset(BRAND.assets.iconLightSvg)');
+    expect(viteConfig).toContain('publicAsset(BRAND.assets.iconDarkSvg)');
+    expect(viteConfig).toContain('publicAsset(BRAND.assets.iconPng)');
     expect(viteConfig).toContain('theme_color: BRAND.colors.trustBlue');
     expect(viteConfig).toContain('background_color: BRAND.colors.white');
-    expect(viteConfig).toContain('src: publicAsset(BRAND.assets.iconSvg)');
+    expect(viteConfig).toContain('src: publicAsset(BRAND.assets.iconLightSvg)');
+    expect(viteConfig).toContain('src: publicAsset(BRAND.assets.iconDarkSvg)');
     expect(viteConfig).toContain("type: 'image/svg+xml'");
     expect(viteConfig).toContain('src: publicAsset(BRAND.assets.iconPng)');
     expect(viteConfig).toContain("type: 'image/png'");

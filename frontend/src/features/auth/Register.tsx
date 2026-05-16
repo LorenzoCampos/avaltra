@@ -9,7 +9,7 @@ import { registerSchema, type RegisterFormData } from '@/schemas/auth.schema';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { BrandLogo } from '@/components/BrandLogo';
+import { BrandMark } from '@/components/BrandLogo';
 
 export const Register = () => {
   const { t } = useTranslation('auth');
@@ -51,7 +51,7 @@ export const Register = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex justify-center">
-              <BrandLogo variant="wordmark" size="md" />
+              <BrandMark markSize="md" />
             </CardTitle>
             <p className="text-center text-gray-600 dark:text-gray-400 mt-2">
               {t('register.subtitle')}

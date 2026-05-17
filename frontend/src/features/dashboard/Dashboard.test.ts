@@ -9,6 +9,7 @@ import dashboardEs from '@/i18n/locales/es/dashboard.json';
 import tourEs from '@/i18n/locales/es/tour.json';
 import { getDashboardErrorMessage } from './dashboardErrorMessage';
 import { getDashboardCardAmounts } from './dashboardSummaryCards';
+import { getDashboardCurrency } from './dashboardCurrency';
 
 const apiDocPath = path.resolve(__dirname, '../../../../API.md');
 const featuresDocPath = path.resolve(__dirname, '../../../../FEATURES.md');
@@ -51,6 +52,16 @@ describe('dashboard summary card semantics', () => {
 			totalExpenses: 120,
 			totalIncome: 845,
 		});
+	});
+});
+
+describe('dashboard currency resolution', () => {
+	it('uses the dashboard primary currency when it is explicit', () => {
+		expect(getDashboardCurrency('USD', 'ARS')).toBe('USD');
+	});
+
+	it('falls back to the active account currency when the summary currency is implicit', () => {
+		expect(getDashboardCurrency(undefined, 'EUR')).toBe('EUR');
 	});
 });
 

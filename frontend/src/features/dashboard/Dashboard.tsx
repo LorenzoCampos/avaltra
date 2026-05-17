@@ -6,14 +6,17 @@ import { useAuthStore } from '@/stores/auth.store';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { FeatureErrorBoundary } from '@/components/ErrorBoundary';
 import { DashboardCardSkeleton, ChartSkeleton, ListSkeleton } from '@/components/ui/Skeleton';
-import { formatCurrency, getCurrentMonth } from '@/lib/utils';
+import { getCurrentMonth } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { QuickAddExpenseFAB } from '@/components/QuickAddExpenseFAB';
 import { InfoTooltip } from '@/components/InfoTooltip';
+import { MoneyAmountDisplay } from '@/components/MoneyAmountDisplay';
+import { useMoneyFormatter } from '@/hooks/useMoneyFormatter';
 import { InsightsCard } from './InsightsCard';
 import { getDashboardErrorMessage } from './dashboardErrorMessage';
 import { getDashboardCardAmounts } from './dashboardSummaryCards';
+import { getDashboardCurrency } from './dashboardCurrency';
 import type { Currency } from '@/schemas/account.schema';
 
 export const Dashboard = () => {
@@ -21,6 +24,7 @@ export const Dashboard = () => {
   const user = useAuthStore((state) => state.user);
   const { activeAccount, activeAccountId } = useAccountStore();
   const navigate = useNavigate();
+  const { formatMoney } = useMoneyFormatter();
   
   // ============================================================================
   // IMPORTANTE: Llamar a useAccounts para que se auto-seleccione default account
@@ -129,7 +133,7 @@ export const Dashboard = () => {
 
   const { currentAvailableBalance, totalExpenses, totalIncome } = getDashboardCardAmounts(dashboard);
 
-  const primaryCurrency = (primary_currency || activeAccount.currency) as Currency;
+  const primaryCurrency = getDashboardCurrency(primary_currency, activeAccount.currency as Currency);
 
   return (
     <div className="space-y-6">
@@ -154,7 +158,7 @@ export const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                {formatCurrency(currentAvailableBalance, primaryCurrency)}
+                {formatMoney(currentAvailableBalance, primaryCurrency)}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('cards.availableBalance.subtitle')}</p>
             </CardContent>
@@ -169,7 +173,7 @@ export const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-                {formatCurrency(totalExpenses, primaryCurrency)}
+                {formatMoney(totalExpenses, primaryCurrency)}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {t('cards.expenses.subtitle', { count: top_expenses?.length || 0 })}
@@ -186,7 +190,7 @@ export const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(totalIncome, primaryCurrency)}
+                {formatMoney(totalIncome, primaryCurrency)}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('cards.income.subtitle')}</p>
             </CardContent>
@@ -260,7 +264,7 @@ export const Dashboard = () => {
                         {category.category_name || t('common:common.noCategory')}
                       </span>
                       <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
-                        {formatCurrency(category.total, primaryCurrency)}
+                        {formatMoney(category.total, primaryCurrency)}
                         <span className="text-gray-500 dark:text-gray-400 ml-2">({category.percentage.toFixed(1)}%)</span>
                       </span>
                     </div>
@@ -301,16 +305,14 @@ export const Dashboard = () => {
                         {expense.category_name || t('common:common.noCategory')} • {expense.date}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">
-                        {formatCurrency(expense.amount_in_primary_currency, primaryCurrency)}
-                      </p>
-                      {expense.currency !== primaryCurrency && (
-                        <p className="text-xs text-gray-500">
-                          {formatCurrency(expense.amount, expense.currency as Currency)}
-                        </p>
-                      )}
-                    </div>
+                    <MoneyAmountDisplay
+                      amount={expense.amount}
+                      currency={expense.currency as Currency}
+                      accountCurrency={primaryCurrency}
+                      amountInAccountCurrency={expense.amount_in_primary_currency}
+                      formatMoney={formatMoney}
+                      primaryClassName="font-semibold text-gray-900 dark:text-gray-100"
+                    />
                   </div>
                 ))}
               </div>
@@ -345,12 +347,15 @@ export const Dashboard = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className={`font-semibold ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {transaction.type === 'income' ? '+' : '-'}
-                        {formatCurrency(transaction.amount_in_primary_currency, primaryCurrency)}
-                      </p>
-                    </div>
+                    <MoneyAmountDisplay
+                      amount={transaction.amount}
+                      currency={transaction.currency as Currency}
+                      accountCurrency={primaryCurrency}
+                      amountInAccountCurrency={transaction.amount_in_primary_currency}
+                      formatMoney={formatMoney}
+                      sign={transaction.type === 'income' ? '+' : '-'}
+                      primaryClassName={`font-semibold ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                    />
                   </div>
                 ))}
               </div>

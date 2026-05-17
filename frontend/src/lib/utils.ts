@@ -3,7 +3,6 @@ import { twMerge } from 'tailwind-merge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Currency } from '@/types/api';
-import { CURRENCY_SYMBOLS } from './constants';
 
 /**
  * Combina clases de Tailwind CSS de manera eficiente
@@ -13,20 +12,31 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/**
- * Formatea un monto con símbolo de moneda
- * @param amount - Monto numérico
- * @param currency - Moneda (ARS | USD | EUR)
- * @param decimals - Cantidad de decimales (default: 2)
- */
+export interface FormatCurrencyOptions {
+  language?: string;
+}
+
+const MONEY_LOCALES: Record<string, string> = {
+  es: 'es-AR',
+  en: 'en-US',
+};
+
+export function resolveMoneyLocale(language?: string): string {
+  const baseLanguage = language?.split('-')[0] ?? 'en';
+  return MONEY_LOCALES[baseLanguage] ?? MONEY_LOCALES.en;
+}
+
 export function formatCurrency(
   amount: number,
   currency: Currency,
-  decimals: number = 2
+  options: FormatCurrencyOptions = {}
 ): string {
-  const symbol = CURRENCY_SYMBOLS[currency];
-  const formatted = amount.toFixed(decimals);
-  return `${symbol} ${formatted}`;
+  return new Intl.NumberFormat(resolveMoneyLocale(options.language), {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
 /**

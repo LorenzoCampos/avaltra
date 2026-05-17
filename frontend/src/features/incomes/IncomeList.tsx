@@ -11,9 +11,12 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { TableSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { MoneyAmountDisplay } from '@/components/MoneyAmountDisplay';
 import { useActionFeedback } from '@/hooks/useActionFeedback';
+import { useMoneyFormatter } from '@/hooks/useMoneyFormatter';
 import { cn } from '@/lib/utils';
 import { getPaymentMethodLabel } from '@/lib/paymentMethods';
+import type { Currency } from '@/types/api';
 
 export const IncomeList = () => {
   const { t } = useTranslation('incomes');
@@ -24,6 +27,7 @@ export const IncomeList = () => {
   const { data: categories } = useIncomeCategories();
   const { handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
   const { getFeedbackClassName } = useActionFeedback();
+  const { formatMoney } = useMoneyFormatter();
 
   const isFamilyAccount = activeAccount?.type === 'family';
 
@@ -266,8 +270,16 @@ export const IncomeList = () => {
                             {familyMembers?.find(m => m.id === income.family_member_id)?.name || t('list.table.na')}
                           </td>
                         )}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-green-600 dark:text-green-400">
-                          {income.currency} {(income.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <MoneyAmountDisplay
+                            amount={income.amount}
+                            currency={income.currency as Currency}
+                            accountCurrency={activeAccount.currency as Currency}
+                            amountInAccountCurrency={income.amount_in_primary_currency}
+                            formatMoney={formatMoney}
+                            sign="+"
+                            primaryClassName="font-semibold text-green-600 dark:text-green-400"
+                          />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                           <button
@@ -346,11 +358,15 @@ export const IncomeList = () => {
                       {income.date}
                     </p>
                   </div>
-                  <div className="text-right ml-4">
-                    <p className="text-lg font-bold text-green-600 dark:text-green-400 whitespace-nowrap">
-                      {income.currency} {(income.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                  </div>
+                  <MoneyAmountDisplay
+                    amount={income.amount}
+                    currency={income.currency as Currency}
+                    accountCurrency={activeAccount.currency as Currency}
+                    amountInAccountCurrency={income.amount_in_primary_currency}
+                    formatMoney={formatMoney}
+                    sign="+"
+                    primaryClassName="text-lg font-bold text-green-600 dark:text-green-400 whitespace-nowrap"
+                  />
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-3">

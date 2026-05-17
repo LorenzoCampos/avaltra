@@ -34,6 +34,8 @@
     "daysLeft_one": "{{count}} day left",
     "addFundsButton": "Add Funds",
     "withdrawButton": "Withdraw",
+    "editActionLabel": "Edit goal",
+    "deleteActionLabel": "Delete goal",
     "archivedBadge": "Archived"
   },
   "form": {

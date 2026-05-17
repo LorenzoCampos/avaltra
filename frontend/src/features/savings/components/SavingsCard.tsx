@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { SavingsGoal } from '@/types/savings';
@@ -18,7 +17,6 @@ interface SavingsCardProps {
 export const SavingsCard = ({ goal, onDelete, onAddFunds, onWithdrawFunds }: SavingsCardProps) => {
   const { t } = useTranslation('savings');
   const navigate = useNavigate();
-  const [showActions, setShowActions] = useState(false);
   const { handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
 
   const formatCurrency = (amount: number) => {
@@ -50,11 +48,9 @@ export const SavingsCard = ({ goal, onDelete, onAddFunds, onWithdrawFunds }: Sav
 
   return (
     <Card
-      className={`animate-slide-up transition-all duration-300 hover:shadow-lg ${
+      className={`group animate-slide-up transition-all duration-300 hover:shadow-lg ${
         isDeleting(goal.id) ? 'animate-slide-out-left' : ''
       } ${!goal.is_active ? 'opacity-60' : ''}`}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
     >
       <CardContent className="p-6">
         {/* Header */}
@@ -70,23 +66,27 @@ export const SavingsCard = ({ goal, onDelete, onAddFunds, onWithdrawFunds }: Sav
             )}
           </div>
 
-          {/* Actions (show on hover) */}
-          <div className={`flex items-center gap-2 transition-opacity ${showActions ? 'opacity-100' : 'opacity-0'}`}>
+          {/* Actions */}
+          <div className="flex items-center gap-2 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate(`/savings/edit/${goal.id}`)}
+              aria-label={t('card.editActionLabel')}
+              title={t('card.editActionLabel')}
               className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
             >
-              <EditIcon className="w-4 h-4" />
+              <EditIcon aria-hidden="true" className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => handleDeleteWithAnimation(goal.id, () => onDelete(goal.id))}
+              aria-label={t('card.deleteActionLabel')}
+              title={t('card.deleteActionLabel')}
               className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
             >
-              <TrashIcon className="w-4 h-4" />
+              <TrashIcon aria-hidden="true" className="w-4 h-4" />
             </Button>
           </div>
         </div>

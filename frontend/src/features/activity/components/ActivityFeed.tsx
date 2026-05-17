@@ -2,20 +2,26 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   useActivity,
-  formatCurrency,
   formatActivityDate,
   getActivityIcon,
   getActivityColor,
   getActivityLabel,
   type ActivityItem,
 } from '@/hooks/useActivity';
+import { MoneyAmountDisplay } from '@/components/MoneyAmountDisplay';
 import { useFilters } from '@/hooks/useFilters';
+import { useMoneyFormatter } from '@/hooks/useMoneyFormatter';
+import { useAccountStore } from '@/stores/account.store';
 import { FilterBar } from '@/components/FilterBar';
 import { Loader2 } from 'lucide-react';
+import type { Currency } from '@/types/api';
 
 export function ActivityFeed() {
   const { t } = useTranslation('activity');
   const { data, isLoading, error } = useActivity({});
+  const { activeAccount } = useAccountStore();
+  const { formatMoney } = useMoneyFormatter();
+  const accountCurrency = (activeAccount?.currency || 'ARS') as Currency;
 
   console.log('ActivityFeed state:', { isLoading, error: error?.toString(), dataLength: data?.activities?.length });
 
@@ -108,28 +114,28 @@ export function ActivityFeed() {
         <div className="rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
           <p className="text-sm font-medium text-green-900 dark:text-green-300">{t('summary.income')}</p>
           <p className="mt-1 text-xl font-bold text-green-600 dark:text-green-400">
-            {formatCurrency(data.summary.total_income, 'ARS')}
+            {formatMoney(data.summary.total_income, accountCurrency)}
           </p>
         </div>
 
         <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
           <p className="text-sm font-medium text-red-900 dark:text-red-300">{t('summary.expenses')}</p>
           <p className="mt-1 text-xl font-bold text-red-600 dark:text-red-400">
-            {formatCurrency(data.summary.total_expenses, 'ARS')}
+            {formatMoney(data.summary.total_expenses, accountCurrency)}
           </p>
         </div>
 
         <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
           <p className="text-sm font-medium text-blue-900 dark:text-blue-300">{t('summary.saved')}</p>
           <p className="mt-1 text-xl font-bold text-blue-600 dark:text-blue-400">
-            {formatCurrency(data.summary.total_savings_deposits - data.summary.total_savings_withdrawals, 'ARS')}
+            {formatMoney(data.summary.total_savings_deposits - data.summary.total_savings_withdrawals, accountCurrency)}
           </p>
         </div>
 
         <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
           <p className="text-sm font-medium text-gray-900 dark:text-gray-300">{t('summary.balance')}</p>
           <p className={`mt-1 text-xl font-bold ${data.summary.net_balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            {formatCurrency(data.summary.net_balance, 'ARS')}
+            {formatMoney(data.summary.net_balance, accountCurrency)}
           </p>
         </div>
       </div>
@@ -158,7 +164,7 @@ export function ActivityFeed() {
                 </div>
                 <div className="space-y-2">
                   {activities.map((activity) => (
-                    <ActivityCard key={activity.id} activity={activity} />
+                    <ActivityCard key={activity.id} activity={activity} accountCurrency={accountCurrency} formatMoney={formatMoney} />
                   ))}
                 </div>
               </div>
@@ -177,7 +183,15 @@ export function ActivityFeed() {
 }
 
 // Activity card component
-function ActivityCard({ activity }: { activity: ActivityItem }) {
+function ActivityCard({
+  activity,
+  accountCurrency,
+  formatMoney,
+}: {
+  activity: ActivityItem;
+  accountCurrency: Currency;
+  formatMoney: (amount: number, currency: Currency) => string;
+}) {
   const icon = getActivityIcon(activity.type);
   const color = getActivityColor(activity.type);
   const label = getActivityLabel(activity.type);
@@ -199,17 +213,15 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
       </div>
 
       {/* Right side: amount */}
-      <div className="text-right">
-        <p className={`text-lg font-semibold ${color}`}>
-          {isNegative && '-'}
-          {formatCurrency(activity.amount, activity.currency)}
-        </p>
-        {activity.currency !== 'ARS' && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {activity.currency}
-          </p>
-        )}
-      </div>
+      <MoneyAmountDisplay
+        amount={activity.amount}
+        currency={activity.currency as Currency}
+        accountCurrency={accountCurrency}
+        amountInAccountCurrency={activity.amount_in_primary_currency}
+        formatMoney={formatMoney}
+        sign={isNegative ? '-' : undefined}
+        primaryClassName={`text-lg font-semibold ${color}`}
+      />
     </div>
   );
 }

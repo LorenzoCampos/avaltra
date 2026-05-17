@@ -108,17 +108,6 @@ export function getActivityLabel(type: ActivityType): string {
   return labels[type];
 }
 
-// Helper: Format currency
-export function formatCurrency(amount: number, currency: string): string {
-  const formatter = new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: currency === 'ARS' ? 'ARS' : currency === 'USD' ? 'USD' : 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
-  return formatter.format(amount);
-}
-
 // Helper: Format date to human readable
 export function formatActivityDate(dateString: string): string {
   const date = new Date(dateString);

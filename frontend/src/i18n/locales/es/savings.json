@@ -34,6 +34,8 @@
     "daysLeft_one": "{{count}} día restante",
     "addFundsButton": "Agregar Fondos",
     "withdrawButton": "Retirar",
+    "editActionLabel": "Editar objetivo",
+    "deleteActionLabel": "Eliminar objetivo",
     "archivedBadge": "Archivado"
   },
   "form": {

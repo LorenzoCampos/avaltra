@@ -8,6 +8,7 @@
     "recurring": "Recurrentes",
     "settings": "Configuración",
     "accounts": "Cuentas",
+    "paymentContainers": "Contexto de pago",
     "categories": "Categorías",
     "reports": "Reportes"
   },
@@ -22,6 +23,10 @@
     "accounts": {
       "label": "Cuentas",
       "description": "Administrá tus cuentas"
+    },
+    "paymentContainers": {
+      "label": "Contexto de pago",
+      "description": "Contenedores e instrumentos"
     },
     "categories": {
       "label": "Categorías",

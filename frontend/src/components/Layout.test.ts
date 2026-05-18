@@ -19,7 +19,7 @@ describe('Layout desktop sidebar navigation', () => {
   it('uses shared lucide navigation icons instead of collapsed first-letter labels', async () => {
     const layout = await readSource('components/Layout.tsx');
 
-    expect(layout).toContain('Home, Activity, DollarSign, TrendingUp, Wallet, Tag, BarChart3, PiggyBank, Settings');
+    expect(layout).toContain('Home, Activity, DollarSign, TrendingUp, Wallet, Tag, BarChart3, PiggyBank, Settings, CreditCard');
     expect(layout).toContain('icon: Home');
     expect(layout).toContain('icon: Wallet');
     expect(layout).toContain('const Icon = link.icon');

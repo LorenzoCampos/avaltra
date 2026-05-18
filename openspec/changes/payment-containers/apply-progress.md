@@ -1,11 +1,9 @@
 # Apply Progress: payment-containers
 
 ## Scope
-PR1 foundation remains complete. PR2 backend transaction wiring is complete on the resolved `stacked-to-main` chain, with this update limited to PR2 verification warning fixes before packaging.
+PR1 foundation and PR2 backend transaction wiring remain complete. PR3 frontend management is now implemented on the resolved `stacked-to-main` chain, limited to frontend API types/hooks, management UI forms/lists, and route/navigation entry.
 
-No frontend UI, importer, dashboard, branding, spreadsheet, or PR3+ work was implemented.
-
-Prior PR1 hardening and fresh-review fixes remain preserved in the completed task history below. This current update is PR2-only and addresses backend transaction wiring verification warnings before packaging.
+No transaction form selectors, activity/list label rendering, importer, dashboard breakdown, backend, branding, spreadsheet, commit, or PR work was implemented in this slice.
 
 ## Completed Tasks
 - [x] 1.1 Added additive migration `023_create_payment_containers` with `payment_institutions`, `payment_containers`, `payment_instruments`, nullable expense/income FK columns, indexes, and reversible down migration.
@@ -18,6 +16,11 @@ Prior PR1 hardening and fresh-review fixes remain preserved in the completed tas
 - [x] 2.2 Income create/update/get/list now accept, validate, persist, and return nullable `destination_container_id` and `destination_instrument_id` with the same compatibility and explicit-null update semantics.
 - [x] 2.3 Activity list now exposes nullable `payment_context` with display precedence `normalized label → payment_method → null` for backend responses only.
 - [x] PR2 verification warning fix: expense/income update validation now checks final one-field replacement pairs against existing transaction refs, and activity legacy fallback now returns user-facing backend labels while preserving the raw legacy enum in `legacy_payment_method`.
+- [x] 3.1 Added frontend payment container/instrument API types and optional normalized payment-context fields to expense/income types without touching dashboard contracts.
+- [x] 3.2 Added TanStack Query hooks for `/payment-containers` and `/payment-instruments`, including list/create/update/deactivate mutations wired to the existing axios client.
+- [x] 3.3 Added the payment context management page, container/instrument forms, card backing-container UI validation, active/inactive list badges, route entry, and desktop/mobile navigation links.
+- [x] PR3 verification fix: replaced source-string-primary frontend management tests with behavioral Vitest coverage for `PaymentContainersPage` loading/error/empty/list rendering, container form submit payload validation, and instrument card-backing submit enforcement.
+- [x] PR3 lint fix: moved `getContainerFormSubmission` and `getInstrumentFormSubmission` to `frontend/src/features/payment-containers/formSubmissions.ts` and updated tests/imports so component files export components only.
 
 ## TDD Cycle Evidence
 | Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
@@ -32,12 +35,18 @@ Prior PR1 hardening and fresh-review fixes remain preserved in the completed tas
 | 2.2 | `backend/internal/handlers/incomes/payment_method_test.go`, `backend/internal/handlers/incomes/category_validation_test.go` | Handler/unit | ✅ `go test ./internal/handlers/expenses ./internal/handlers/incomes ./internal/handlers/activity` passing before changes | ✅ Tests updated/written first; failed on old income INSERT/response lacking normalized refs and validation | ✅ Focused handler packages passed after income context helper and query wiring | ✅ Create valid + inactive/foreign rejection, update replace + explicit null, get/list compatibility, legacy-only create cases | ✅ Kept additive nullable fields; no frontend/importer changes |
 | 2.3 | `backend/internal/handlers/activity/payment_method_test.go` | Handler/unit | ✅ `go test ./internal/handlers/expenses ./internal/handlers/incomes ./internal/handlers/activity` passing before changes | ✅ Test updated first; failed parsing activity rows because production query lacked `payment_context_label` | ✅ Focused activity package passed after activity query/response wiring | ✅ Cases cover normalized label precedence, legacy fallback, and null for savings/no context | ✅ Minimal response helper `buildPaymentContext` |
 | PR2 verification warning fix | `backend/internal/handlers/{expenses,incomes,activity}/payment_method_test.go` | Handler/unit | ✅ `go test ./internal/handlers/expenses ./internal/handlers/incomes ./internal/handlers/activity` passed before new warning fixes | ✅ Added regression tests first; focused run failed with 500/update path for one-field replacements and raw `credit_card` activity display label | ✅ Focused handler packages passed after final-pair validation and label helper changes | ✅ Expense + income cover changed-container and changed-instrument mismatch paths; activity covers labeled fallback plus raw `legacy_payment_method` preservation | ✅ Small shared `PaymentMethodLabel` helper; no frontend/importer/dashboard changes |
+| 3.1/3.2/3.3 | `frontend/src/features/payment-containers/paymentContainerManagement.test.ts`, `frontend/src/components/Layout.test.ts` | Frontend source/type contract | ✅ Frontend has Vitest; `npm run typecheck` passed before verification after implementation | ✅ New test failed first because payment instrument types/hooks/page did not exist | ✅ Focused tests and full `npm test` passed after adding types, hooks, forms, page, route, and navigation | ✅ Tests cover card backing helper, endpoint wiring, route/navigation wiring, and PR3 non-scope guard | ✅ Removed local lint issues in new files; no transaction/importer/dashboard work |
+| PR3 verification fix | `frontend/src/features/payment-containers/paymentContainerManagement.test.ts` | Frontend behavior/unit | ✅ PR3 verify showed typecheck, full tests, and build passed but frontend evidence was mostly source-string inspection | ✅ Verification failed because tests did not render/exercise loading/error/empty/list behavior or form-submit card backing enforcement | ✅ Focused test, typecheck, full `npm test`, and build pass after adding server-render page tests and submit-validation helpers used by the forms | ✅ Cases cover loading, error, empty, active/inactive lists, backing labels, container required/trim/update payloads, and instrument card/non-card submit payloads | ✅ Minimal extraction of form submit helpers; no backend, PR4, importer, dashboard, branding, or spreadsheet changes |
+| PR3 lint fix | `frontend/src/features/payment-containers/paymentContainerManagement.test.ts` | Frontend unit/refactor | ✅ 7 focused payment-container tests passed before refactor | ✅ Approval tests already covered helper behavior before moving it; lint failed on component files exporting non-components | ✅ Focused test, typecheck, and focused eslint passed after helper-module extraction | ✅ Existing cases cover blank/trimmed/reactivation container payloads and card/non-card instrument payloads | ✅ Moved helpers only; no behavior changes |
 
 ## Test Summary
 - **Total tests written**: 12 handler/domain/route test functions with table-driven subtests across the PR1 slice, plus new hardening subtests in existing handler tables.
 - **Fresh-review test additions**: 2 table-driven handler subtests for explicit-null backing updates on existing card instruments, plus PATCH route alignment for deactivate handler tests.
 - **Total tests passing**: full backend suite passing.
 - **PR2 additions**: Expense/income handler tests now cover normalized refs for create/update/read paths and activity covers `payment_context` precedence.
+- **PR3 additions**: Frontend source-contract tests cover management endpoint wiring, card backing selection rule, route/navigation wiring, and scope guard against transaction forms.
+- **PR3 verification fix additions**: Behavioral frontend tests now render `PaymentContainersPage` through mocked hooks and exercise form submit payload/validation helpers used by `ContainerForm` and `InstrumentForm`.
+- **PR3 lint fix**: Refactor-only approval coverage preserved 7 focused tests while moving helper exports out of component files.
 - **Layers used**: Unit/filesystem and handler-level tests with `pgxmock`.
 - **Approval tests**: None — no refactoring-only tasks.
 - **Pure functions created**: `IsValidPaymentContainerKind`, `IsValidPaymentInstrumentKind`, `ValidatePaymentContainerKind`, `ValidatePaymentInstrumentBackingContainer`, `RejectSplitPaymentPayload`.
@@ -49,6 +58,22 @@ Prior PR1 hardening and fresh-review fixes remain preserved in the completed tas
 - `go test ./internal/transactions ./internal/handlers/payment_containers ./internal/server -coverprofile=/tmp/payment-containers-pr1-cover.out`
 - `go tool cover -func=/tmp/payment-containers-pr1-cover.out`
 - `go test ./...` from `backend/`
+- `npm test -- --run src/features/payment-containers/paymentContainerManagement.test.ts` (PR3 RED; failed because frontend payment instrument types/hooks/page did not exist)
+- `npm run typecheck`
+- `npm test -- --run src/features/payment-containers/paymentContainerManagement.test.ts` (PR3 GREEN)
+- `npm run build` (first run timed out during Vite transform at 120s; retried with 300s and passed)
+- `npm test -- --run src/features/payment-containers/paymentContainerManagement.test.ts src/components/Layout.test.ts`
+- `npm test` from `frontend/`
+- `npm run lint` from `frontend/` (failed on pre-existing lint debt outside this PR3 slice; no remaining reported errors in new payment-containers files)
+- `npm test -- --run src/features/payment-containers/paymentContainerManagement.test.ts` (PR3 verification fix focused behavioral suite; 7 tests passed)
+- `npm run typecheck` from `frontend/`
+- `npm test` from `frontend/` (17 files / 79 tests passed)
+- `npm run build` from `frontend/` (passed; existing dynamic-import and chunk-size warnings remain)
+- `npm test -- --run src/features/payment-containers/paymentContainerManagement.test.ts` (PR3 lint-fix baseline; 7 tests passed)
+- `npm test -- --run src/features/payment-containers/paymentContainerManagement.test.ts` (PR3 lint-fix post-refactor; 7 tests passed)
+- `npm run typecheck` from `frontend/` (passed)
+- `npx eslint src/features/payment-containers/ContainerForm.tsx src/features/payment-containers/InstrumentForm.tsx src/features/payment-containers/formSubmissions.ts src/features/payment-containers/paymentContainerManagement.test.ts` from `frontend/` (passed; confirms the two new PR3 react-refresh lint errors are gone)
+- `npm run lint` from `frontend/` (failed on pre-existing lint debt outside this PR3 lint-fix scope, including `dev-dist/workbox-1fb923f4.js`, `src/api/axios.ts`, `src/components/FeatureTour.tsx`, `src/components/PageTransition.tsx`, existing expense/income form react-refresh exports, and broader `any`/React Compiler issues)
 - `go test ./internal/transactions ./internal/handlers/payment_containers` (hardening baseline safety net)
 - `go test ./internal/handlers/payment_containers -run TestUpdatePaymentInstrumentScenarios` (RED; failed on unsupported kind and card-kind-without-backing update returning 500)
 - `gofmt -w internal/transactions/payment_context_test.go internal/handlers/payment_containers/handlers_test.go internal/handlers/payment_containers/update.go && go test ./internal/transactions -run TestValidatePaymentContainerKind && go test ./internal/handlers/payment_containers -run 'Test(CreatePaymentInstrumentRequiresBackingForCards|UpdatePaymentInstrumentScenarios)'`
@@ -75,7 +100,7 @@ Prior PR1 hardening and fresh-review fixes remain preserved in the completed tas
 - Hardening coverage improved `internal/transactions` to 97.4% and `ValidatePaymentContainerKind` to 100%; `internal/handlers/payment_containers` improved to 74.9%, with `UpdatePaymentInstrument` at 78.7%.
 
 ## Deviations
-- None from the assigned PR2 backend transaction wiring scope. No frontend, importer, dashboard, or management UI work was implemented.
+- None from the assigned PR3 frontend management scope. Dashboard type extension was intentionally skipped because PR3 did not compile against dashboard payment-context contracts and dashboard breakdown is PR5 scope.
 
 ## Issues Fixed
 - Omitted `institution_id` / `backing_container_id` fields in update JSON no longer clear stored nullable IDs; update SQL now preserves existing values unless the JSON field is explicitly present.
@@ -88,10 +113,20 @@ Prior PR1 hardening and fresh-review fixes remain preserved in the completed tas
 - Update endpoints preserve omitted normalized refs and clear them only on explicit JSON `null`, matching existing `payment_method` nullable semantics.
 - Expense/income one-field normalized ref updates now validate the final persisted pair against the existing counterpart before running UPDATE.
 - Activity fallback display labels now use a backend legacy payment-method label helper (`Credit card`, `Bank transfer`, etc.) while keeping `legacy_payment_method` as the raw enum for clients that need it.
+- The frontend now has Vitest configured, so PR3 followed test-first behavior instead of using the earlier no-frontend-runner limitation from SDD init.
+- PR3 frontend management tests can render React components with `react-dom/server` under the existing Vitest runner; no extra DOM test dependency was required.
+- The global `npm run lint` command currently fails on pre-existing frontend lint debt and generated `dev-dist` artifacts outside this PR3 slice; focused tests, full Vitest suite, typecheck, and build pass.
+- `react-refresh/only-export-components` is satisfied for the PR3 management forms by keeping `ContainerForm.tsx` and `InstrumentForm.tsx` component-only and placing reusable submit helpers in `formSubmissions.ts`.
 
 ## Remaining Tasks
 - [x] 2.1 Expense normalized refs + compatibility.
 - [x] 2.2 Income normalized refs + compatibility.
 - [x] 2.3 Activity payment context labels.
-- [ ] Phase 3 frontend management/forms.
+- [x] 3.1 Frontend payment container/instrument types and required transaction type extensions.
+- [x] 3.2 Frontend payment container/instrument hooks.
+- [x] 3.3 Frontend management page/forms and route/navigation entry.
+- [x] PR3 verification test-quality fix.
+- [x] PR3 lint fix for payment-container form helper exports.
+- [ ] 3.4 Transaction form optional selectors (PR4).
+- [ ] 3.5 Transaction/activity label rendering (PR4).
 - [ ] Phase 4 importer/dashboard/final verification.

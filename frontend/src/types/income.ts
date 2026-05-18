@@ -1,5 +1,6 @@
 import type { Currency, TransactionType } from './api';
 import type { PaymentMethod } from './paymentMethod';
+import type { PaymentContext } from './expense';
 
 export interface Income {
   id: string;
@@ -16,6 +17,9 @@ export interface Income {
   date: string; // YYYY-MM-DD
   end_date?: string | null;
   payment_method: PaymentMethod | null;
+  destination_container_id?: string | null;
+  destination_instrument_id?: string | null;
+  payment_context?: PaymentContext | null;
   recurring_income_id?: string | null;
   created_at: string;
 }
@@ -31,6 +35,8 @@ export interface CreateIncomeRequest {
   income_type?: TransactionType; // Default: "one-time"
   end_date?: string;
   payment_method?: PaymentMethod | null;
+  destination_container_id?: string | null;
+  destination_instrument_id?: string | null;
   // Multi-Currency Modo 3 (preferido)
   exchange_rate?: number;
   amount_in_primary_currency?: number;
@@ -46,6 +52,8 @@ export interface UpdateIncomeRequest {
   family_member_id?: string | null;
   end_date?: string | null;
   payment_method?: PaymentMethod | null;
+  destination_container_id?: string | null;
+  destination_instrument_id?: string | null;
   exchange_rate?: number;
   amount_in_primary_currency?: number;
 }

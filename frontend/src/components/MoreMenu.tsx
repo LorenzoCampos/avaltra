@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { X, Wallet, Tag, BarChart3, PiggyBank, Settings, LogOut } from 'lucide-react';
+import { X, Wallet, Tag, BarChart3, PiggyBank, Settings, LogOut, CreditCard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -40,6 +40,7 @@ export const MoreMenu = ({ isOpen, onClose }: MoreMenuProps) => {
 
   const moreItems = [
     { to: '/accounts', label: t('moreMenu.accounts.label'), icon: Wallet, description: t('moreMenu.accounts.description'), dataTour: undefined },
+    { to: '/payment-containers', label: t('moreMenu.paymentContainers.label'), icon: CreditCard, description: t('moreMenu.paymentContainers.description'), dataTour: undefined },
     { to: '/categories', label: t('moreMenu.categories.label'), icon: Tag, description: t('moreMenu.categories.description'), dataTour: undefined },
     { to: '/reports', label: t('moreMenu.reports.label'), icon: BarChart3, description: t('moreMenu.reports.description'), dataTour: 'reports' },
     { to: '/savings', label: t('moreMenu.savings.label'), icon: PiggyBank, description: t('moreMenu.savings.description'), dataTour: undefined },

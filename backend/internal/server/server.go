@@ -15,6 +15,7 @@ import (
 	expensesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/expenses"
 	importsHandler "github.com/LorenzoCampos/avaltra/internal/handlers/imports"
 	incomesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/incomes"
+	paymentContainersHandler "github.com/LorenzoCampos/avaltra/internal/handlers/payment_containers"
 	recurringExpensesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/recurring_expenses"
 	recurringIncomesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/recurring_incomes"
 	savingsGoalsHandler "github.com/LorenzoCampos/avaltra/internal/handlers/savings_goals"
@@ -179,6 +180,26 @@ func (s *Server) setupRoutes() {
 		{
 			importsRoutes.POST("/excel-template/preview", importsHandler.PreviewExcelTemplate(s.db.Pool))
 			importsRoutes.POST("/excel-template/commit", importsHandler.CommitExcelTemplate(s.db.Pool))
+		}
+
+		paymentContainersRoutes := api.Group("/payment-containers")
+		paymentContainersRoutes.Use(authMiddleware)
+		paymentContainersRoutes.Use(accountMiddleware)
+		{
+			paymentContainersRoutes.GET("", paymentContainersHandler.ListPaymentContainers(s.db.Pool))
+			paymentContainersRoutes.POST("", paymentContainersHandler.CreatePaymentContainer(s.db.Pool))
+			paymentContainersRoutes.PUT("/:id", paymentContainersHandler.UpdatePaymentContainer(s.db.Pool))
+			paymentContainersRoutes.PATCH("/:id/deactivate", paymentContainersHandler.DeactivatePaymentContainer(s.db.Pool))
+		}
+
+		paymentInstrumentsRoutes := api.Group("/payment-instruments")
+		paymentInstrumentsRoutes.Use(authMiddleware)
+		paymentInstrumentsRoutes.Use(accountMiddleware)
+		{
+			paymentInstrumentsRoutes.GET("", paymentContainersHandler.ListPaymentInstruments(s.db.Pool))
+			paymentInstrumentsRoutes.POST("", paymentContainersHandler.CreatePaymentInstrument(s.db.Pool))
+			paymentInstrumentsRoutes.PUT("/:id", paymentContainersHandler.UpdatePaymentInstrument(s.db.Pool))
+			paymentInstrumentsRoutes.PATCH("/:id/deactivate", paymentContainersHandler.DeactivatePaymentInstrument(s.db.Pool))
 		}
 
 		// Rutas de categorías de gastos (protegidas - requieren auth + account)

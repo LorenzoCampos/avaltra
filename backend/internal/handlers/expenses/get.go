@@ -31,7 +31,7 @@ func getExpenseHandler(db expenseStore) gin.HandlerFunc {
 
 		// Query expense with category name
 		var expense ExpenseResponse
-		var familyMemberID, categoryID, categoryName, paymentMethod *string
+		var familyMemberID, categoryID, categoryName, paymentMethod, sourceContainerID, sourceInstrumentID *string
 		var date, endDate *time.Time
 		var createdAt time.Time
 
@@ -39,7 +39,7 @@ func getExpenseHandler(db expenseStore) gin.HandlerFunc {
 			SELECT e.id, e.account_id, e.family_member_id, e.category_id, 
 			       ec.name as category_name, e.description, 
 			       e.amount, e.currency, e.exchange_rate, e.amount_in_primary_currency,
-			       e.expense_type, e.date, e.end_date, e.payment_method, e.created_at
+			       e.expense_type, e.date, e.end_date, e.payment_method, e.source_container_id, e.source_instrument_id, e.created_at
 			FROM expenses e
 			LEFT JOIN expense_categories ec ON e.category_id = ec.id
 			WHERE e.id = $1 AND e.account_id = $2 AND e.deleted_at IS NULL
@@ -60,6 +60,8 @@ func getExpenseHandler(db expenseStore) gin.HandlerFunc {
 			&date,
 			&endDate,
 			&paymentMethod,
+			&sourceContainerID,
+			&sourceInstrumentID,
 			&createdAt,
 		)
 
@@ -78,6 +80,8 @@ func getExpenseHandler(db expenseStore) gin.HandlerFunc {
 		expense.CategoryID = categoryID
 		expense.CategoryName = categoryName
 		expense.PaymentMethod = paymentMethod
+		expense.SourceContainerID = sourceContainerID
+		expense.SourceInstrumentID = sourceInstrumentID
 
 		if date != nil {
 			dateStr := date.Format("2006-01-02")

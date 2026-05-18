@@ -41,10 +41,10 @@ func TestListActivityIncludesPaymentMethodAndOriginalAmounts(t *testing.T) {
 
 	mock.ExpectQuery(`SELECT\s+i.id,`).
 		WithArgs(activityTestAccountID, 50, 0).
-		WillReturnRows(mock.NewRows([]string{"id", "type", "description", "amount", "currency", "amount_in_primary_currency", "payment_method", "category_name", "goal_name", "goal_id", "date", "created_at"}).
-			AddRow("income-id", "income", "Salario", 1000.0, "ARS", 1000.0, stringPtr("bank_transfer"), stringPtr("Salario"), nil, nil, incomeDate, createdAt).
-			AddRow("expense-id", "expense", "Compra USD", 13.0, "USD", 20819.0, stringPtr("credit_card"), stringPtr("Viajes"), nil, nil, expenseDate, createdAt).
-			AddRow("savings-id", "savings_deposit", "Ahorro", 50.0, "ARS", 50.0, nil, nil, stringPtr("Vacaciones"), stringPtr("goal-id"), savingsDate, createdAt))
+		WillReturnRows(mock.NewRows([]string{"id", "type", "description", "amount", "currency", "amount_in_primary_currency", "payment_method", "payment_context_label", "category_name", "goal_name", "goal_id", "date", "created_at"}).
+			AddRow("income-id", "income", "Salario", 1000.0, "ARS", 1000.0, stringPtr("bank_transfer"), stringPtr("Cuenta sueldo"), stringPtr("Salario"), nil, nil, incomeDate, createdAt).
+			AddRow("expense-id", "expense", "Compra USD", 13.0, "USD", 20819.0, stringPtr("credit_card"), nil, stringPtr("Viajes"), nil, nil, expenseDate, createdAt).
+			AddRow("savings-id", "savings_deposit", "Ahorro", 50.0, "ARS", 50.0, nil, nil, nil, stringPtr("Vacaciones"), stringPtr("goal-id"), savingsDate, createdAt))
 
 	recorder := httptest.NewRecorder()
 	router := activityTestRouter(listActivityHandler(mock))
@@ -69,9 +69,12 @@ func TestListActivityIncludesPaymentMethodAndOriginalAmounts(t *testing.T) {
 	if got := response.Activities[0]["payment_method"]; got != "bank_transfer" {
 		t.Fatalf("income payment_method = %#v, want %#v", got, "bank_transfer")
 	}
+	assertPaymentContextLabel(t, response.Activities[0], "Cuenta sueldo")
 	if got := response.Activities[1]["payment_method"]; got != "credit_card" {
 		t.Fatalf("expense payment_method = %#v, want %#v", got, "credit_card")
 	}
+	assertPaymentContextLabel(t, response.Activities[1], "Credit card")
+	assertLegacyPaymentMethod(t, response.Activities[1], "credit_card")
 	if got := response.Activities[1]["amount"]; got != 13.0 {
 		t.Fatalf("expense amount = %#v, want %#v", got, 13.0)
 	}
@@ -84,9 +87,36 @@ func TestListActivityIncludesPaymentMethodAndOriginalAmounts(t *testing.T) {
 	if got := response.Activities[2]["payment_method"]; got != nil {
 		t.Fatalf("savings payment_method = %#v, want nil", got)
 	}
+	if got := response.Activities[2]["payment_context"]; got != nil {
+		t.Fatalf("savings payment_context = %#v, want nil", got)
+	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Fatalf("mock expectations: %v", err)
+	}
+}
+
+func assertPaymentContextLabel(t *testing.T, activity map[string]any, expected string) {
+	t.Helper()
+
+	contextValue, ok := activity["payment_context"].(map[string]any)
+	if !ok {
+		t.Fatalf("payment_context = %#v, want object", activity["payment_context"])
+	}
+	if got := contextValue["display_label"]; got != expected {
+		t.Fatalf("payment_context.display_label = %#v, want %#v", got, expected)
+	}
+}
+
+func assertLegacyPaymentMethod(t *testing.T, activity map[string]any, expected string) {
+	t.Helper()
+
+	contextValue, ok := activity["payment_context"].(map[string]any)
+	if !ok {
+		t.Fatalf("payment_context = %#v, want object", activity["payment_context"])
+	}
+	if got := contextValue["legacy_payment_method"]; got != expected {
+		t.Fatalf("payment_context.legacy_payment_method = %#v, want %#v", got, expected)
 	}
 }
 

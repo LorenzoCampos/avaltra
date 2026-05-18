@@ -98,8 +98,8 @@ func TestUpdateIncomeAcceptsEURCurrency(t *testing.T) {
 		WithArgs(testIncomeAccountID).
 		WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
 	mock.ExpectQuery(`UPDATE incomes SET`).
-		WithArgs(nilString, nilString, nilString, nilFloat, pgxmock.AnyArg(), nilString, nilString, nilString, testIncomeID, testIncomeAccountID, pgxmock.AnyArg(), pgxmock.AnyArg(), false, nilString).
-		WillReturnRows(mock.NewRows([]string{"id", "account_id", "family_member_id", "category_id", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "income_type", "date", "end_date", "payment_method", "created_at"}).AddRow(testIncomeID, testIncomeAccountID, nil, nil, "Sueldo", 200000.0, "EUR", 1.2, 240000.0, "one-time", &transactionDate, nil, nil, createdAt))
+		WithArgs(nilString, nilString, nilString, nilFloat, pgxmock.AnyArg(), nilString, nilString, nilString, testIncomeID, testIncomeAccountID, pgxmock.AnyArg(), pgxmock.AnyArg(), false, nilString, false, nilString, false, nilString).
+		WillReturnRows(mock.NewRows([]string{"id", "account_id", "family_member_id", "category_id", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "income_type", "date", "end_date", "payment_method", "destination_container_id", "destination_instrument_id", "created_at"}).AddRow(testIncomeID, testIncomeAccountID, nil, nil, "Sueldo", 200000.0, "EUR", 1.2, 240000.0, "one-time", &transactionDate, nil, nil, nil, nil, createdAt))
 
 	recorder := httptest.NewRecorder()
 	router := incomeTestRouter(updateIncomeHandler(mock))

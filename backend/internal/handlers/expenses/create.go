@@ -13,15 +13,17 @@ import (
 )
 
 type CreateExpenseRequest struct {
-	FamilyMemberID *string `json:"family_member_id"` // Optional: for family accounts
-	CategoryID     *string `json:"category_id"`      // Optional: UUID of expense_categories
-	Description    string  `json:"description" binding:"required"`
-	Amount         float64 `json:"amount" binding:"required,gt=0"`
-	Currency       string  `json:"currency" binding:"required,oneof=ARS USD EUR"`
-	ExpenseType    *string `json:"expense_type" binding:"omitempty,oneof=one-time recurring"` // Optional: defaults to "one-time"
-	Date           string  `json:"date" binding:"required"`                                   // Format: YYYY-MM-DD
-	EndDate        *string `json:"end_date"`                                                  // Optional for recurring
-	PaymentMethod  *string `json:"payment_method"`
+	FamilyMemberID     *string `json:"family_member_id"` // Optional: for family accounts
+	CategoryID         *string `json:"category_id"`      // Optional: UUID of expense_categories
+	Description        string  `json:"description" binding:"required"`
+	Amount             float64 `json:"amount" binding:"required,gt=0"`
+	Currency           string  `json:"currency" binding:"required,oneof=ARS USD EUR"`
+	ExpenseType        *string `json:"expense_type" binding:"omitempty,oneof=one-time recurring"` // Optional: defaults to "one-time"
+	Date               string  `json:"date" binding:"required"`                                   // Format: YYYY-MM-DD
+	EndDate            *string `json:"end_date"`                                                  // Optional for recurring
+	PaymentMethod      *string `json:"payment_method"`
+	SourceContainerID  *string `json:"source_container_id"`
+	SourceInstrumentID *string `json:"source_instrument_id"`
 
 	// Multi-currency fields (Modo 3: Flexibilidad Total)
 	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`              // Optional: tasa de conversión
@@ -43,6 +45,8 @@ type ExpenseResponse struct {
 	Date                    string  `json:"date"`
 	EndDate                 *string `json:"end_date,omitempty"`
 	PaymentMethod           *string `json:"payment_method"`
+	SourceContainerID       *string `json:"source_container_id"`
+	SourceInstrumentID      *string `json:"source_instrument_id"`
 	CreatedAt               string  `json:"created_at"`
 }
 
@@ -100,6 +104,11 @@ func createExpenseHandler(db expenseStore) gin.HandlerFunc {
 		}
 
 		if err := transactions.ValidateOptionalPaymentMethod(req.PaymentMethod); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if err := validateExpensePaymentContext(c.Request.Context(), db, accountID, expensePaymentContextRequest{ContainerID: req.SourceContainerID, InstrumentID: req.SourceInstrumentID}); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -208,12 +217,12 @@ func createExpenseHandler(db expenseStore) gin.HandlerFunc {
 			`INSERT INTO expenses (
 			account_id, family_member_id, category_id, description, 
 			amount, currency, exchange_rate, amount_in_primary_currency,
-			expense_type, date, end_date, payment_method
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+			expense_type, date, end_date, payment_method, source_container_id, source_instrument_id
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at`,
 			accountID, req.FamilyMemberID, req.CategoryID, req.Description,
 			req.Amount, req.Currency, exchangeRate, amountInPrimaryCurrency,
-			expenseType, req.Date, req.EndDate, req.PaymentMethod,
+			expenseType, req.Date, req.EndDate, req.PaymentMethod, req.SourceContainerID, req.SourceInstrumentID,
 		).Scan(&expenseID, &createdAt)
 
 		if err != nil {
@@ -266,6 +275,8 @@ func createExpenseHandler(db expenseStore) gin.HandlerFunc {
 			Date:                    req.Date,
 			EndDate:                 req.EndDate,
 			PaymentMethod:           req.PaymentMethod,
+			SourceContainerID:       req.SourceContainerID,
+			SourceInstrumentID:      req.SourceInstrumentID,
 			CreatedAt:               createdAt.Format(time.RFC3339),
 		}
 

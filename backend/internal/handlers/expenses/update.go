@@ -11,15 +11,17 @@ import (
 )
 
 type UpdateExpenseRequest struct {
-	FamilyMemberID *string                          `json:"family_member_id"` // Optional
-	CategoryID     *string                          `json:"category_id"`      // Optional: UUID
-	Description    *string                          `json:"description"`
-	Amount         *float64                         `json:"amount"`
-	Currency       *string                          `json:"currency"`
-	ExpenseType    *string                          `json:"expense_type"`
-	Date           *string                          `json:"date"`     // Format: YYYY-MM-DD
-	EndDate        *string                          `json:"end_date"` // Format: YYYY-MM-DD
-	PaymentMethod  transactions.NullableStringField `json:"payment_method"`
+	FamilyMemberID     *string                          `json:"family_member_id"` // Optional
+	CategoryID         *string                          `json:"category_id"`      // Optional: UUID
+	Description        *string                          `json:"description"`
+	Amount             *float64                         `json:"amount"`
+	Currency           *string                          `json:"currency"`
+	ExpenseType        *string                          `json:"expense_type"`
+	Date               *string                          `json:"date"`     // Format: YYYY-MM-DD
+	EndDate            *string                          `json:"end_date"` // Format: YYYY-MM-DD
+	PaymentMethod      transactions.NullableStringField `json:"payment_method"`
+	SourceContainerID  transactions.NullableStringField `json:"source_container_id"`
+	SourceInstrumentID transactions.NullableStringField `json:"source_instrument_id"`
 
 	// Multi-currency fields (Modo 3)
 	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`
@@ -262,6 +264,11 @@ func updateExpenseHandler(db expenseStore) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		sourceContainerSet, sourceContainerID, sourceInstrumentSet, sourceInstrumentID, err := resolveExpensePaymentContextUpdate(c.Request.Context(), db, accountID, expenseID, expensePaymentContextUpdate{ContainerID: req.SourceContainerID, InstrumentID: req.SourceInstrumentID})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
 		updateQuery := `
 		UPDATE expenses SET
@@ -281,13 +288,21 @@ func updateExpenseHandler(db expenseStore) gin.HandlerFunc {
 				WHEN $13 THEN $14::text
 				ELSE payment_method
 			END,
+			source_container_id = CASE
+				WHEN $15 THEN $16::uuid
+				ELSE source_container_id
+			END,
+			source_instrument_id = CASE
+				WHEN $17 THEN $18::uuid
+				ELSE source_instrument_id
+			END,
 			exchange_rate = COALESCE($11, exchange_rate),
 			amount_in_primary_currency = COALESCE($12, amount_in_primary_currency),
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = $9 AND account_id = $10 AND deleted_at IS NULL
 		RETURNING id, account_id, family_member_id, category_id, description, 
 		          amount, currency, exchange_rate, amount_in_primary_currency,
-		          expense_type, date, end_date, payment_method, created_at
+		          expense_type, date, end_date, payment_method, source_container_id, source_instrument_id, created_at
 	`
 
 		// Handle end_date special case: empty string means clear it
@@ -302,7 +317,7 @@ func updateExpenseHandler(db expenseStore) gin.HandlerFunc {
 		}
 
 		var expense ExpenseResponse
-		var familyMemberID, categoryID, paymentMethod *string
+		var familyMemberID, categoryID, paymentMethod, sourceContainerIDResult, sourceInstrumentIDResult *string
 		var date, endDate *time.Time
 		var createdAt time.Time
 
@@ -312,6 +327,7 @@ func updateExpenseHandler(db expenseStore) gin.HandlerFunc {
 			endDateParam, expenseID, accountID,
 			finalExchangeRate, finalAmountInPrimaryCurrency,
 			paymentMethodSet, paymentMethodValue,
+			sourceContainerSet, sourceContainerID, sourceInstrumentSet, sourceInstrumentID,
 		).Scan(
 			&expense.ID,
 			&expense.AccountID,
@@ -326,6 +342,8 @@ func updateExpenseHandler(db expenseStore) gin.HandlerFunc {
 			&date,
 			&endDate,
 			&paymentMethod,
+			&sourceContainerIDResult,
+			&sourceInstrumentIDResult,
 			&createdAt,
 		)
 
@@ -357,6 +375,8 @@ func updateExpenseHandler(db expenseStore) gin.HandlerFunc {
 		expense.CategoryID = categoryID
 		expense.CategoryName = categoryName
 		expense.PaymentMethod = paymentMethod
+		expense.SourceContainerID = sourceContainerIDResult
+		expense.SourceInstrumentID = sourceInstrumentIDResult
 
 		if date != nil {
 			dateStr := date.Format("2006-01-02")

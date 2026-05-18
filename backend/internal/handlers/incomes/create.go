@@ -13,15 +13,17 @@ import (
 )
 
 type CreateIncomeRequest struct {
-	FamilyMemberID *string `json:"family_member_id"` // Optional: for family accounts
-	CategoryID     *string `json:"category_id"`      // Optional
-	Description    string  `json:"description" binding:"required"`
-	Amount         float64 `json:"amount" binding:"required,gt=0"`
-	Currency       string  `json:"currency" binding:"required,oneof=ARS USD EUR"`
-	IncomeType     *string `json:"income_type" binding:"omitempty,oneof=one-time recurring"` // Optional: defaults to "one-time"
-	Date           string  `json:"date" binding:"required"`                                  // Format: YYYY-MM-DD
-	EndDate        *string `json:"end_date"`                                                 // Optional: for recurring
-	PaymentMethod  *string `json:"payment_method"`
+	FamilyMemberID          *string `json:"family_member_id"` // Optional: for family accounts
+	CategoryID              *string `json:"category_id"`      // Optional
+	Description             string  `json:"description" binding:"required"`
+	Amount                  float64 `json:"amount" binding:"required,gt=0"`
+	Currency                string  `json:"currency" binding:"required,oneof=ARS USD EUR"`
+	IncomeType              *string `json:"income_type" binding:"omitempty,oneof=one-time recurring"` // Optional: defaults to "one-time"
+	Date                    string  `json:"date" binding:"required"`                                  // Format: YYYY-MM-DD
+	EndDate                 *string `json:"end_date"`                                                 // Optional: for recurring
+	PaymentMethod           *string `json:"payment_method"`
+	DestinationContainerID  *string `json:"destination_container_id"`
+	DestinationInstrumentID *string `json:"destination_instrument_id"`
 
 	// Multi-currency fields (Modo 3: Flexibilidad Total)
 	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`              // Optional: tasa de conversión
@@ -43,6 +45,8 @@ type IncomeResponse struct {
 	Date                    string  `json:"date"`
 	EndDate                 *string `json:"end_date,omitempty"`
 	PaymentMethod           *string `json:"payment_method"`
+	DestinationContainerID  *string `json:"destination_container_id"`
+	DestinationInstrumentID *string `json:"destination_instrument_id"`
 	CreatedAt               string  `json:"created_at"`
 }
 
@@ -100,6 +104,11 @@ func createIncomeHandler(db incomeStore) gin.HandlerFunc {
 		}
 
 		if err := transactions.ValidateOptionalPaymentMethod(req.PaymentMethod); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if err := validateIncomePaymentContext(c.Request.Context(), db, accountID, incomePaymentContextRequest{ContainerID: req.DestinationContainerID, InstrumentID: req.DestinationInstrumentID}); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -208,12 +217,12 @@ func createIncomeHandler(db incomeStore) gin.HandlerFunc {
 			`INSERT INTO incomes (
 			account_id, family_member_id, category_id, description, 
 			amount, currency, exchange_rate, amount_in_primary_currency,
-			income_type, date, end_date, payment_method
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+			income_type, date, end_date, payment_method, destination_container_id, destination_instrument_id
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at`,
 			accountID, req.FamilyMemberID, req.CategoryID, req.Description,
 			req.Amount, req.Currency, exchangeRate, amountInPrimaryCurrency,
-			incomeType, req.Date, req.EndDate, req.PaymentMethod,
+			incomeType, req.Date, req.EndDate, req.PaymentMethod, req.DestinationContainerID, req.DestinationInstrumentID,
 		).Scan(&incomeID, &createdAt)
 
 		if err != nil {
@@ -265,6 +274,8 @@ func createIncomeHandler(db incomeStore) gin.HandlerFunc {
 			Date:                    req.Date,
 			EndDate:                 req.EndDate,
 			PaymentMethod:           req.PaymentMethod,
+			DestinationContainerID:  req.DestinationContainerID,
+			DestinationInstrumentID: req.DestinationInstrumentID,
 			CreatedAt:               createdAt.Format(time.RFC3339),
 		}
 

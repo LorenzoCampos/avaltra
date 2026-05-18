@@ -36,6 +36,8 @@ type ExpenseListItem struct {
 	Date                    string  `json:"date"`
 	EndDate                 *string `json:"end_date,omitempty"`
 	PaymentMethod           *string `json:"payment_method"`
+	SourceContainerID       *string `json:"source_container_id"`
+	SourceInstrumentID      *string `json:"source_instrument_id"`
 	CreatedAt               string  `json:"created_at"`
 }
 
@@ -175,7 +177,7 @@ func listExpensesHandler(db expenseStore) gin.HandlerFunc {
 		mainQuery := `
 			SELECT e.id, e.family_member_id, e.category_id, ec.name as category_name,
 			       e.description, e.amount, e.currency, e.exchange_rate, e.amount_in_primary_currency,
-			       e.expense_type, e.date, e.end_date, e.payment_method, e.created_at
+			       e.expense_type, e.date, e.end_date, e.payment_method, e.source_container_id, e.source_instrument_id, e.created_at
 			FROM expenses e
 			LEFT JOIN expense_categories ec ON e.category_id = ec.id
 			WHERE ` + whereClause + `
@@ -196,7 +198,7 @@ func listExpensesHandler(db expenseStore) gin.HandlerFunc {
 		expenses := []ExpenseListItem{}
 		for rows.Next() {
 			var expense ExpenseListItem
-			var familyMemberID, categoryID, categoryName, paymentMethod *string
+			var familyMemberID, categoryID, categoryName, paymentMethod, sourceContainerID, sourceInstrumentID *string
 			var date, endDate *time.Time
 			var createdAt time.Time
 
@@ -214,6 +216,8 @@ func listExpensesHandler(db expenseStore) gin.HandlerFunc {
 				&date,
 				&endDate,
 				&paymentMethod,
+				&sourceContainerID,
+				&sourceInstrumentID,
 				&createdAt,
 			)
 			if err != nil {
@@ -225,6 +229,8 @@ func listExpensesHandler(db expenseStore) gin.HandlerFunc {
 			expense.CategoryID = categoryID
 			expense.CategoryName = categoryName
 			expense.PaymentMethod = paymentMethod
+			expense.SourceContainerID = sourceContainerID
+			expense.SourceInstrumentID = sourceInstrumentID
 
 			if date != nil {
 				dateStr := date.Format("2006-01-02")

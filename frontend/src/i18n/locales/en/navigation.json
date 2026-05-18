@@ -8,7 +8,7 @@
     "recurring": "Recurring",
     "settings": "Settings",
     "accounts": "Accounts",
-    "paymentContainers": "Payment context",
+    "paymentContainers": "Places & methods",
     "categories": "Categories",
     "reports": "Reports"
   },
@@ -25,8 +25,8 @@
       "description": "Manage your accounts"
     },
     "paymentContainers": {
-      "label": "Payment context",
-      "description": "Containers and instruments"
+      "label": "Places & methods",
+      "description": "Where money lives and how it moves"
     },
     "categories": {
       "label": "Categories",
@@ -43,6 +43,73 @@
     "settings": {
       "label": "Settings",
       "description": "Account preferences"
+    }
+  },
+  "paymentContainersPage": {
+    "loading": "Loading payment places and methods…",
+    "error": "Failed to load payment places and methods. Please try again.",
+    "eyebrow": "Payment places and methods",
+    "title": "Where your money lives and how it moves",
+    "description": "Manage where money is held (accounts, wallets, or cash) and how it moves (cards, transfers, or other methods).",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "actions": {
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "cancel": "Cancel"
+    },
+    "containers": {
+      "title": "Places",
+      "description": "Active places appear as the source or destination in expenses and incomes.",
+      "empty": "No places yet."
+    },
+    "instruments": {
+      "title": "Methods",
+      "description": "Cards require an associated place, such as an account or wallet.",
+      "empty": "No methods yet.",
+      "backedBy": "associated with {{container}}",
+      "unknownContainer": "unknown place"
+    },
+    "containerKinds": {
+      "bank": "Bank account",
+      "wallet": "Wallet",
+      "cash": "Cash",
+      "other": "Other"
+    },
+    "instrumentKinds": {
+      "debit_card": "Debit card",
+      "credit_card": "Credit card",
+      "transfer": "Bank transfer",
+      "cash": "Cash",
+      "other": "Other"
+    },
+    "forms": {
+      "name": "Name",
+      "type": "Type",
+      "container": {
+        "createTitle": "New place",
+        "editTitle": "Edit place",
+        "description": "Where money is held, such as a bank account, wallet, or cash.",
+        "namePlaceholder": "Main account",
+        "create": "Create place",
+        "save": "Save place"
+      },
+      "instrument": {
+        "createTitle": "New method",
+        "editTitle": "Edit method",
+        "description": "How money moves, such as cards, transfers, or cash payments.",
+        "namePlaceholder": "Visa debit",
+        "backingContainer": "Associated place",
+        "selectBackingContainer": "Select an associated place",
+        "noBackingContainer": "No associated place",
+        "inactiveContainerOption": "{{name}} (inactive)",
+        "backingRequiredHelp": "Required for debit and credit cards.",
+        "backingOptionalHelp": "Optional for non-card methods.",
+        "create": "Create method",
+        "save": "Save method"
+      }
     }
   }
 }

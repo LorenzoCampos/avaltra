@@ -44,6 +44,9 @@
     "savings_deposit": "Depósito en Ahorro",
     "savings_withdrawal": "Retiro de Ahorro"
   },
+  "paymentContext": {
+    "label": "Lugar/medio: {{value}}"
+  },
   "empty": "No hay actividad todavía",
   "noResults": "No hay actividades que coincidan con tus filtros",
   "clearFilters": "Limpiar filtros",

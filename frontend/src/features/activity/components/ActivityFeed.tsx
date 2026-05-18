@@ -200,7 +200,12 @@ function ActivityCard({
   const color = getActivityColor(activity.type);
   const label = getActivityLabel(activity.type);
   const isNegative = activity.type === 'expense' || activity.type === 'savings_deposit';
-  const paymentContextLabel = getPaymentContextLabel(t, activity.payment_context, activity.payment_method);
+  const paymentContextLabel = getPaymentContextLabel(
+    t,
+    activity.payment_context,
+    activity.payment_method,
+    activity.type === 'income' ? 'incomes' : 'expenses',
+  );
 
   return (
     <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750">
@@ -216,7 +221,7 @@ function ActivityCard({
           </p>
           {paymentContextLabel && (
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {paymentContextLabel}
+              {t('paymentContext.label', { value: paymentContextLabel })}
             </p>
           )}
         </div>

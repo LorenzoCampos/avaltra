@@ -26,7 +26,6 @@ export function getContainerFormSubmission(values: {
     values: {
       name: trimmedName,
       kind: values.kind,
-      ...(values.existingContainer && !values.existingContainer.is_active ? { is_active: true } : {}),
     },
   };
 }
@@ -52,7 +51,6 @@ export function getInstrumentFormSubmission(values: {
       name: trimmedName,
       kind: values.kind,
       backing_container_id: values.backingContainerId || null,
-      ...(values.existingInstrument && !values.existingInstrument.is_active ? { is_active: true } : {}),
     },
   };
 }

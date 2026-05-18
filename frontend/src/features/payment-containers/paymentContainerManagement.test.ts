@@ -4,6 +4,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import '@/i18n';
 import type { PaymentContainer } from '@/types/paymentContainer';
 import type { PaymentInstrument } from '@/types/paymentInstrument';
 import { isCardPaymentInstrumentKind, paymentInstrumentRequiresBackingContainer } from '@/types/paymentInstrument';
@@ -87,22 +88,22 @@ describe('payment container management behavior', () => {
   it('renders the loading state while either management query is loading', () => {
     hookState.containersQuery = { data: undefined, isLoading: true, error: null };
 
-    expect(renderManagementPage()).toContain('Loading payment context…');
+    expect(renderManagementPage()).toContain('Cargando lugares y medios…');
   });
 
   it('renders the error state when a management query fails', () => {
     hookState.instrumentsQuery = { data: undefined, isLoading: false, error: new Error('network failed') };
 
-    expect(renderManagementPage()).toContain('Failed to load payment containers and instruments. Please try again.');
+    expect(renderManagementPage()).toContain('No se pudieron cargar los lugares y medios de pago. Intentá de nuevo.');
   });
 
   it('renders empty management lists without hiding the create forms', () => {
     const html = renderManagementPage();
 
-    expect(html).toContain('New container');
-    expect(html).toContain('New instrument');
-    expect(html).toContain('No containers yet.');
-    expect(html).toContain('No instruments yet.');
+    expect(html).toContain('Nuevo lugar');
+    expect(html).toContain('Nuevo medio');
+    expect(html).toContain('Todavía no hay lugares cargados.');
+    expect(html).toContain('Todavía no hay medios cargados.');
   });
 
   it('renders active and inactive containers and instruments with backing-container labels', () => {
@@ -126,13 +127,13 @@ describe('payment container management behavior', () => {
     const html = renderManagementPage();
 
     expect(html).toContain('Main bank account');
-    expect(html).toContain('Bank account');
+    expect(html).toContain('Cuenta bancaria');
     expect(html).toContain('Cash box');
-    expect(html).toContain('Inactive');
+    expect(html).toContain('Inactivo');
     expect(html).toContain('Visa debit');
-    expect(html).toContain('Debit card backed by Main bank account');
+    expect(html).toContain('Tarjeta de débito asociado a Main bank account');
     expect(html).toContain('Manual transfer');
-    expect(html).toContain('Bank transfer');
+    expect(html).toContain('Transferencia bancaria');
   });
 
   it('validates container submissions and trims names before create/update mutation payloads', () => {
@@ -145,8 +146,32 @@ describe('payment container management behavior', () => {
 
     expect(getContainerFormSubmission({ name: 'Cash box', kind: 'cash', existingContainer: container({ is_active: false }) })).toEqual({
       ok: true,
-      values: { name: 'Cash box', kind: 'cash', is_active: true },
+      values: { name: 'Cash box', kind: 'cash' },
     });
+  });
+
+  it('does not reactivate inactive entities when editing only their name or type', () => {
+    expect(getContainerFormSubmission({ name: '  Cash box  ', kind: 'cash', existingContainer: container({ is_active: false }) })).toEqual({
+      ok: true,
+      values: { name: 'Cash box', kind: 'cash' },
+    });
+
+    expect(getInstrumentFormSubmission({
+      name: '  Old debit  ',
+      kind: 'debit_card',
+      backingContainerId: 'container-1',
+      existingInstrument: instrument({ is_active: false }),
+    })).toEqual({
+      ok: true,
+      values: { name: 'Old debit', kind: 'debit_card', backing_container_id: 'container-1' },
+    });
+  });
+
+  it('keeps an inactive backing container selectable while editing its existing instrument', async () => {
+    const form = await readSource('features/payment-containers/InstrumentForm.tsx');
+
+    expect(form).toContain('container.is_active || container.id === instrument?.backing_container_id');
+    expect(form).toContain('inactiveContainerOption');
   });
 
   it('enforces card backing at form-submit payload level before instrument mutations run', () => {

@@ -127,7 +127,7 @@
       "date": "Fecha",
       "description": "Descripción",
       "category": "Categoría",
-      "paymentMethod": "Medio",
+      "paymentMethod": "Lugar / medio",
       "member": "Miembro",
       "amount": "Monto",
       "actions": "Acciones",

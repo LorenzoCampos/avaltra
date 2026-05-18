@@ -99,11 +99,13 @@ export function getPaymentContextLabel(
   t: TFunction,
   context?: PaymentContext | null,
   legacyPaymentMethod?: PaymentMethod | null,
+  legacyNamespace?: 'expenses' | 'incomes',
 ) {
   if (context?.display_label) return context.display_label;
   if (context?.instrument_name) return context.instrument_name;
   if (context?.container_name) return context.container_name;
 
   const legacy = legacyPaymentMethod ?? context?.legacy_payment_method;
+  if (legacy && legacyNamespace) return t(`${legacyNamespace}:form.paymentMethod.options.${legacy}`);
   return legacy ? getPaymentMethodLabel(t, legacy) : null;
 }

@@ -112,7 +112,7 @@
       "date": "Fecha",
       "description": "Descripción",
       "category": "Categoría",
-      "paymentMethod": "Medio",
+      "paymentMethod": "Lugar / medio",
       "emptyPaymentMethod": "Sin especificar",
       "member": "Miembro",
       "amount": "Monto",

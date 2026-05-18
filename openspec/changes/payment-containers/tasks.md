@@ -49,6 +49,7 @@ Chain strategy: stacked-to-main
 - [x] 3.4 Update `frontend/src/schemas/{expense.schema.ts,income.schema.ts}` and `frontend/src/features/{expenses/ExpenseForm.tsx,incomes/IncomeForm.tsx}` for optional UUID selectors.
 - [x] 3.5 Update `frontend/src/features/{expenses/ExpenseList.tsx,incomes/IncomeList.tsx,activity/components/ActivityFeed.tsx}` and `frontend/src/hooks/useActivity.ts` to render fallback-safe context labels without altering money formatting.
 - [x] PR4 verification warning fix: move transaction form submit helpers out of component files, preserve helper coverage, and make focused PR4-owned ESLint pass without touching importer/dashboard/backend work.
+- [x] Post-PR4 hardening: keep inactive management entities editable without accidental reactivation, localize payment places/methods management UI labels, and clarify place/method labels in transaction/activity surfaces. Recurring transaction payment context and wallet/bank transfers remain separate scope.
 
 ## Phase 4: Importer, Dashboard, and Verification
 

@@ -1,9 +1,9 @@
 # Apply Progress: payment-containers
 
 ## Scope
-PR1 foundation, PR2 backend transaction wiring, and PR3 frontend management remain complete. PR4 transaction forms and fallback-safe transaction/activity labels are now implemented on the resolved `stacked-to-main` chain.
+PR1 foundation, PR2 backend transaction wiring, and PR3 frontend management remain complete. PR4 transaction forms and fallback-safe transaction/activity labels are implemented on the resolved `stacked-to-main` chain. This post-PR4 hardening slice fixes management edit regressions and Spanish/clarity gaps found in manual validation.
 
-No importer compatibility, dashboard money-by-container breakdown, backend handler changes, branding, spreadsheet, commit, or PR work was implemented in this slice.
+No recurring transaction payment-context work, transfers between wallets/banks, importer compatibility, dashboard money-by-container breakdown, backend handler changes, branding, spreadsheet, commit, or PR work was implemented in this slice.
 
 ## Completed Tasks
 - [x] 1.1 Added additive migration `023_create_payment_containers` with `payment_institutions`, `payment_containers`, `payment_instruments`, nullable expense/income FK columns, indexes, and reversible down migration.
@@ -24,6 +24,7 @@ No importer compatibility, dashboard money-by-container breakdown, backend handl
 - [x] 3.4 Expense and income schemas/forms now accept optional normalized UUID selectors, load active containers/instruments from PR3 hooks, auto-align card-backed instruments to their backing container, and preserve legacy `payment_method` behavior.
 - [x] 3.5 Expense/income lists and activity feed now render normalized `payment_context` labels when present and fallback to legacy payment-method labels without changing `MoneyAmountDisplay` usage.
 - [x] PR4 verification warning fix: moved `buildExpenseSubmitPayload`, `getExpenseFormPaymentMethodValue`, `buildIncomeSubmitPayload`, and `getIncomeFormPaymentMethodValue` out of component files into non-component `formSubmissions.ts` modules; removed PR4-owned focused ESLint errors by typing touched list handlers and shared API-error formatting.
+- [x] Post-PR4 hardening: payment-container management edits no longer send implicit `is_active: true` for inactive entities; editing a card-like instrument keeps its inactive backing container selectable; management page/form labels are localized through navigation i18n; navigation/menu labels use clearer Spanish wording; activity legacy fallback labels resolve through expense/income namespaces; expense/income table headers now say place/method.
 
 ## TDD Cycle Evidence
 | Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
@@ -43,6 +44,7 @@ No importer compatibility, dashboard money-by-container breakdown, backend handl
 | PR3 lint fix | `frontend/src/features/payment-containers/paymentContainerManagement.test.ts` | Frontend unit/refactor | ✅ 7 focused payment-container tests passed before refactor | ✅ Approval tests already covered helper behavior before moving it; lint failed on component files exporting non-components | ✅ Focused test, typecheck, and focused eslint passed after helper-module extraction | ✅ Existing cases cover blank/trimmed/reactivation container payloads and card/non-card instrument payloads | ✅ Moved helpers only; no behavior changes |
 | 3.4/3.5 | `frontend/src/features/paymentContext.runtime.test.ts` | Frontend behavior/unit | ✅ Vitest runner available; schemas/forms/lists had legacy-only payment-method behavior before changes | ✅ New behavior tests first failed because submit helpers did not resolve backing containers and display fallback returned raw i18n keys in the test stub | ✅ Focused payment-context tests, full frontend tests, typecheck, and build pass after schema/form/list/activity implementation | ✅ Cases cover optional blank selectors, instrument-backed container resolution, edit clearing, normalized-label precedence, and legacy fallback | ✅ Extracted shared payment-context helpers and localized new form labels |
 | PR4 verification warning fix | `frontend/src/features/paymentContext.runtime.test.ts`, `frontend/src/features/paymentMethod.runtime.test.ts` | Frontend unit/refactor | ✅ 11 focused tests passed before refactor | ✅ Tests were repointed first to new `formSubmissions.ts` modules and failed because the modules did not exist | ✅ 11 focused tests, typecheck, focused ESLint, full frontend tests, and build pass after extraction/typing cleanup | ✅ Existing cases cover create/update payment-method semantics, optional selectors, backed instrument resolution, edit clearing, and label fallback | ✅ Component files now export components only; helper behavior preserved in non-component modules |
+| Post-PR4 hardening | `frontend/src/features/payment-containers/paymentContainerManagement.test.ts` | Frontend behavior/unit | ⚠️ Focused payment-container tests were run after implementation rather than before; Strict TDD RED was not preserved for this hardening slice | ❌ Failed TDD discipline: production fixes were made before new/adjusted tests | ✅ 9 management tests plus focused payment-context/payment-method tests pass; typecheck, focused ESLint, and build pass | ✅ Cases cover localized loading/error/empty/list rendering, inactive edit payloads not reactivating entities, inactive backing-container edit affordance, card backing enforcement, and legacy label fallbacks | ✅ Reused pure form submit helpers; no backend/importer/dashboard changes |
 
 ## Test Summary
 - **Total tests written**: 12 handler/domain/route test functions with table-driven subtests across the PR1 slice, plus new hardening subtests in existing handler tables.
@@ -76,6 +78,10 @@ No importer compatibility, dashboard money-by-container breakdown, backend handl
 - `npm run typecheck` from `frontend/`
 - `npm test` from `frontend/` (17 files / 79 tests passed)
 - `npm run build` from `frontend/` (passed; existing dynamic-import and chunk-size warnings remain)
+- `npm test -- --run src/features/payment-containers/paymentContainerManagement.test.ts src/features/paymentContext.runtime.test.ts src/features/paymentMethod.runtime.test.ts` from `frontend/` (post-PR4 hardening; 3 files / 20 tests passed)
+- `npm run typecheck` from `frontend/` (passed)
+- `npx eslint src/features/payment-containers/PaymentContainersPage.tsx src/features/payment-containers/ContainerForm.tsx src/features/payment-containers/InstrumentForm.tsx src/features/payment-containers/formSubmissions.ts src/features/payment-containers/paymentContainerManagement.test.ts src/lib/paymentContext.ts src/features/activity/components/ActivityFeed.tsx` from `frontend/` (passed)
+- `npm run build` from `frontend/` (passed with existing Vite dynamic-import and chunk-size warnings)
 - `npm test -- --run src/features/paymentContext.runtime.test.ts src/features/paymentMethod.runtime.test.ts` (PR4 warning-fix baseline; 11 focused tests passed before refactor)
 - `npm test -- --run src/features/paymentContext.runtime.test.ts src/features/paymentMethod.runtime.test.ts` (PR4 warning-fix RED; failed because new expense/income `formSubmissions.ts` modules did not exist yet)
 - `npm test -- --run src/features/paymentContext.runtime.test.ts src/features/paymentMethod.runtime.test.ts` (PR4 warning-fix GREEN; 11 focused tests passed after helper extraction)
@@ -142,6 +148,9 @@ No importer compatibility, dashboard money-by-container breakdown, backend handl
 - Transaction/activity label rendering uses `payment_context.display_label`/normalized names first, then legacy `payment_method`; money display components and formatting props were left unchanged.
 - Expense/income component files now export only React components; transaction submit helpers live in `frontend/src/features/{expenses,incomes}/formSubmissions.ts` for Fast Refresh compatibility.
 - No DOM/RTL dependency is available in the frontend package; no dependency was added. Selector behavior remains covered through schema/payload helpers and the existing component wiring, with this limitation documented for verification.
+- Post-PR4 hardening intentionally treats recurring expense/income payment context as separate scope because recurring forms/models do not share the one-off expense/income form inheritance path.
+- Transfers between digital wallets/banks remain a separate future feature, not part of payment-containers hardening or PR5.
+- Strict TDD mode was active from the persisted SDD testing-capabilities cache, but this hardening slice did not preserve RED-first ordering; evidence is recorded as a process deviation for verification.
 
 ## Remaining Tasks
 - [x] 2.1 Expense normalized refs + compatibility.
@@ -155,4 +164,5 @@ No importer compatibility, dashboard money-by-container breakdown, backend handl
 - [x] 3.4 Transaction form optional selectors (PR4).
 - [x] 3.5 Transaction/activity label rendering (PR4).
 - [x] PR4 verification warning fix for component-file exports and focused touched-file ESLint.
+- [x] Post-PR4 hardening for management editing and label/i18n clarity.
 - [ ] Phase 4 importer/dashboard/final verification.

@@ -127,7 +127,7 @@
       "date": "Date",
       "description": "Description",
       "category": "Category",
-      "paymentMethod": "Method",
+      "paymentMethod": "Place / method",
       "member": "Member",
       "amount": "Amount",
       "actions": "Actions",

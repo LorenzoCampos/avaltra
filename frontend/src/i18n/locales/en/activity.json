@@ -44,6 +44,9 @@
     "savings_deposit": "Savings Deposit",
     "savings_withdrawal": "Savings Withdrawal"
   },
+  "paymentContext": {
+    "label": "Place/method: {{value}}"
+  },
   "empty": "No activity yet",
   "noResults": "No activities match your filters",
   "clearFilters": "Clear filters",

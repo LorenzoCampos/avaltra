@@ -28,6 +28,21 @@
         "other": "Otro"
       }
     },
+    "paymentContext": {
+      "destinationContainer": {
+        "label": "Contenedor de destino",
+        "empty": "Sin contenedor de destino",
+        "help": "Lugar opcional donde se deposita la plata."
+      },
+      "instrument": {
+        "label": "Instrumento de cobro",
+        "empty": "Sin instrumento de cobro",
+        "help": "Tarjeta, transferencia u otro instrumento opcional usado para recibir la plata.",
+        "backedBy": "Respaldado por {{container}}",
+        "backedByOption": "{{name}} — respaldado por {{container}}",
+        "selectedContainer": "contenedor seleccionado"
+      }
+    },
     "familyMember": "Miembro Familiar (Opcional)",
     "noMember": "Sin Miembro",
     "loadingCategories": "Cargando categorías...",

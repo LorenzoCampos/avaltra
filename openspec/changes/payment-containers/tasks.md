@@ -34,9 +34,10 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Transaction Wiring (Compatibility First)
 
-- [ ] 2.1 Update `backend/internal/handlers/expenses/{create.go,update.go,get.go,list.go,store.go}` to accept/return `source_container_id` and `source_instrument_id` while preserving legacy-only payloads.
-- [ ] 2.2 Update `backend/internal/handlers/incomes/{create.go,update.go,get.go,list.go,store.go}` for `destination_container_id` and `destination_instrument_id` with same fallback rules.
-- [ ] 2.3 Update `backend/internal/handlers/activity/list.go` to expose normalized `payment_context` with precedence: normalized label → `payment_method` label → null.
+- [x] 2.1 Update `backend/internal/handlers/expenses/{create.go,update.go,get.go,list.go,store.go}` to accept/return `source_container_id` and `source_instrument_id` while preserving legacy-only payloads.
+- [x] 2.2 Update `backend/internal/handlers/incomes/{create.go,update.go,get.go,list.go,store.go}` for `destination_container_id` and `destination_instrument_id` with same fallback rules.
+- [x] 2.3 Update `backend/internal/handlers/activity/list.go` to expose normalized `payment_context` with precedence: normalized label → `payment_method` label → null.
+- [x] PR2 verification warning fix: update validation now proves one-field normalized ref replacements against the existing counterpart, and activity fallback maps legacy `payment_method` values to user-facing backend labels.
 
 ## Phase 3: Frontend Management + Forms
 

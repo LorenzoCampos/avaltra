@@ -14,9 +14,25 @@ var paymentMethodCatalog = map[string]struct{}{
 	"other":          {},
 }
 
+var paymentMethodLabels = map[string]string{
+	"cash":           "Cash",
+	"bank_transfer":  "Bank transfer",
+	"debit_card":     "Debit card",
+	"credit_card":    "Credit card",
+	"digital_wallet": "Digital wallet",
+	"other":          "Other",
+}
+
 func IsValidPaymentMethod(value string) bool {
 	_, ok := paymentMethodCatalog[value]
 	return ok
+}
+
+func PaymentMethodLabel(value string) string {
+	if label, ok := paymentMethodLabels[value]; ok {
+		return label
+	}
+	return value
 }
 
 func ValidateOptionalPaymentMethod(value *string) error {

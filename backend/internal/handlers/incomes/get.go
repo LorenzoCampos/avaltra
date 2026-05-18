@@ -31,14 +31,14 @@ func getIncomeHandler(db incomeStore) gin.HandlerFunc {
 
 		// Query income ensuring it belongs to the user's account
 		var income IncomeResponse
-		var familyMemberID, categoryID, categoryName, paymentMethod *string
+		var familyMemberID, categoryID, categoryName, paymentMethod, destinationContainerID, destinationInstrumentID *string
 		var date, endDate *time.Time
 		var createdAt time.Time
 
 		query := `
 			SELECT i.id, i.account_id, i.family_member_id, i.category_id, ic.name as category_name, i.description, 
 			       i.amount, i.currency, i.exchange_rate, i.amount_in_primary_currency,
-			       i.income_type, i.date, i.end_date, i.payment_method, i.created_at
+			       i.income_type, i.date, i.end_date, i.payment_method, i.destination_container_id, i.destination_instrument_id, i.created_at
 			FROM incomes i
 			LEFT JOIN income_categories ic ON i.category_id = ic.id
 			WHERE i.id = $1 AND i.account_id = $2 AND i.deleted_at IS NULL
@@ -59,6 +59,8 @@ func getIncomeHandler(db incomeStore) gin.HandlerFunc {
 			&date,
 			&endDate,
 			&paymentMethod,
+			&destinationContainerID,
+			&destinationInstrumentID,
 			&createdAt,
 		)
 
@@ -77,6 +79,8 @@ func getIncomeHandler(db incomeStore) gin.HandlerFunc {
 		income.CategoryID = categoryID
 		income.CategoryName = categoryName
 		income.PaymentMethod = paymentMethod
+		income.DestinationContainerID = destinationContainerID
+		income.DestinationInstrumentID = destinationInstrumentID
 
 		if date != nil {
 			dateStr := date.Format("2006-01-02")

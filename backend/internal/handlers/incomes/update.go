@@ -13,15 +13,17 @@ import (
 )
 
 type UpdateIncomeRequest struct {
-	FamilyMemberID *string                          `json:"family_member_id"` // Optional
-	CategoryID     *string                          `json:"category_id"`      // Optional: UUID
-	Description    *string                          `json:"description"`
-	Amount         *float64                         `json:"amount"`
-	Currency       *string                          `json:"currency"`
-	IncomeType     *string                          `json:"income_type"`
-	Date           *string                          `json:"date"`     // Format: YYYY-MM-DD
-	EndDate        *string                          `json:"end_date"` // Format: YYYY-MM-DD
-	PaymentMethod  transactions.NullableStringField `json:"payment_method"`
+	FamilyMemberID          *string                          `json:"family_member_id"` // Optional
+	CategoryID              *string                          `json:"category_id"`      // Optional: UUID
+	Description             *string                          `json:"description"`
+	Amount                  *float64                         `json:"amount"`
+	Currency                *string                          `json:"currency"`
+	IncomeType              *string                          `json:"income_type"`
+	Date                    *string                          `json:"date"`     // Format: YYYY-MM-DD
+	EndDate                 *string                          `json:"end_date"` // Format: YYYY-MM-DD
+	PaymentMethod           transactions.NullableStringField `json:"payment_method"`
+	DestinationContainerID  transactions.NullableStringField `json:"destination_container_id"`
+	DestinationInstrumentID transactions.NullableStringField `json:"destination_instrument_id"`
 
 	// Multi-currency fields (Modo 3)
 	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`
@@ -253,6 +255,11 @@ func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		destinationContainerSet, destinationContainerID, destinationInstrumentSet, destinationInstrumentID, err := resolveIncomePaymentContextUpdate(c.Request.Context(), db, accountID, incomeID, incomePaymentContextUpdate{ContainerID: req.DestinationContainerID, InstrumentID: req.DestinationInstrumentID})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
 		updateQuery := `
 			UPDATE incomes SET
@@ -272,13 +279,21 @@ func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 					WHEN $13 THEN $14::text
 					ELSE payment_method
 				END,
+				destination_container_id = CASE
+					WHEN $15 THEN $16::uuid
+					ELSE destination_container_id
+				END,
+				destination_instrument_id = CASE
+					WHEN $17 THEN $18::uuid
+					ELSE destination_instrument_id
+				END,
 				exchange_rate = COALESCE($11, exchange_rate),
 				amount_in_primary_currency = COALESCE($12, amount_in_primary_currency),
 				updated_at = CURRENT_TIMESTAMP
 			WHERE id = $9 AND account_id = $10 AND deleted_at IS NULL
 			RETURNING id, account_id, family_member_id, category_id, description, 
 			          amount, currency, exchange_rate, amount_in_primary_currency,
-			          income_type, date, end_date, payment_method, created_at
+			          income_type, date, end_date, payment_method, destination_container_id, destination_instrument_id, created_at
 		`
 
 		// Handle end_date special case: empty string means clear it
@@ -293,7 +308,7 @@ func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 		}
 
 		var income IncomeResponse
-		var familyMemberID, categoryID, paymentMethod *string
+		var familyMemberID, categoryID, paymentMethod, destinationContainerIDResult, destinationInstrumentIDResult *string
 		var date, endDate *time.Time
 		var createdAt time.Time
 
@@ -303,6 +318,7 @@ func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 			endDateParam, incomeID, accountID,
 			finalExchangeRate, finalAmountInPrimaryCurrency,
 			paymentMethodSet, paymentMethodValue,
+			destinationContainerSet, destinationContainerID, destinationInstrumentSet, destinationInstrumentID,
 		).Scan(
 			&income.ID,
 			&income.AccountID,
@@ -317,6 +333,8 @@ func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 			&date,
 			&endDate,
 			&paymentMethod,
+			&destinationContainerIDResult,
+			&destinationInstrumentIDResult,
 			&createdAt,
 		)
 
@@ -348,6 +366,8 @@ func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 		income.CategoryID = categoryID
 		income.CategoryName = categoryName
 		income.PaymentMethod = paymentMethod
+		income.DestinationContainerID = destinationContainerIDResult
+		income.DestinationInstrumentID = destinationInstrumentIDResult
 
 		if date != nil {
 			dateStr := date.Format("2006-01-02")

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/LorenzoCampos/avaltra/internal/transactions"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -25,18 +26,24 @@ type ListActivityQuery struct {
 }
 
 type ActivityItem struct {
-	ID                      string  `json:"id"`
-	Type                    string  `json:"type"` // income, expense, savings_deposit, savings_withdrawal
-	Description             string  `json:"description"`
-	Amount                  float64 `json:"amount"`
-	Currency                string  `json:"currency"`
-	AmountInPrimaryCurrency float64 `json:"amount_in_primary_currency"`
-	PaymentMethod           *string `json:"payment_method"`
-	CategoryName            *string `json:"category_name,omitempty"` // For incomes/expenses
-	GoalName                *string `json:"goal_name,omitempty"`     // For savings transactions
-	GoalID                  *string `json:"goal_id,omitempty"`       // For savings transactions
-	Date                    string  `json:"date"`
-	CreatedAt               string  `json:"created_at"`
+	ID                      string          `json:"id"`
+	Type                    string          `json:"type"` // income, expense, savings_deposit, savings_withdrawal
+	Description             string          `json:"description"`
+	Amount                  float64         `json:"amount"`
+	Currency                string          `json:"currency"`
+	AmountInPrimaryCurrency float64         `json:"amount_in_primary_currency"`
+	PaymentMethod           *string         `json:"payment_method"`
+	PaymentContext          *PaymentContext `json:"payment_context"`
+	CategoryName            *string         `json:"category_name,omitempty"` // For incomes/expenses
+	GoalName                *string         `json:"goal_name,omitempty"`     // For savings transactions
+	GoalID                  *string         `json:"goal_id,omitempty"`       // For savings transactions
+	Date                    string          `json:"date"`
+	CreatedAt               string          `json:"created_at"`
+}
+
+type PaymentContext struct {
+	DisplayLabel        *string `json:"display_label"`
+	LegacyPaymentMethod *string `json:"legacy_payment_method"`
 }
 
 type ActivitySummary struct {
@@ -149,6 +156,7 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				i.currency,
 				i.amount_in_primary_currency,
 				i.payment_method,
+				COALESCE(pi.name, pc.name)::TEXT as payment_context_label,
 				ic.name as category_name,
 				NULL::TEXT as goal_name,
 				NULL::UUID as goal_id,
@@ -156,6 +164,8 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				i.created_at
 			FROM incomes i
 			LEFT JOIN income_categories ic ON i.category_id = ic.id
+			LEFT JOIN payment_containers pc ON i.destination_container_id = pc.id AND pc.account_id = i.account_id
+			LEFT JOIN payment_instruments pi ON i.destination_instrument_id = pi.id AND pi.account_id = i.account_id
 			WHERE i.account_id = $1 
 				AND i.deleted_at IS NULL
 				` + dateFilter + `
@@ -171,6 +181,7 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				e.currency,
 				e.amount_in_primary_currency,
 				e.payment_method,
+				COALESCE(pi.name, pc.name)::TEXT as payment_context_label,
 				ec.name as category_name,
 				NULL::TEXT as goal_name,
 				NULL::UUID as goal_id,
@@ -178,6 +189,8 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				e.created_at
 			FROM expenses e
 			LEFT JOIN expense_categories ec ON e.category_id = ec.id
+			LEFT JOIN payment_containers pc ON e.source_container_id = pc.id AND pc.account_id = e.account_id
+			LEFT JOIN payment_instruments pi ON e.source_instrument_id = pi.id AND pi.account_id = e.account_id
 			WHERE e.account_id = $1 
 				AND e.deleted_at IS NULL
 				` + dateFilter + `
@@ -196,6 +209,7 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				sg.currency,
 				st.amount as amount_in_primary_currency,
 				NULL::TEXT as payment_method,
+				NULL::TEXT as payment_context_label,
 				NULL::TEXT as category_name,
 				sg.name as goal_name,
 				sg.id as goal_id,
@@ -297,7 +311,7 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 
 		for rows.Next() {
 			var activity ActivityItem
-			var paymentMethod, categoryName, goalName *string
+			var paymentMethod, paymentContextLabel, categoryName, goalName *string
 			var goalID *string
 			var date time.Time
 			var createdAt time.Time
@@ -310,6 +324,7 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 				&activity.Currency,
 				&activity.AmountInPrimaryCurrency,
 				&paymentMethod,
+				&paymentContextLabel,
 				&categoryName,
 				&goalName,
 				&goalID,
@@ -322,6 +337,7 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 			}
 
 			activity.PaymentMethod = paymentMethod
+			activity.PaymentContext = buildPaymentContext(paymentContextLabel, paymentMethod)
 			activity.CategoryName = categoryName
 			activity.GoalName = goalName
 			activity.GoalID = goalID
@@ -355,4 +371,19 @@ func listActivityHandler(db activityStore) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, response)
 	}
+}
+
+func buildPaymentContext(normalizedLabel, legacyPaymentMethod *string) *PaymentContext {
+	if normalizedLabel == nil && legacyPaymentMethod == nil {
+		return nil
+	}
+	displayLabel := legacyPaymentMethod
+	if legacyPaymentMethod != nil {
+		label := transactions.PaymentMethodLabel(*legacyPaymentMethod)
+		displayLabel = &label
+	}
+	if normalizedLabel != nil {
+		displayLabel = normalizedLabel
+	}
+	return &PaymentContext{DisplayLabel: displayLabel, LegacyPaymentMethod: legacyPaymentMethod}
 }

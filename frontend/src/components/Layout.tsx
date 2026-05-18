@@ -9,7 +9,7 @@ import { DarkModeToggle } from './DarkModeToggle';
 import { BottomNav } from './BottomNav';
 import { FeatureTour } from './FeatureTour';
 import { BrandMark } from './BrandLogo';
-import { Home, Activity, DollarSign, TrendingUp, Wallet, Tag, BarChart3, PiggyBank, Settings } from 'lucide-react';
+import { Home, Activity, DollarSign, TrendingUp, Wallet, Tag, BarChart3, PiggyBank, Settings, CreditCard } from 'lucide-react';
 
 export const DESKTOP_SIDEBAR_COLLAPSED_STORAGE_KEY = 'avaltra-desktop-sidebar-collapsed';
 
@@ -37,6 +37,7 @@ export const Layout = () => {
     { to: '/dashboard', label: t('menu.dashboard'), icon: Home, dataTour: undefined },
     { to: '/activity', label: t('menu.activity'), icon: Activity, dataTour: undefined },
     { to: '/accounts', label: t('menu.accounts'), icon: Wallet, dataTour: undefined },
+    { to: '/payment-containers', label: t('menu.paymentContainers'), icon: CreditCard, dataTour: undefined },
     { to: '/expenses', label: t('menu.expenses'), icon: DollarSign, dataTour: 'expenses-desktop' },
     { to: '/incomes', label: t('menu.incomes'), icon: TrendingUp, dataTour: 'incomes-desktop' },
     { to: '/categories', label: t('menu.categories'), icon: Tag, dataTour: undefined },

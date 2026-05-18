@@ -1,0 +1,58 @@
+import type { PaymentContainer, PaymentContainerKind } from '@/types/paymentContainer';
+import type { PaymentInstrument, PaymentInstrumentKind } from '@/types/paymentInstrument';
+import { paymentInstrumentRequiresBackingContainer } from '@/types/paymentInstrument';
+
+type ContainerFormSubmission =
+  | { ok: true; values: { name: string; kind: PaymentContainerKind; is_active?: boolean } }
+  | { ok: false; error: string };
+
+type InstrumentFormSubmission =
+  | { ok: true; values: { name: string; kind: PaymentInstrumentKind; backing_container_id?: string | null; is_active?: boolean } }
+  | { ok: false; error: string };
+
+export function getContainerFormSubmission(values: {
+  name: string;
+  kind: PaymentContainerKind;
+  existingContainer?: PaymentContainer | null;
+}): ContainerFormSubmission {
+  const trimmedName = values.name.trim();
+
+  if (!trimmedName) {
+    return { ok: false, error: 'Name is required' };
+  }
+
+  return {
+    ok: true,
+    values: {
+      name: trimmedName,
+      kind: values.kind,
+      ...(values.existingContainer && !values.existingContainer.is_active ? { is_active: true } : {}),
+    },
+  };
+}
+
+export function getInstrumentFormSubmission(values: {
+  name: string;
+  kind: PaymentInstrumentKind;
+  backingContainerId: string;
+  existingInstrument?: PaymentInstrument | null;
+}): InstrumentFormSubmission {
+  const trimmedName = values.name.trim();
+
+  if (!trimmedName) {
+    return { ok: false, error: 'Name is required' };
+  }
+  if (paymentInstrumentRequiresBackingContainer(values.kind) && !values.backingContainerId) {
+    return { ok: false, error: 'Card instruments require a backing container' };
+  }
+
+  return {
+    ok: true,
+    values: {
+      name: trimmedName,
+      kind: values.kind,
+      backing_container_id: values.backingContainerId || null,
+      ...(values.existingInstrument && !values.existingInstrument.is_active ? { is_active: true } : {}),
+    },
+  };
+}

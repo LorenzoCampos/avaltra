@@ -21,7 +21,7 @@ export const BottomNav = () => {
   };
 
   // Check if current path is in "more" section
-  const morePages = ['/accounts', '/categories', '/reports', '/savings', '/settings'];
+  const morePages = ['/accounts', '/payment-containers', '/categories', '/reports', '/savings', '/settings'];
   const isMoreActive = morePages.some(page => location.pathname.startsWith(page));
 
   return (

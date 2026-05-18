@@ -26,6 +26,7 @@ import { CategoryForm } from '@/features/categories/CategoryForm';
 import UserSettings from '@/features/settings/UserSettings';
 import { OnboardingWizard } from '@/features/onboarding/OnboardingWizard';
 import { ImportExcelTemplatePage } from '@/features/imports/ImportExcelTemplatePage';
+import { PaymentContainersPage } from '@/features/payment-containers/PaymentContainersPage';
 
 import { useAuthStore, selectIsAuthenticated } from '@/stores/auth.store';
 
@@ -83,6 +84,7 @@ function App() {
               <Route path="/accounts" element={<AccountList />} />
               <Route path="/accounts/new" element={<AccountForm />} />
               <Route path="/accounts/edit/:accountId" element={<AccountForm />} />
+              <Route path="/payment-containers" element={<PaymentContainersPage />} />
 
               {/* Expenses Routes (con tabs para Expenses y Recurring) */}
               <Route path="/expenses" element={<ExpensesPage />} />

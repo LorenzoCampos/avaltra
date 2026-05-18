@@ -28,6 +28,21 @@
         "other": "Other"
       }
     },
+    "paymentContext": {
+      "destinationContainer": {
+        "label": "Destination container",
+        "empty": "No destination container",
+        "help": "Optional place where the money is deposited."
+      },
+      "instrument": {
+        "label": "Payment instrument",
+        "empty": "No payment instrument",
+        "help": "Optional card, transfer, or other instrument used to receive the money.",
+        "backedBy": "Backed by {{container}}",
+        "backedByOption": "{{name}} — backed by {{container}}",
+        "selectedContainer": "selected container"
+      }
+    },
     "familyMember": "Family Member (Optional)",
     "noMember": "No Member",
     "loadingCategories": "Loading categories...",

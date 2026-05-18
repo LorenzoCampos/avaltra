@@ -13,6 +13,8 @@ import { useFilters } from '@/hooks/useFilters';
 import { useMoneyFormatter } from '@/hooks/useMoneyFormatter';
 import { useAccountStore } from '@/stores/account.store';
 import { FilterBar } from '@/components/FilterBar';
+import { getPaymentContextLabel } from '@/lib/paymentContext';
+import { getApiErrorMessage } from '@/lib/apiError';
 import { Loader2 } from 'lucide-react';
 import type { Currency } from '@/types/api';
 
@@ -22,16 +24,17 @@ export function ActivityFeed() {
   const { activeAccount } = useAccountStore();
   const { formatMoney } = useMoneyFormatter();
   const accountCurrency = (activeAccount?.currency || 'ARS') as Currency;
+  const activities = data?.activities;
 
-  console.log('ActivityFeed state:', { isLoading, error: error?.toString(), dataLength: data?.activities?.length });
+  console.log('ActivityFeed state:', { isLoading, error: error?.toString(), dataLength: activities?.length });
 
   // Adaptar ActivityItem para que funcione con useFilters
   // ActivityItem tiene: { type, description, amount, date, category_name, goal_name }
   // FilterableItem necesita: { description, date, amount, amount_in_primary_currency, category_id }
   const adaptedActivities = useMemo(() => {
-    if (!data?.activities) return [];
+    if (!activities) return [];
     
-    return data.activities.map(activity => ({
+    return activities.map(activity => ({
       ...activity,
       // Para filtros: usar category_name como "pseudo category_id" 
       // (no es ideal pero funciona para filtrado por texto)
@@ -39,7 +42,7 @@ export function ActivityFeed() {
       // Activity ahora expone monto original y monto en moneda primaria por separado
       amount_in_primary_currency: activity.amount_in_primary_currency,
     }));
-  }, [data?.activities]);
+  }, [activities]);
 
   // Filters
   const {
@@ -72,7 +75,7 @@ export function ActivityFeed() {
   }
 
   if (error) {
-    const errorMessage = (error as any)?.response?.data?.error || (error as any)?.message || t('error.unknown');
+    const errorMessage = getApiErrorMessage(error, t('error.unknown'));
     console.error('Activity error:', error);
     return (
       <div className="rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
@@ -192,10 +195,12 @@ function ActivityCard({
   accountCurrency: Currency;
   formatMoney: (amount: number, currency: Currency) => string;
 }) {
+  const { t } = useTranslation('activity');
   const icon = getActivityIcon(activity.type);
   const color = getActivityColor(activity.type);
   const label = getActivityLabel(activity.type);
   const isNegative = activity.type === 'expense' || activity.type === 'savings_deposit';
+  const paymentContextLabel = getPaymentContextLabel(t, activity.payment_context, activity.payment_method);
 
   return (
     <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750">
@@ -209,6 +214,11 @@ function ActivityCard({
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {activity.category_name || activity.goal_name || label}
           </p>
+          {paymentContextLabel && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {paymentContextLabel}
+            </p>
+          )}
         </div>
       </div>
 

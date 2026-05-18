@@ -4,11 +4,11 @@ import { buildQuickAddExpensePayload } from '@/components/QuickAddExpenseModal';
 import {
   buildExpenseSubmitPayload,
   getExpenseFormPaymentMethodValue,
-} from '@/features/expenses/ExpenseForm';
+} from '@/features/expenses/formSubmissions';
 import {
   buildIncomeSubmitPayload,
   getIncomeFormPaymentMethodValue,
-} from '@/features/incomes/IncomeForm';
+} from '@/features/incomes/formSubmissions';
 
 const expenseBase = {
   description: 'Supermercado',

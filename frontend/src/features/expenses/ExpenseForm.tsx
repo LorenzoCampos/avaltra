@@ -15,32 +15,17 @@ import { useExpenses, useExpenseCategories, useFamilyMembers } from '@/hooks/use
 import { useAccountStore } from '@/stores/account.store';
 import { useUser } from '@/hooks/useUser';
 import { useAccounts } from '@/hooks/useAccounts';
+import { usePaymentContainers } from '@/hooks/usePaymentContainers';
+import { usePaymentInstruments } from '@/hooks/usePaymentInstruments';
 import type { ActionFeedbackState } from '@/hooks/useActionFeedback';
 import { expenseSchema } from '@/schemas/expense.schema';
-import type { CreateExpenseRequest } from '@/types/expense';
 import type { Currency } from '@/schemas/account.schema';
 import { getPaymentMethodOptions } from '@/lib/paymentMethods';
-import {
-  normalizePaymentMethodForCreate,
-  normalizePaymentMethodForForm,
-  normalizePaymentMethodForUpdate,
-} from '@/types/paymentMethod';
-
-export const getExpenseFormPaymentMethodValue = normalizePaymentMethodForForm;
+import { buildExpenseSubmitPayload } from './formSubmissions';
+import { normalizePaymentMethodForForm } from '@/types/paymentMethod';
 
 type ExpenseFormInput = z.input<typeof expenseSchema>;
 type ExpenseFormData = z.output<typeof expenseSchema>;
-
-export const buildExpenseSubmitPayload = (
-  data: CreateExpenseRequest,
-  isEditing: boolean,
-  existingPaymentMethod?: CreateExpenseRequest['payment_method'],
-): CreateExpenseRequest => ({
-  ...data,
-  payment_method: isEditing
-    ? normalizePaymentMethodForUpdate(data.payment_method, existingPaymentMethod)
-    : normalizePaymentMethodForCreate(data.payment_method),
-});
 
 export const ExpenseForm = () => {
   const { t } = useTranslation('expenses');
@@ -61,6 +46,8 @@ export const ExpenseForm = () => {
   const { data: expenseData, isLoading: isLoadingExpense, error: loadExpenseError } = useExpense(expenseId);
   const { data: categories, isLoading: isLoadingCategories } = useExpenseCategories();
   const { data: familyMembers, isLoading: isLoadingFamilyMembers } = useFamilyMembers();
+  const { data: paymentContainers, isLoading: isLoadingPaymentContainers } = usePaymentContainers();
+  const { data: paymentInstruments, isLoading: isLoadingPaymentInstruments } = usePaymentInstruments();
 
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const [pendingFeedback, setPendingFeedback] = useState<ActionFeedbackState['actionFeedback']>();
@@ -89,12 +76,20 @@ export const ExpenseForm = () => {
       category_id: lastCategoryId ?? undefined,
       family_member_id: undefined,
       payment_method: undefined,
+      source_container_id: undefined,
+      source_instrument_id: undefined,
     },
     mode: 'onChange',
   });
 
   const selectedCurrency = watch('currency');
+  const selectedSourceContainerId = watch('source_container_id');
+  const selectedSourceInstrumentId = watch('source_instrument_id');
   const showMultiCurrencyFields = activeAccount && selectedCurrency !== activeAccount.currency;
+  const activePaymentContainers = paymentContainers?.payment_containers ?? [];
+  const activePaymentInstruments = paymentInstruments?.payment_instruments ?? [];
+  const selectedSourceInstrument = activePaymentInstruments.find((instrument) => instrument.id === selectedSourceInstrumentId);
+  const selectedSourceInstrumentBacking = activePaymentContainers.find((container) => container.id === selectedSourceInstrument?.backing_container_id);
 
   // ============================================================================
   // AUTO-COMPLETAR CURRENCY basado en default account (solo para nuevos gastos)
@@ -115,6 +110,8 @@ export const ExpenseForm = () => {
       setValue('category_id', expenseData.category_id ?? undefined);
       setValue('family_member_id', expenseData.family_member_id ?? undefined);
       setValue('payment_method', normalizePaymentMethodForForm(expenseData.payment_method));
+      setValue('source_container_id', expenseData.source_container_id ?? undefined);
+      setValue('source_instrument_id', expenseData.source_instrument_id ?? undefined);
       
       // Load amount_in_primary_currency if it exists (for multi-currency expenses)
       // Set with a small delay to ensure the multi-currency field is rendered first
@@ -145,9 +142,21 @@ export const ExpenseForm = () => {
       if (duplicateData.payment_method) {
         setValue('payment_method', duplicateData.payment_method);
       }
+      if (duplicateData.source_container_id) {
+        setValue('source_container_id', duplicateData.source_container_id);
+      }
+      if (duplicateData.source_instrument_id) {
+        setValue('source_instrument_id', duplicateData.source_instrument_id);
+      }
       // Date uses default (today) - not copied from original
     }
   }, [location.state, isEditing, setValue]);
+
+  useEffect(() => {
+    if (selectedSourceInstrument?.backing_container_id && selectedSourceContainerId !== selectedSourceInstrument.backing_container_id) {
+      setValue('source_container_id', selectedSourceInstrument.backing_container_id, { shouldValidate: true });
+    }
+  }, [selectedSourceContainerId, selectedSourceInstrument, setValue]);
 
   useEffect(() => {
     if (redirectCountdown === null) {
@@ -180,7 +189,10 @@ export const ExpenseForm = () => {
     }
 
     try {
-      const payload = buildExpenseSubmitPayload(data, isEditing, expenseData?.payment_method);
+      const payload = buildExpenseSubmitPayload(data, isEditing, expenseData?.payment_method, activePaymentInstruments, {
+        containerId: expenseData?.source_container_id,
+        instrumentId: expenseData?.source_instrument_id,
+      });
 
       const savedExpense = isEditing && expenseId
         ? await updateExpenseAsync({
@@ -212,8 +224,24 @@ export const ExpenseForm = () => {
     { label: t('form.paymentMethod.empty'), value: '' },
     ...getPaymentMethodOptions(t),
   ];
+  const paymentContainerOptions = [
+    { label: t('form.paymentContext.sourceContainer.empty'), value: '' },
+    ...activePaymentContainers.map((container) => ({ label: container.name, value: container.id })),
+  ];
+  const paymentInstrumentOptions = [
+    { label: t('form.paymentContext.instrument.empty'), value: '' },
+    ...activePaymentInstruments.map((instrument) => ({
+      label: instrument.backing_container_id
+        ? t('form.paymentContext.instrument.backedByOption', {
+            name: instrument.name,
+            container: activePaymentContainers.find((container) => container.id === instrument.backing_container_id)?.name ?? t('form.paymentContext.instrument.selectedContainer'),
+          })
+        : instrument.name,
+      value: instrument.id,
+    })),
+  ];
 
-  if (isLoadingExpense || isLoadingCategories || isLoadingFamilyMembers) {
+  if (isLoadingExpense || isLoadingCategories || isLoadingFamilyMembers || isLoadingPaymentContainers || isLoadingPaymentInstruments) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="mb-4">
@@ -221,7 +249,7 @@ export const ExpenseForm = () => {
             ← {t('form.backToList')}
           </Button>
         </div>
-        <FormSkeleton fields={6} />
+        <FormSkeleton fields={8} />
       </div>
     );
   }
@@ -384,6 +412,37 @@ export const ExpenseForm = () => {
 				    {...register('payment_method')}
 				  />
 				</div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('form.paymentContext.sourceContainer.label')}
+                  </label>
+                  <InfoTooltip content={t('form.paymentContext.sourceContainer.help')} />
+                </div>
+                <Select
+                  options={paymentContainerOptions}
+                  error={errors.source_container_id?.message}
+                  {...register('source_container_id')}
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('form.paymentContext.instrument.label')}
+                  </label>
+                  <InfoTooltip content={t('form.paymentContext.instrument.help')} />
+                </div>
+                <Select
+                  options={paymentInstrumentOptions}
+                  error={errors.source_instrument_id?.message}
+                  helperText={selectedSourceInstrumentBacking ? t('form.paymentContext.instrument.backedBy', { container: selectedSourceInstrumentBacking.name }) : undefined}
+                  {...register('source_instrument_id')}
+                />
+              </div>
+            </div>
 
             {activeAccount?.type === 'family' && (
               <div>

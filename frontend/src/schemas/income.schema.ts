@@ -1,11 +1,16 @@
 import { z } from 'zod';
 import { CURRENCIES } from './account.schema';
 import { PAYMENT_METHODS } from '@/types/paymentMethod';
+import { normalizeOptionalUuid } from '@/lib/paymentContext';
 
 const paymentMethodSchema = z.enum(PAYMENT_METHODS);
 const optionalPaymentMethodSchema = z.preprocess(
   (value) => (value === '' ? undefined : value),
   paymentMethodSchema.nullable().optional(),
+);
+const optionalUuidSchema = z.preprocess(
+  normalizeOptionalUuid,
+  z.string().uuid('Invalid payment context ID').nullable().optional(),
 );
 
 export const incomeSchema = z.object({
@@ -16,6 +21,8 @@ export const incomeSchema = z.object({
   category_id: z.string().uuid("Invalid category ID").nullable().optional(), // Nullable for 'Other' or no category
   family_member_id: z.string().uuid("Invalid family member ID").nullable().optional(), // Nullable for no specific member
   payment_method: optionalPaymentMethodSchema,
+  destination_container_id: optionalUuidSchema,
+  destination_instrument_id: optionalUuidSchema,
   exchange_rate: z.number().min(0.01, { message: "Exchange rate must be greater than 0" }).optional(),
   amount_in_primary_currency: z.number().min(0.01, { message: "Amount in primary currency must be greater than 0" }).optional(),
   end_date: z.string().optional(),
@@ -27,6 +34,8 @@ export const updateIncomeSchema = incomeSchema.partial().extend({
   category_id: z.string().uuid("Invalid category ID").nullable().or(z.literal("")).optional(),
   family_member_id: z.string().uuid("Invalid family member ID").nullable().or(z.literal("")).optional(),
   payment_method: optionalPaymentMethodSchema,
+  destination_container_id: optionalUuidSchema,
+  destination_instrument_id: optionalUuidSchema,
   // Do not allow updating income_type or end_date for one-time incomes
   income_type: z.any().optional(),
   end_date: z.any().optional(),

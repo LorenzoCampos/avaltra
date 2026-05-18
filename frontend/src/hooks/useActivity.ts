@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/axios';
+import type { PaymentContext } from '@/types/expense';
 import type { PaymentMethod } from '@/types/paymentMethod';
 
 // Types
@@ -13,6 +14,7 @@ export interface ActivityItem {
   currency: string;
   amount_in_primary_currency: number;
   payment_method: PaymentMethod | null;
+  payment_context?: PaymentContext | null;
   category_name: string | null;
   goal_name: string | null;
   goal_id: string | null;

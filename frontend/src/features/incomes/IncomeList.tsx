@@ -15,8 +15,10 @@ import { MoneyAmountDisplay } from '@/components/MoneyAmountDisplay';
 import { useActionFeedback } from '@/hooks/useActionFeedback';
 import { useMoneyFormatter } from '@/hooks/useMoneyFormatter';
 import { cn } from '@/lib/utils';
-import { getPaymentMethodLabel } from '@/lib/paymentMethods';
+import { getPaymentContextLabel } from '@/lib/paymentContext';
 import type { Currency } from '@/types/api';
+import type { Income } from '@/types/income';
+import { getApiErrorMessage } from '@/lib/apiError';
 
 export const IncomeList = () => {
   const { t } = useTranslation('incomes');
@@ -49,7 +51,7 @@ export const IncomeList = () => {
     navigate(`/incomes/edit/${incomeId}`);
   };
 
-  const handleDuplicate = (e: React.MouseEvent, income: any) => {
+  const handleDuplicate = (e: React.MouseEvent, income: Income) => {
     e.stopPropagation();
     navigate('/incomes/new', {
       state: {
@@ -60,13 +62,15 @@ export const IncomeList = () => {
           category_id: income.category_id,
           family_member_id: income.family_member_id,
           payment_method: income.payment_method,
+          destination_container_id: income.destination_container_id,
+          destination_instrument_id: income.destination_instrument_id,
           // Date is NOT included - will use today's date
         }
       }
     });
   };
 
-  const handleDelete = (e: React.MouseEvent, income: any) => {
+  const handleDelete = (e: React.MouseEvent, income: Income) => {
     e.stopPropagation();
 
     handleDeleteWithAnimation(income.id, async () => {
@@ -82,7 +86,7 @@ export const IncomeList = () => {
               toast.success(t('list.toast.restored', { description: income.description }));
             } catch (error) {
               toast.error(t('list.toast.restoreError'), {
-                description: (error as any)?.response?.data?.error || (error as Error).message,
+                description: getApiErrorMessage(error, t('list.toast.restoreError')),
               });
             } finally {
               toast.dismiss(toastId);
@@ -133,7 +137,7 @@ export const IncomeList = () => {
   }
 
   if (incomesError) {
-    const errorMessage = (incomesError as any)?.response?.data?.error || (incomesError as any)?.message || t('list.error.loadFailed');
+    const errorMessage = getApiErrorMessage(incomesError, t('list.error.loadFailed'));
     return (
       <div className="text-center py-10">
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -263,7 +267,7 @@ export const IncomeList = () => {
                           {income.category_name || t('common:common.noCategory')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {income.payment_method ? getPaymentMethodLabel(t, income.payment_method) : '—'}
+                          {getPaymentContextLabel(t, income.payment_context, income.payment_method) ?? '—'}
                         </td>
                         {isFamilyAccount && (
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -373,9 +377,9 @@ export const IncomeList = () => {
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
                     {income.category_name || t('common:common.noCategory')}
                   </span>
-                  {income.payment_method && (
+                  {getPaymentContextLabel(t, income.payment_context, income.payment_method) && (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">
-                      {getPaymentMethodLabel(t, income.payment_method)}
+                      {getPaymentContextLabel(t, income.payment_context, income.payment_method)}
                     </span>
                   )}
                   {isFamilyAccount && income.family_member_id && (

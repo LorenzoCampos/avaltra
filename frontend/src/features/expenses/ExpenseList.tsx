@@ -15,8 +15,10 @@ import { MoneyAmountDisplay } from '@/components/MoneyAmountDisplay';
 import { useActionFeedback } from '@/hooks/useActionFeedback';
 import { useMoneyFormatter } from '@/hooks/useMoneyFormatter';
 import { cn } from '@/lib/utils';
-import { getPaymentMethodLabel } from '@/lib/paymentMethods';
+import { getPaymentContextLabel } from '@/lib/paymentContext';
 import type { Currency } from '@/types/api';
+import type { Expense } from '@/types/expense';
+import { getApiErrorMessage } from '@/lib/apiError';
 
 export const ExpenseList = () => {
   const { t } = useTranslation('expenses');
@@ -49,7 +51,7 @@ export const ExpenseList = () => {
     navigate(`/expenses/edit/${expenseId}`);
   };
 
-  const handleDuplicate = (e: React.MouseEvent, expense: any) => {
+  const handleDuplicate = (e: React.MouseEvent, expense: Expense) => {
     e.stopPropagation();
     navigate('/expenses/new', {
       state: {
@@ -60,13 +62,15 @@ export const ExpenseList = () => {
           category_id: expense.category_id,
           family_member_id: expense.family_member_id,
           payment_method: expense.payment_method,
+          source_container_id: expense.source_container_id,
+          source_instrument_id: expense.source_instrument_id,
           // Date is NOT included - will use today's date
         }
       }
     });
   };
 
-  const handleDelete = (e: React.MouseEvent, expense: any) => {
+  const handleDelete = (e: React.MouseEvent, expense: Expense) => {
     e.stopPropagation();
 
     handleDeleteWithAnimation(expense.id, async () => {
@@ -82,7 +86,7 @@ export const ExpenseList = () => {
               toast.success(t('list.toast.restored', { description: expense.description }));
             } catch (error) {
               toast.error(t('list.toast.restoreError'), {
-                description: (error as any)?.response?.data?.error || (error as Error).message,
+                description: getApiErrorMessage(error, t('list.toast.restoreError')),
               });
             } finally {
               toast.dismiss(toastId);
@@ -133,7 +137,7 @@ export const ExpenseList = () => {
   }
 
   if (expensesError) {
-    const errorMessage = (expensesError as any)?.response?.data?.error || (expensesError as any)?.message || t('list.error.loadFailed');
+    const errorMessage = getApiErrorMessage(expensesError, t('list.error.loadFailed'));
     return (
       <div className="text-center py-10">
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -263,7 +267,7 @@ export const ExpenseList = () => {
                           {expense.category_name || t('common:common.noCategory')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          {expense.payment_method ? getPaymentMethodLabel(t, expense.payment_method) : '—'}
+                          {getPaymentContextLabel(t, expense.payment_context, expense.payment_method) ?? '—'}
                         </td>
                         {isFamilyAccount && (
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -373,9 +377,9 @@ export const ExpenseList = () => {
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
                     {expense.category_name || t('common:common.noCategory')}
                   </span>
-                  {expense.payment_method && (
+                  {getPaymentContextLabel(t, expense.payment_context, expense.payment_method) && (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">
-                      {getPaymentMethodLabel(t, expense.payment_method)}
+                      {getPaymentContextLabel(t, expense.payment_context, expense.payment_method)}
                     </span>
                   )}
                   {isFamilyAccount && expense.family_member_id && (

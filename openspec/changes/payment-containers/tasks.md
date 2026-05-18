@@ -46,8 +46,9 @@ Chain strategy: stacked-to-main
 - [x] 3.3 Create `frontend/src/features/payment-containers/{PaymentContainersPage.tsx,ContainerForm.tsx,InstrumentForm.tsx}` and add route entry in `frontend/src/App.tsx` (or current route module).
 - [x] PR3 verification fix: replace source-string-primary frontend management tests with behavioral Vitest coverage for page loading/error/empty/list rendering and form submit validation helpers.
 - [x] PR3 lint fix: move form submit validation helpers out of component files so `react-refresh/only-export-components` no longer flags `ContainerForm.tsx` or `InstrumentForm.tsx`.
-- [ ] 3.4 Update `frontend/src/schemas/{expense.schema.ts,income.schema.ts}` and `frontend/src/features/{expenses/ExpenseForm.tsx,incomes/IncomeForm.tsx}` for optional UUID selectors.
-- [ ] 3.5 Update `frontend/src/features/{expenses/ExpenseList.tsx,incomes/IncomeList.tsx,activity/components/ActivityFeed.tsx}` and `frontend/src/hooks/useActivity.ts` to render fallback-safe context labels without altering money formatting.
+- [x] 3.4 Update `frontend/src/schemas/{expense.schema.ts,income.schema.ts}` and `frontend/src/features/{expenses/ExpenseForm.tsx,incomes/IncomeForm.tsx}` for optional UUID selectors.
+- [x] 3.5 Update `frontend/src/features/{expenses/ExpenseList.tsx,incomes/IncomeList.tsx,activity/components/ActivityFeed.tsx}` and `frontend/src/hooks/useActivity.ts` to render fallback-safe context labels without altering money formatting.
+- [x] PR4 verification warning fix: move transaction form submit helpers out of component files, preserve helper coverage, and make focused PR4-owned ESLint pass without touching importer/dashboard/backend work.
 
 ## Phase 4: Importer, Dashboard, and Verification
 

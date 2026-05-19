@@ -45,6 +45,8 @@
     "versus": "{{current}} vs {{previous}}",
     "topCategory": "Top category: {{name}}",
     "categoryPercentage": "{{amount}} ({{percent}}% of expenses)",
+    "topContainer": "Largest money location: {{name}}",
+    "containerPercentage": "{{amount}} ({{percent}}% of distributed balance)",
     "savingsGoal": "Savings: {{name}}",
     "savingsProgress": "{{current}} / {{target}} ({{percent}}%)",
     "savingsAlmostThere": "You're almost there!",
@@ -56,6 +58,10 @@
     "inDays": "In {{count}} days",
     "noUpcoming": "No recurring expenses in the next 7 days",
     "noInsights": "Add some transactions to see your insights"
+  },
+  "moneyByContainer": {
+    "title": "Money by location",
+    "unassigned": "Unassigned"
   },
   
   "expensesByCategory": "Expenses by Category",
@@ -77,6 +83,7 @@
     "expenses": "All the expenses you've recorded this month. Includes purchases, services, and any money you've spent.",
     "income": "The income you've recorded this month. This could be your salary, side work, or any money you've received.",
     "expensesByCategory": "Here you can see which categories you spend the most on. It helps you identify where you can save.",
+    "moneyByContainer": "Shows historical balance grouped by money location. Transactions without a normalized location appear as Unassigned.",
     "recentTransactions": "Your most recent activity. The latest expenses and income you've recorded appear here.",
     "account": "An 'account' is like a virtual wallet where you organize your money. You can have multiple accounts for different purposes (e.g., Personal, Family, Savings)."
   }

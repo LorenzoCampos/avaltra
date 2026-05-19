@@ -64,6 +64,15 @@ type UpcomingRecurringSummary struct {
 	Items []UpcomingRecurringItem `json:"items"`
 }
 
+type MoneyByContainer struct {
+	ContainerID  *string `json:"container_id"`
+	Name         string  `json:"name"`
+	Type         *string `json:"type"`
+	Total        float64 `json:"total"`
+	Percentage   float64 `json:"percentage"`
+	IsUnassigned bool    `json:"is_unassigned"`
+}
+
 // DashboardSummaryResponse represents the complete dashboard summary
 type DashboardSummaryResponse struct {
 	Period                  string                   `json:"period"` // YYYY-MM format
@@ -77,6 +86,14 @@ type DashboardSummaryResponse struct {
 	TopExpenses             []TopExpense             `json:"top_expenses"`
 	RecentTransactions      []RecentTransaction      `json:"recent_transactions"`
 	UpcomingRecurring       UpcomingRecurringSummary `json:"upcoming_recurring"`
+	MoneyByContainer        []MoneyByContainer       `json:"money_by_container"`
+}
+
+type containerMoneyRow struct {
+	ContainerID   *string
+	ContainerName *string
+	ContainerType *string
+	Total         float64
 }
 
 type recurringExpenseTemplateRow struct {
@@ -188,6 +205,13 @@ func GetSummary(db dashboardQuerier) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to calculate historical expenses"})
 			return
 		}
+
+		moneyByContainerRows, err := queryMoneyByContainer(ctx, db, accountID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to calculate money by container"})
+			return
+		}
+		moneyByContainer := buildMoneyByContainerBreakdown(moneyByContainerRows)
 
 		// ============================================================================
 		// 3. EXPENSES BY CATEGORY (with percentages)
@@ -454,10 +478,105 @@ func GetSummary(db dashboardQuerier) gin.HandlerFunc {
 			TopExpenses:             topExpenses,
 			RecentTransactions:      recentTransactions,
 			UpcomingRecurring:       upcomingRecurring,
+			MoneyByContainer:        moneyByContainer,
 		}
 
 		c.JSON(http.StatusOK, response)
 	}
+}
+
+func queryMoneyByContainer(ctx context.Context, db dashboardQuerier, accountID interface{}) ([]containerMoneyRow, error) {
+	query := `
+		SELECT container_id, container_name, container_type, SUM(total) AS total
+		FROM (
+			SELECT
+				i.destination_container_id AS container_id,
+				pc.name AS container_name,
+				pc.kind AS container_type,
+				SUM(i.amount_in_primary_currency) AS total
+			FROM incomes i
+			LEFT JOIN payment_containers pc ON i.destination_container_id = pc.id
+			WHERE i.account_id = $1 AND i.deleted_at IS NULL
+			GROUP BY i.destination_container_id, pc.name, pc.kind
+			UNION ALL
+			SELECT
+				e.source_container_id AS container_id,
+				pc.name AS container_name,
+				pc.kind AS container_type,
+				-SUM(e.amount_in_primary_currency) AS total
+			FROM expenses e
+			LEFT JOIN payment_containers pc ON e.source_container_id = pc.id
+			WHERE e.account_id = $1 AND e.deleted_at IS NULL
+			GROUP BY e.source_container_id, pc.name, pc.kind
+		) AS movements
+		GROUP BY container_id, container_name, container_type
+		HAVING SUM(total) <> 0
+	`
+	rows, err := db.Query(ctx, query, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make([]containerMoneyRow, 0)
+	for rows.Next() {
+		var row containerMoneyRow
+		if err := rows.Scan(&row.ContainerID, &row.ContainerName, &row.ContainerType, &row.Total); err != nil {
+			return nil, err
+		}
+		result = append(result, row)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func buildMoneyByContainerBreakdown(rows []containerMoneyRow) []MoneyByContainer {
+	items := make([]MoneyByContainer, 0, len(rows))
+	unassignedTotal := 0.0
+	grandTotal := 0.0
+
+	for _, row := range rows {
+		if row.Total <= 0 {
+			continue
+		}
+		grandTotal += row.Total
+		if row.ContainerID == nil {
+			unassignedTotal += row.Total
+			continue
+		}
+		name := "Unassigned"
+		if row.ContainerName != nil && *row.ContainerName != "" {
+			name = *row.ContainerName
+		}
+		items = append(items, MoneyByContainer{
+			ContainerID: row.ContainerID,
+			Name:        name,
+			Type:        row.ContainerType,
+			Total:       row.Total,
+		})
+	}
+
+	if unassignedTotal > 0 {
+		items = append(items, MoneyByContainer{
+			Name:         "Unassigned",
+			Total:        unassignedTotal,
+			IsUnassigned: true,
+		})
+	}
+
+	if grandTotal > 0 {
+		for index := range items {
+			items[index].Percentage = (items[index].Total / grandTotal) * 100
+		}
+	}
+
+	sort.SliceStable(items, func(i, j int) bool {
+		return items[i].Total > items[j].Total
+	})
+
+	return items
 }
 
 func getUpcomingRecurringExpenses(db dashboardQuerier, ctx context.Context, accountID interface{}, today time.Time) (UpcomingRecurringSummary, error) {

@@ -32,22 +32,26 @@ type PreviewSummary struct {
 }
 
 type PreviewRow struct {
-	RowID                 string                `json:"row_id"`
-	Sheet                 string                `json:"sheet"`
-	SheetRow              int                   `json:"sheet_row"`
-	Classification        rowClassification     `json:"classification"`
-	NormalizedType        *normalizedType       `json:"normalized_type"`
-	Date                  *string               `json:"date"`
-	Description           string                `json:"description"`
-	Amount                *float64              `json:"amount"`
-	RawCategory           *string               `json:"raw_category"`
-	RawPaymentMethod      *string               `json:"raw_payment_method"`
-	PaymentMethod         *string               `json:"payment_method"`
-	CategoryMappingStatus categoryMappingStatus `json:"category_mapping_status"`
-	SuggestedCategoryID   *string               `json:"suggested_category_id,omitempty"`
-	SuggestedCategoryName *string               `json:"suggested_category_name,omitempty"`
-	MappingKey            *string               `json:"mapping_key,omitempty"`
-	ReasonCodes           []string              `json:"reason_codes"`
+	RowID                   string                `json:"row_id"`
+	Sheet                   string                `json:"sheet"`
+	SheetRow                int                   `json:"sheet_row"`
+	Classification          rowClassification     `json:"classification"`
+	NormalizedType          *normalizedType       `json:"normalized_type"`
+	Date                    *string               `json:"date"`
+	Description             string                `json:"description"`
+	Amount                  *float64              `json:"amount"`
+	RawCategory             *string               `json:"raw_category"`
+	RawPaymentMethod        *string               `json:"raw_payment_method"`
+	PaymentMethod           *string               `json:"payment_method"`
+	SourceContainerID       *string               `json:"source_container_id,omitempty"`
+	SourceInstrumentID      *string               `json:"source_instrument_id,omitempty"`
+	DestinationContainerID  *string               `json:"destination_container_id,omitempty"`
+	DestinationInstrumentID *string               `json:"destination_instrument_id,omitempty"`
+	CategoryMappingStatus   categoryMappingStatus `json:"category_mapping_status"`
+	SuggestedCategoryID     *string               `json:"suggested_category_id,omitempty"`
+	SuggestedCategoryName   *string               `json:"suggested_category_name,omitempty"`
+	MappingKey              *string               `json:"mapping_key,omitempty"`
+	ReasonCodes             []string              `json:"reason_codes"`
 }
 
 type MappingItem struct {
@@ -115,7 +119,17 @@ type categoryOption struct {
 }
 
 type categoryCatalog struct {
-	expenseByName map[string]categoryOption
-	incomeByName  map[string]categoryOption
-	visibleByID   map[string]categoryOption
+	expenseByName   map[string]categoryOption
+	incomeByName    map[string]categoryOption
+	visibleByID     map[string]categoryOption
+	paymentContexts paymentContextCatalog
+}
+
+type paymentContextRef struct {
+	ContainerID  *string
+	InstrumentID *string
+}
+
+type paymentContextCatalog struct {
+	byLookupKey map[string][]paymentContextRef
 }

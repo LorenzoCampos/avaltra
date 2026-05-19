@@ -10,6 +10,7 @@ import tourEs from '@/i18n/locales/es/tour.json';
 import { getDashboardErrorMessage } from './dashboardErrorMessage';
 import { getDashboardCardAmounts } from './dashboardSummaryCards';
 import { getDashboardCurrency } from './dashboardCurrency';
+import { getDashboardMoneyByContainerItems } from './dashboardMoneyByContainer';
 
 const apiDocPath = path.resolve(__dirname, '../../../../API.md');
 const featuresDocPath = path.resolve(__dirname, '../../../../FEATURES.md');
@@ -62,6 +63,38 @@ describe('dashboard currency resolution', () => {
 
 	it('falls back to the active account currency when the summary currency is implicit', () => {
 		expect(getDashboardCurrency(undefined, 'EUR')).toBe('EUR');
+	});
+});
+
+describe('dashboard money by container breakdown', () => {
+	it('keeps backend percentages and labels the unassigned bucket', () => {
+		expect(
+			getDashboardMoneyByContainerItems([
+				{
+					container_id: 'wallet-1',
+					name: 'Mercado Pago',
+					type: 'wallet',
+					total: 800,
+					percentage: 80,
+					is_unassigned: false,
+				},
+				{
+					container_id: null,
+					name: 'Unassigned',
+					type: null,
+					total: 200,
+					percentage: 20,
+					is_unassigned: true,
+				},
+			], 'Unassigned'),
+		).toEqual([
+			{ key: 'wallet-1', label: 'Mercado Pago', total: 800, percentage: 80, isUnassigned: false },
+			{ key: 'unassigned', label: 'Unassigned', total: 200, percentage: 20, isUnassigned: true },
+		]);
+	});
+
+	it('returns an empty list when the backend omits the optional field', () => {
+		expect(getDashboardMoneyByContainerItems(undefined, 'Unassigned')).toEqual([]);
 	});
 });
 

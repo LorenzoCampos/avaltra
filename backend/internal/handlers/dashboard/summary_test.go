@@ -125,6 +125,45 @@ func TestGetSummaryKeepsMonthlyFieldsAndAddsCurrentAvailableBalance(t *testing.T
 
 }
 
+func TestBuildMoneyByContainerBreakdownIncludesUnassignedBucket(t *testing.T) {
+	rows := []containerMoneyRow{
+		{ContainerID: stringPtr("wallet-1"), ContainerName: stringPtr("Mercado Pago"), ContainerType: stringPtr("wallet"), Total: 800},
+		{ContainerID: stringPtr("bank-1"), ContainerName: stringPtr("Banco Nación"), ContainerType: stringPtr("bank"), Total: 200},
+		{Total: 150},
+	}
+
+	breakdown := buildMoneyByContainerBreakdown(rows)
+
+	if len(breakdown) != 3 {
+		t.Fatalf("len(breakdown) = %d, want 3", len(breakdown))
+	}
+	if breakdown[0].ContainerID == nil || *breakdown[0].ContainerID != "wallet-1" || breakdown[0].Percentage != 69.56521739130434 {
+		t.Fatalf("first breakdown item = %+v, want Mercado Pago first with percentage", breakdown[0])
+	}
+	unassigned := breakdown[2]
+	if !unassigned.IsUnassigned || unassigned.Name != "Unassigned" || unassigned.Total != 150 {
+		t.Fatalf("unassigned item = %+v, want explicit unassigned bucket", unassigned)
+	}
+}
+
+func TestBuildMoneyByContainerBreakdownMergesMultipleUnassignedRows(t *testing.T) {
+	breakdown := buildMoneyByContainerBreakdown([]containerMoneyRow{
+		{Total: 100},
+		{ContainerID: stringPtr("cash-1"), ContainerName: stringPtr("Cash"), ContainerType: stringPtr("cash"), Total: 50},
+		{Total: 25},
+	})
+
+	if len(breakdown) != 2 {
+		t.Fatalf("len(breakdown) = %d, want 2", len(breakdown))
+	}
+	if breakdown[0].Name != "Unassigned" || breakdown[0].Total != 125 || !breakdown[0].IsUnassigned {
+		t.Fatalf("first breakdown item = %+v, want merged unassigned first by total", breakdown[0])
+	}
+	if breakdown[1].Percentage != float64(50)/float64(175)*100 {
+		t.Fatalf("cash percentage = %v, want %v", breakdown[1].Percentage, float64(50)/float64(175)*100)
+	}
+}
+
 func expectDashboardSummaryQueries(
 	mock pgxmock.PgxPoolIface,
 	month string,
@@ -156,6 +195,10 @@ func expectDashboardSummaryQueries(
 	mock.ExpectQuery(`FROM expenses[\s\S]*WHERE account_id = \$1[\s\S]*deleted_at IS NULL[\s]*$`).
 		WithArgs(dashboardTestAccountID).
 		WillReturnRows(mock.NewRows([]string{"sum"}).AddRow(historicalExpenses))
+
+	mock.ExpectQuery(`FROM incomes i[\s\S]*LEFT JOIN payment_containers[\s\S]*UNION ALL[\s\S]*FROM expenses e`).
+		WithArgs(dashboardTestAccountID).
+		WillReturnRows(mock.NewRows([]string{"container_id", "container_name", "container_type", "total"}))
 
 	mock.ExpectQuery(`FROM expenses e[\s\S]*GROUP BY`).
 		WithArgs(dashboardTestAccountID, month).
@@ -221,4 +264,8 @@ func dashboardTestRouter(handler gin.HandlerFunc) *gin.Engine {
 	})
 	router.GET("/dashboard/summary", handler)
 	return router
+}
+
+func stringPtr(value string) *string {
+	return &value
 }

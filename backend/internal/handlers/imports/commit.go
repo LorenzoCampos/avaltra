@@ -177,20 +177,20 @@ func insertImportedRow(ctx context.Context, tx pgx.Tx, accountID, currency strin
 	switch *row.NormalizedType {
 	case normalizedTypeExpense:
 		err := tx.QueryRow(ctx, `INSERT INTO expenses (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, import_fingerprint
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, source_container_id, source_instrument_id, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
-		RETURNING id`, accountID, row.SuggestedCategoryID, row.Description, *row.Amount, currency, exchangeRate, amountInPrimary, "one-time", date, row.PaymentMethod, fingerprint).Scan(&createdID)
+		RETURNING id`, accountID, row.SuggestedCategoryID, row.Description, *row.Amount, currency, exchangeRate, amountInPrimary, "one-time", date, row.PaymentMethod, row.SourceContainerID, row.SourceInstrumentID, fingerprint).Scan(&createdID)
 		if err == pgx.ErrNoRows {
 			return false, nil
 		}
 		return err == nil, err
 	case normalizedTypeIncome:
 		err := tx.QueryRow(ctx, `INSERT INTO incomes (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, income_type, date, payment_method, import_fingerprint
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, income_type, date, payment_method, destination_container_id, destination_instrument_id, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
-		RETURNING id`, accountID, row.SuggestedCategoryID, row.Description, *row.Amount, currency, exchangeRate, amountInPrimary, "one-time", date, row.PaymentMethod, fingerprint).Scan(&createdID)
+		RETURNING id`, accountID, row.SuggestedCategoryID, row.Description, *row.Amount, currency, exchangeRate, amountInPrimary, "one-time", date, row.PaymentMethod, row.DestinationContainerID, row.DestinationInstrumentID, fingerprint).Scan(&createdID)
 		if err == pgx.ErrNoRows {
 			return false, nil
 		}

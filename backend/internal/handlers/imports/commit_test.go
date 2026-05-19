@@ -33,6 +33,7 @@ func TestCommitExcelTemplateRejectsMissingCategoryMapping(t *testing.T) {
 	mock.ExpectQuery(`FROM income_categories`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"id", "name"}).AddRow("income-services", "Servicios ingreso"))
+	expectEmptyImportPaymentContextCatalog(mock)
 
 	recorder := httptest.NewRecorder()
 	router := importTestRouter(commitHandler(mock))
@@ -74,26 +75,32 @@ func TestCommitExcelTemplatePersistsApprovedRowsInOneTransaction(t *testing.T) {
 	mock.ExpectQuery(`FROM income_categories`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"id", "name"}).AddRow("income-cat", "Salario"))
+	mock.ExpectQuery(`FROM payment_containers`).
+		WithArgs(testImportAccountID).
+		WillReturnRows(mock.NewRows([]string{"id", "name"}).AddRow("cash-container", "Efectivo").AddRow("bank-container", "Transferencia"))
+	mock.ExpectQuery(`FROM payment_instruments`).
+		WithArgs(testImportAccountID).
+		WillReturnRows(mock.NewRows([]string{"id", "name", "backing_container_id"}))
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
 	mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO expenses (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, import_fingerprint
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, source_container_id, source_instrument_id, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
 		RETURNING id`)).
-		WithArgs(testImportAccountID, stringPtr("expense-cat"), "Supermercado", 1500.0, "ARS", 1.0, 1500.0, "one-time", "2026-01-05", stringPtr("cash"), pgxmock.AnyArg()).
+		WithArgs(testImportAccountID, stringPtr("expense-cat"), "Supermercado", 1500.0, "ARS", 1.0, 1500.0, "one-time", "2026-01-05", stringPtr("cash"), stringPtr("cash-container"), nilStringPtr(), pgxmock.AnyArg()).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow("expense-created"))
 	mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
 	mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO incomes (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, income_type, date, payment_method, import_fingerprint
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, income_type, date, payment_method, destination_container_id, destination_instrument_id, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
 		RETURNING id`)).
-		WithArgs(testImportAccountID, stringPtr("income-cat"), "Sueldo", 200000.0, "ARS", 1.0, 200000.0, "one-time", "2026-01-06", stringPtr("bank_transfer"), pgxmock.AnyArg()).
+		WithArgs(testImportAccountID, stringPtr("income-cat"), "Sueldo", 200000.0, "ARS", 1.0, 200000.0, "one-time", "2026-01-06", stringPtr("bank_transfer"), stringPtr("bank-container"), nilStringPtr(), pgxmock.AnyArg()).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow("income-created"))
 	mock.ExpectCommit()
 
@@ -154,26 +161,27 @@ func TestCommitExcelTemplateAcceptsTypedCategoryMapKeysForSharedLabels(t *testin
 	mock.ExpectQuery(`FROM income_categories`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"id", "name"}).AddRow("income-services", "Servicios reintegro"))
+	expectEmptyImportPaymentContextCatalog(mock)
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
 	mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO expenses (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, import_fingerprint
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, source_container_id, source_instrument_id, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
 		RETURNING id`)).
-		WithArgs(testImportAccountID, stringPtr("expense-services"), "Luz", 1500.0, "ARS", 1.0, 1500.0, "one-time", "2026-01-05", stringPtr("cash"), pgxmock.AnyArg()).
+		WithArgs(testImportAccountID, stringPtr("expense-services"), "Luz", 1500.0, "ARS", 1.0, 1500.0, "one-time", "2026-01-05", stringPtr("cash"), nilStringPtr(), nilStringPtr(), pgxmock.AnyArg()).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow("expense-created"))
 	mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
 	mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO incomes (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, income_type, date, payment_method, import_fingerprint
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, income_type, date, payment_method, destination_container_id, destination_instrument_id, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
 		RETURNING id`)).
-		WithArgs(testImportAccountID, stringPtr("income-services"), "Reintegro", 2000.0, "ARS", 1.0, 2000.0, "one-time", "2026-01-06", stringPtr("bank_transfer"), pgxmock.AnyArg()).
+		WithArgs(testImportAccountID, stringPtr("income-services"), "Reintegro", 2000.0, "ARS", 1.0, 2000.0, "one-time", "2026-01-06", stringPtr("bank_transfer"), nilStringPtr(), nilStringPtr(), pgxmock.AnyArg()).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow("income-created"))
 	mock.ExpectCommit()
 
@@ -225,6 +233,7 @@ func TestCommitExcelTemplatePersistsIdenticalRowsFromDifferentSourceRows(t *test
 	mock.ExpectQuery(`FROM income_categories`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"id", "name"}))
+	expectEmptyImportPaymentContextCatalog(mock)
 	mock.ExpectBegin()
 	for _, expected := range []struct {
 		fingerprint string
@@ -237,11 +246,11 @@ func TestCommitExcelTemplatePersistsIdenticalRowsFromDifferentSourceRows(t *test
 			WithArgs(testImportAccountID).
 			WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
 		mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO expenses (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, import_fingerprint
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, source_container_id, source_instrument_id, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
 		RETURNING id`)).
-			WithArgs(testImportAccountID, stringPtr("expense-cat"), "Cafe", 1200.0, "ARS", 1.0, 1200.0, "one-time", "2026-01-05", stringPtr("cash"), expected.fingerprint).
+			WithArgs(testImportAccountID, stringPtr("expense-cat"), "Cafe", 1200.0, "ARS", 1.0, 1200.0, "one-time", "2026-01-05", stringPtr("cash"), nilStringPtr(), nilStringPtr(), expected.fingerprint).
 			WillReturnRows(mock.NewRows([]string{"id"}).AddRow(expected.createdID))
 	}
 	mock.ExpectCommit()
@@ -296,11 +305,11 @@ func TestInsertImportedRowSkipsDuplicateFingerprint(t *testing.T) {
 	}
 
 	mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO expenses (
-			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, import_fingerprint
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, source_container_id, source_instrument_id, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
 		RETURNING id`)).
-		WithArgs(testImportAccountID, stringPtr("expense-cat"), "Supermercado", 1500.0, "ARS", 1.0, 1500.0, "one-time", "2026-01-05", stringPtr("cash"), pgxmock.AnyArg()).
+		WithArgs(testImportAccountID, stringPtr("expense-cat"), "Supermercado", 1500.0, "ARS", 1.0, 1500.0, "one-time", "2026-01-05", stringPtr("cash"), nilStringPtr(), nilStringPtr(), pgxmock.AnyArg()).
 		WillReturnError(pgx.ErrNoRows)
 
 	created, err := insertImportedRow(t.Context(), tx, testImportAccountID, "ARS", 1, 1500, row)

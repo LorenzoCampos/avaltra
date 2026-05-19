@@ -9,6 +9,7 @@ import { formatCurrency, getCurrentMonth } from '@/lib/utils';
 import { useAccountStore } from '@/stores/account.store';
 import type { Currency } from '@/types/api';
 import type { UpcomingRecurringItem } from '@/types/dashboard';
+import { getDashboardMoneyByContainerItems } from './dashboardMoneyByContainer';
 import {
   calculateMonthOverMonth,
   getBestSavingsInsight,
@@ -70,10 +71,16 @@ export const InsightsCard = () => {
   const topCategory = getTopSpendingCategory(dashboard?.expenses_by_category || []);
   const savingsInsight = getBestSavingsInsight(savingsGoals);
   const upcomingRecurring = dashboard?.upcoming_recurring.items || [];
+  const moneyByContainerItems = getDashboardMoneyByContainerItems(
+    dashboard?.money_by_container,
+    t('moneyByContainer.unassigned'),
+  );
+  const topContainer = moneyByContainerItems[0];
 
   const hasInsights =
     !!topCategory ||
     !!savingsInsight ||
+    !!topContainer ||
     upcomingRecurring.length > 0 ||
     (dashboard?.total_expenses || 0) > 0 ||
     (previousDashboard?.total_expenses || 0) > 0;
@@ -179,6 +186,23 @@ export const InsightsCard = () => {
                     : t('insights.savingsRemaining', {
                         amount: formatAmount(savingsInsight.remaining, primaryCurrency),
                       })}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {topContainer && (
+          <div className="flex items-start gap-3">
+            <Target className="mt-0.5 h-5 w-5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+            <div>
+              <p className="font-medium text-gray-900 dark:text-gray-100">
+                {t('insights.topContainer', { name: topContainer.label })}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t('insights.containerPercentage', {
+                  amount: formatAmount(topContainer.total, primaryCurrency),
+                  percent: Math.round(topContainer.percentage),
+                })}
               </p>
             </div>
           </div>

@@ -88,6 +88,17 @@ func classifyParsedRow(row parsedWorkbookRow, catalog categoryCatalog) PreviewRo
 	} else {
 		response.PaymentMethod = paymentMethod
 	}
+	if normalizedTypeValue != nil {
+		containerID, instrumentID := resolveImportPaymentContext(row.RawPaymentMethod, catalog.paymentContexts)
+		switch *normalizedTypeValue {
+		case normalizedTypeExpense:
+			response.SourceContainerID = containerID
+			response.SourceInstrumentID = instrumentID
+		case normalizedTypeIncome:
+			response.DestinationContainerID = containerID
+			response.DestinationInstrumentID = instrumentID
+		}
+	}
 
 	option, status, mappingKey := resolveCategory(row.RawCategory, normalizedTypeValue, catalog)
 	response.CategoryMappingStatus = status
@@ -160,6 +171,11 @@ func loadCategoryCatalog(ctx context.Context, db queryStore, accountID string) (
 	if err := loadCategoryType(ctx, db, accountID, "income_categories", normalizedTypeIncome, catalog.incomeByName, catalog.visibleByID); err != nil {
 		return categoryCatalog{}, err
 	}
+	paymentContexts, err := loadPaymentContextCatalog(ctx, db, accountID)
+	if err != nil {
+		return categoryCatalog{}, err
+	}
+	catalog.paymentContexts = paymentContexts
 	return catalog, nil
 }
 
@@ -185,6 +201,82 @@ func loadCategoryType(ctx context.Context, db queryStore, accountID, table strin
 
 func buildCategoryMappingKey(normalizedTypeValue normalizedType, rawCategory string) string {
 	return string(normalizedTypeValue) + ":" + strings.TrimSpace(rawCategory)
+}
+
+func loadPaymentContextCatalog(ctx context.Context, db queryStore, accountID string) (paymentContextCatalog, error) {
+	catalog := paymentContextCatalog{byLookupKey: make(map[string][]paymentContextRef)}
+
+	containerRows, err := db.Query(ctx, `
+		SELECT id, name
+		FROM payment_containers
+		WHERE account_id = $1 AND is_active = true
+	`, accountID)
+	if err != nil {
+		return paymentContextCatalog{}, err
+	}
+	defer containerRows.Close()
+
+	for containerRows.Next() {
+		var id, name string
+		if err := containerRows.Scan(&id, &name); err != nil {
+			return paymentContextCatalog{}, err
+		}
+		containerID := id
+		catalog.add(name, paymentContextRef{ContainerID: &containerID})
+	}
+	if err := containerRows.Err(); err != nil {
+		return paymentContextCatalog{}, err
+	}
+
+	instrumentRows, err := db.Query(ctx, `
+		SELECT id, name, backing_container_id
+		FROM payment_instruments
+		WHERE account_id = $1 AND is_active = true
+	`, accountID)
+	if err != nil {
+		return paymentContextCatalog{}, err
+	}
+	defer instrumentRows.Close()
+
+	for instrumentRows.Next() {
+		var id, name string
+		var backingContainerID *string
+		if err := instrumentRows.Scan(&id, &name, &backingContainerID); err != nil {
+			return paymentContextCatalog{}, err
+		}
+		instrumentID := id
+		ref := paymentContextRef{InstrumentID: &instrumentID}
+		if backingContainerID != nil {
+			containerID := *backingContainerID
+			ref.ContainerID = &containerID
+		}
+		catalog.add(name, ref)
+	}
+	if err := instrumentRows.Err(); err != nil {
+		return paymentContextCatalog{}, err
+	}
+
+	return catalog, nil
+}
+
+func (catalog paymentContextCatalog) add(raw string, ref paymentContextRef) {
+	key := normalizeLookupKey(raw)
+	if key == "" {
+		return
+	}
+	catalog.byLookupKey[key] = append(catalog.byLookupKey[key], ref)
+}
+
+func resolveImportPaymentContext(raw string, catalog paymentContextCatalog) (*string, *string) {
+	key := normalizeLookupKey(raw)
+	if key == "" || catalog.byLookupKey == nil {
+		return nil, nil
+	}
+	matches := catalog.byLookupKey[key]
+	if len(matches) != 1 {
+		return nil, nil
+	}
+	return matches[0].ContainerID, matches[0].InstrumentID
 }
 
 func categoryMappingLookupKeys(normalizedTypeValue normalizedType, rawCategory string) []string {

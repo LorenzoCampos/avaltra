@@ -1,135 +1,157 @@
-# Verification Report
+# Verification Report: payment-containers
 
-**Change**: payment-containers — post-PR4 manual-validation hardening slice only
+**Change**: payment-containers
 **Version**: N/A
-**Mode**: Strict TDD verification, hybrid artifact store; Engram primary with filesystem fallback
+**Mode**: Strict TDD
+**Scope**: PR5 importer/dashboard plus final full feature completion
 **Verdict**: PASS WITH WARNINGS
 
-## Scope Boundary
+## Executive Summary
 
-Verified only the hardening fixes requested after PR4 manual validation:
-- Management UI edit flow for containers/instruments preserves inactive state.
-- Existing card instruments can still select their inactive backing container while editing.
-- Spanish/i18n navigation, menu, and management page labels are clearer for account context.
-- Transaction/activity label clarity was minimally improved to “place/method” wording.
-- No recurring transaction support, transfers, importer, dashboard, or backend changes are part of this slice.
-
-Out-of-scope untracked working-tree items still exist: `branding/` and `Planilla de gastos diarios - En blanco 2026.xlsx`; they were not part of this verification judgment.
+PR5 is implemented and runtime-verified: importer compatibility preserves legacy `payment_method` behavior while attaching normalized refs only for exact unique active container/instrument matches, and dashboard backend/frontend expose `money_by_container` with an explicit unassigned bucket. All required backend and frontend test/type/build commands passed. Warnings are limited to known/non-blocking frontend build output and a non-gating full-project lint run that fails on pre-existing unrelated/generated files, while PR5-owned frontend files pass focused ESLint.
 
 ## Completeness
 
 | Metric | Value |
 |--------|-------|
-| Hardening tasks in scope | 5 |
-| Hardening tasks complete | 5 |
-| Hardening tasks incomplete | 0 |
-| Phase 4 importer/dashboard tasks | Out of scope; still incomplete for PR5 |
-| Backend/importer/dashboard application files changed | 0 |
+| Tasks total | 19 tracked task rows including hardening/fix rows |
+| Tasks complete | 19 |
+| Tasks incomplete | 0 |
+| Explicitly out of scope | Recurring transaction payment context, wallet/bank transfers, reconciliation, detailed institution/instrument reports, card-held balances, branding/spreadsheet work, commit/PR packaging |
 
 ## Build & Tests Execution
 
-| Command | Result | Evidence |
-|---------|--------|----------|
-| `npm test -- --run src/features/payment-containers/paymentContainerManagement.test.ts src/features/paymentContext.runtime.test.ts src/features/paymentMethod.runtime.test.ts` | ✅ Passed | 3 files / 20 tests passed. i18next debug/locize advisory output only. |
-| `npm run typecheck` | ✅ Passed | `tsc --noEmit -p tsconfig.app.json` exited 0. |
-| `npm run build` | ✅ Passed after retry | First 120s run timed out during Vite transform; rerun with 300s completed in 1m16s. Existing Vite dynamic-import and chunk-size warnings remain. |
-| `npx eslint <changed TS/TSX files>` | ✅ Passed | No output, exit 0 for changed lint-configured TS/TSX files. |
-| `npx eslint <changed TS/TSX + JSON i18n files>` | ⚠️ Non-blocking warnings | JSON locale files are ignored by current ESLint config: “File ignored because no matching configuration was supplied.” TS/TSX focused lint passed separately. |
-| `git diff --stat && git diff --name-only` | ✅ Scoped | Tracked application diff is frontend payment management/activity/i18n/payment-context only plus SDD artifacts; no backend/importer/dashboard/recurring/transfer code. |
-| `git status --short` | ⚠️ Scoped | Shows expected tracked hardening files plus untracked `branding/` and spreadsheet artifacts outside this verification scope. |
+**Backend tests**: ✅ Passed
 
-Coverage analysis skipped: no coverage command/tooling is configured in `frontend/package.json` for this Vitest/frontend slice.
+```text
+backend$ go test ./internal/handlers/imports ./internal/handlers/dashboard
+ok  github.com/LorenzoCampos/avaltra/internal/handlers/imports   (cached)
+ok  github.com/LorenzoCampos/avaltra/internal/handlers/dashboard (cached)
+
+backend$ go test ./internal/handlers/expenses ./internal/handlers/incomes ./internal/handlers/imports ./internal/handlers/dashboard ./internal/handlers/payment_containers
+ok  expenses, incomes, imports, dashboard, payment_containers (cached)
+
+backend$ go test ./...
+ok  all packages; no failures
+```
+
+**Frontend tests/type/build**: ✅ Passed
+
+```text
+frontend$ npm test -- --run src/features/dashboard/Dashboard.test.ts src/features/paymentMethod.runtime.test.ts
+Test Files 2 passed (2); Tests 20 passed (20)
+
+frontend$ npm test
+Test Files 18 passed (18); Tests 87 passed (87)
+
+frontend$ npm run typecheck
+tsc --noEmit -p tsconfig.app.json passed
+
+frontend$ npm run build
+tsc -b && vite build passed
+```
+
+**Static checks**: ⚠️ Mixed, non-blocking
+
+```text
+backend$ gofmt -l <PR5 backend files>
+No output; formatting OK.
+
+frontend$ npx eslint src/features/dashboard/Dashboard.tsx src/features/dashboard/InsightsCard.tsx src/features/dashboard/Dashboard.test.ts src/features/dashboard/dashboardMoneyByContainer.ts src/types/dashboard.ts
+No output; PR5 frontend files OK.
+
+frontend$ npm run lint
+Failed on pre-existing unrelated/generated files such as dev-dist/workbox-*.js, src/api/axios.ts, FeatureTour.tsx, PageTransition.tsx, reports, hooks, etc. No PR5 dashboard files were reported.
+```
+
+**Coverage**: ➖ Not run; no explicit project coverage threshold was provided for this verify request.
 
 ## TDD Compliance
 
 | Check | Result | Details |
 |-------|--------|---------|
-| TDD Evidence reported | ✅ | `apply-progress` includes a `TDD Cycle Evidence` row for post-PR4 hardening. |
-| All tasks have tests | ✅ | `frontend/src/features/payment-containers/paymentContainerManagement.test.ts` plus runtime tests cover the hardening behavior. |
-| RED confirmed | ⚠️ | Apply explicitly reports production fixes were made before new/adjusted tests; RED-first ordering was not preserved. |
-| GREEN confirmed | ✅ | Focused 20-test run passed during verification. |
-| Triangulation adequate | ✅ | Tests cover inactive edit payloads, inactive backing-container edit affordance, localized management rendering, card backing validation, and legacy label fallbacks. |
-| Safety Net for modified files | ⚠️ | Apply reports focused payment-container tests were run after implementation rather than before for this slice. |
+| TDD Evidence reported | ✅ | `apply-progress.md` contains TDD Cycle Evidence for PR5 tasks 4.1-4.5 plus prior slices. |
+| All tasks have tests | ✅ | PR5 importer/dashboard tasks map to backend and frontend test files. Prior PR1-PR4/hardening evidence is documented as historical. |
+| RED confirmed | ✅ | Apply evidence records RED failures for missing importer normalized fields/SQL and missing dashboard helper/module/types. |
+| GREEN confirmed | ✅ | Referenced backend/frontend tests passed during fresh verify. |
+| Triangulation adequate | ✅ | Import deterministic, ambiguous, unknown, SQL persistence; dashboard ordering, percentages, unassigned merge, frontend mapping, optional missing field. |
+| Safety net for modified files | ✅ | Existing importer/dashboard tests were run and full backend/frontend suites passed. |
 
-**TDD Compliance**: behavior green; process deviation confirmed. Per user instruction, this is `PASS WITH WARNINGS` rather than `FAIL` because tests/build/static checks pass and the strict module flags missing/failed evidence as critical, but this slice has honest evidence with a RED-first process warning.
-
----
+**TDD Compliance**: 6/6 checks passed for current PR5 evidence.
 
 ## Test Layer Distribution
 
 | Layer | Tests | Files | Tools |
 |-------|-------|-------|-------|
-| Unit / helper behavior | 11 | 2 | Vitest |
-| Frontend render/static behavior | 9 | 1 | Vitest + `renderToStaticMarkup` |
-| E2E | 0 | 0 | Not configured |
-| **Total** | **20** | **3** | |
-
----
+| Backend unit/handler | Focused importer/dashboard plus broader handler packages | `backend/internal/handlers/imports/*_test.go`, `backend/internal/handlers/dashboard/summary_test.go`, expenses/incomes/payment_containers packages | Go test + pgxmock |
+| Frontend unit | Dashboard/payment runtime and full Vitest suite | `frontend/src/features/dashboard/Dashboard.test.ts`, `paymentMethod.runtime.test.ts`, full `src` tests | Vitest |
+| E2E | 0 | none | Not installed/used in this verify |
 
 ## Changed File Coverage
 
-Coverage analysis skipped — no coverage tool/command is configured for this frontend package.
-
----
+Coverage analysis skipped — no coverage command/threshold was requested or identified as mandatory for this repo.
 
 ## Assertion Quality
 
-**Assertion quality**: ✅ No tautologies or production-code-free tests found in the hardening test files. One assertion checks `InstrumentForm.tsx` source text for the inactive backing-container affordance because no DOM/RTL harness exists; classified as a warning-quality limitation, not a blocker.
-
----
-
-## Quality Metrics
-
-**Linter**: ✅ No TS/TSX errors. ⚠️ JSON locale files are outside current ESLint config and reported ignored when included.
-**Type Checker**: ✅ No errors.
+**Assertion quality**: ✅ PR5 test assertions verify behavior. The only empty-array assertion found is paired with production helper input (`getDashboardMoneyByContainerItems(undefined, ...)`) and validates optional backend field fallback, not a tautology/orphan empty check.
 
 ## Spec Compliance Matrix
 
-| Requirement | Scenario | Test / Evidence | Result |
+| Requirement | Scenario | Evidence / Test | Result |
 |-------------|----------|-----------------|--------|
-| Container and Instrument Management UX | Activation status and relationship editing | `paymentContainerManagement.test.ts` verifies inactive entities render and edit payload helpers no longer send `is_active: true`; static inspection confirms edit buttons remain available for inactive rows. | ✅ COMPLIANT |
-| Container and Instrument Management UX | Inactive backing container remains selectable for existing instrument edit | `paymentContainerManagement.test.ts` checks `InstrumentForm.tsx` keeps `container.is_active || container.id === instrument?.backing_container_id`; static inspection confirms inactive option label. | ✅ COMPLIANT |
-| Card Backing Container Rule | Card requires backing container | `paymentContainerManagement.test.ts` verifies card backing helper and submit-level error/payload behavior. | ✅ COMPLIANT |
-| Activity and Transaction Detail Display | Display fallback precedence and clearer labels | `paymentContext.runtime.test.ts` covers normalized-first/legacy fallback; `ActivityFeed.tsx` now wraps activity labels as `Lugar/medio` / `Place/method`. | ✅ COMPLIANT |
-| Payment Context Labels Preserve Money Formatting Rules | Supplemental context only | Static inspection confirms activity still renders payment context separately from `MoneyAmountDisplay`; build/tests pass. | ✅ COMPLIANT |
-| Explicit V1 Non-Goals | No recurring/transfers/importer/dashboard/backend expansion | `git diff --name-only` shows no backend, importer, dashboard, recurring, or transfer application files changed. | ✅ COMPLIANT |
+| Container and Instrument Domain Model | Create separate entities | `go test ./internal/handlers/payment_containers`; migration and handlers present | ✅ COMPLIANT |
+| Optional Single Association per Transaction in V1 | Transaction without normalized links | `go test ./internal/handlers/expenses ./internal/handlers/incomes`; legacy-only compatibility covered | ✅ COMPLIANT |
+| Optional Single Association per Transaction in V1 | Split payment is rejected | `internal/transactions` and expense/income handler tests in `go test ./...` | ✅ COMPLIANT |
+| Card Backing Container Rule | Card requires backing container | `go test ./internal/handlers/payment_containers ./internal/transactions` | ✅ COMPLIANT |
+| Legacy `payment_method` Compatibility | Legacy-only client compatibility | `go test ./internal/handlers/expenses ./internal/handlers/incomes ./internal/handlers/imports` | ✅ COMPLIANT |
+| Container and Instrument Management UX | Deactivate referenced instrument | `go test ./internal/handlers/payment_containers`; frontend management tests in full `npm test` | ✅ COMPLIANT |
+| Transaction Form Selection Behavior | Optional form selection | Full `npm test` includes form/runtime coverage; typecheck passed | ✅ COMPLIANT |
+| Activity and Transaction Detail Display | Display fallback precedence | `go test ./internal/handlers/activity`, `npm test` payment context/runtime tests | ✅ COMPLIANT |
+| Mini Breakdown by Money Location | Mixed migrated and unmigrated data | `backend/internal/handlers/dashboard/summary_test.go`; `frontend/src/features/dashboard/Dashboard.test.ts` | ✅ COMPLIANT |
+| Importer Backward Compatibility | Unknown medium still validated by legacy rules | `backend/internal/handlers/imports/preview_test.go`, `commit_test.go`; focused/full backend tests | ✅ COMPLIANT |
+| Explicit V1 Non-Goals | Out-of-scope report request | Proposal/tasks/apply-progress keep transfers, recurring payment context, detailed reports, card balances out of scope; no implementation claims support | ✅ COMPLIANT |
+| Payment Context Labels Preserve Money Formatting Rules | Supplemental context on mismatched currency row | Full frontend tests include money display/runtime coverage; backend activity tests passed | ✅ COMPLIANT |
+| Payment Context Labels Preserve Money Formatting Rules | Legacy fallback still compatible | `paymentMethod.runtime.test.ts`, `paymentContext.runtime.test.ts`, backend activity tests | ✅ COMPLIANT |
 
-**Compliance summary**: 6 compliant, 0 partial, 0 failing, 0 untested for the hardening scope.
+**Compliance summary**: 13/13 scenarios compliant.
 
 ## Correctness (Static Evidence)
 
 | Requirement | Status | Notes |
 |------------|--------|-------|
-| Preserve inactive state on edit | ✅ Implemented | `getContainerFormSubmission` and `getInstrumentFormSubmission` no longer add implicit `is_active: true` for inactive existing entities. |
-| Inactive backing container editable | ✅ Implemented | `InstrumentForm` receives all containers and filters to active containers plus the instrument’s existing backing container. |
-| Spanish/navigation/account clarity | ✅ Implemented | `es/navigation.json` uses “Lugares y medios” and page copy explains where money is held and how it moves. |
-| Transaction/activity clarity | ✅ Implemented | Expense/income table headers now say “Lugar / medio”; activity label now prefixes `Lugar/medio`. |
-| Scope guard | ✅ Preserved | Tracked diff contains no backend, importer, dashboard, recurring, or transfer implementation files. |
+| Importer compatibility | ✅ Implemented | `loadPaymentContextCatalog` loads active containers/instruments; `resolveImportPaymentContext` returns refs only when normalized raw medium has exactly one match. Legacy alias validation remains through `paymentMethodAliases`. |
+| No unsafe alias inference | ✅ Implemented | Normalized refs are not inferred from payment-method alias families; ambiguous duplicate names and unknown media return nil refs. |
+| Import persistence | ✅ Implemented | `insertImportedRow` writes source/destination normalized refs alongside legacy `payment_method` and import fingerprint. |
+| Dashboard backend `money_by_container` | ✅ Implemented | Summary query unions income and expense normalized movements, groups null refs as unassigned, builds percentages, sorts by total. |
+| Dashboard frontend display | ✅ Implemented | Typed `MoneyByContainer`; dashboard card and insights consume mapped items; optional missing backend field returns empty list. |
+| Tasks finality | ✅ Implemented | All task checkboxes complete; explicit future/non-scope items are not blockers. |
 
 ## Coherence (Design)
 
 | Decision | Followed? | Notes |
 |----------|-----------|-------|
-| Compatibility bridge | ✅ Yes | Legacy payment method fallback remains; only label clarity changed. |
-| Frontend patterns | ✅ Yes | Reuses TanStack hooks, existing i18n JSON namespaces, forms, and helper extraction pattern. |
-| Review-safe slicing | ✅ Yes | Hardening is frontend-only and avoids PR5/backend work. |
-| Strict TDD process | ⚠️ Deviated | Apply honestly reports RED-first ordering was not preserved for this slice. |
+| Add normalized layer beside legacy `payment_method` | ✅ Yes | Importer writes additive refs without removing legacy method. |
+| Optional single refs | ✅ Yes | Existing transaction validation/tests remain green. |
+| Card backing rule | ✅ Yes | Prior/backend tests remain green; importer backs instruments with backing container when deterministic. |
+| Compatibility and display precedence | ✅ Yes | Legacy aliases and fallback labels are preserved. |
+| Import fallback safety | ✅ Yes | Exact unique active name match only; unresolved/ambiguous remains legacy-only. |
+| Dashboard compact breakdown | ✅ Yes | `money_by_container` includes unassigned bucket and frontend rendering. |
+| Non-goals | ✅ Yes | Recurring payment context and transfers remain explicit future scope/non-scope. |
 
 ## Issues Found
 
 **CRITICAL**: None.
 
 **WARNING**:
-- Strict TDD process deviation: the post-PR4 hardening fixes were implemented before new/adjusted tests, so RED-first evidence is missing for this slice.
-- No DOM/RTL dependency is configured; the inactive backing-container edit affordance is verified via source assertion plus static inspection rather than actual DOM interaction.
-- Initial `npm run build` timed out at 120s; rerun with 300s passed. Existing Vite dynamic-import/chunk-size warnings remain.
-- Focused ESLint on JSON locale files reports ignore warnings because current ESLint config does not apply to JSON files; TS/TSX lint passed.
-- Out-of-scope untracked `branding/` and spreadsheet artifacts remain in the working tree.
+- `npm run build` passes with known Vite warnings: dynamic import/static import overlap for `i18next`, and chunk size over 500 kB.
+- `npm test` focused/full suites pass but print existing i18next debug/locize advisory output.
+- Non-gating `npm run lint` fails project-wide on existing unrelated/generated files and legacy lint debt; focused ESLint on PR5 dashboard files passes cleanly.
+- Build initially hit the 120s verification command timeout during transform; rerun with 300s completed successfully in ~1m18s.
 
 **SUGGESTION**:
-- Add DOM/RTL tooling later to cover management form editing through real user interactions.
-- Keep recurring payment context, transfers, importer compatibility, and dashboard money-by-container breakdown for explicit future slices.
+- Add a lint ignore/config cleanup for generated `dev-dist`/workbox artifacts and track existing lint debt separately so full-project lint can become a reliable release gate.
+- Consider a future coverage command/threshold for SDD verify, especially for changed backend helpers and dashboard frontend mapping.
 
-## Verdict
+## Final Verdict
 
-PASS WITH WARNINGS — hardening behavior, typecheck, build, focused TS/TSX ESLint, and diff scope checks pass. The blocking behavior is correct for this scope, but strict TDD RED-first ordering was not preserved and frontend DOM-level coverage remains unavailable.
+PASS WITH WARNINGS — PR5 and the full `payment-containers` feature meet the approved SDD scope, with all required test/type/build commands passing and no critical issues found. Remaining warnings are non-blocking process/build/lint-noise items outside the PR5 behavioral contract.

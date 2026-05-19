@@ -53,8 +53,8 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Importer, Dashboard, and Verification
 
-- [ ] 4.1 Update `backend/internal/handlers/imports/{mapping.go,commit.go,types.go}` to keep alias behavior and optionally attach deterministic normalized refs only when safe.
-- [ ] 4.2 Update `backend/internal/handlers/dashboard/summary.go` and `frontend/src/features/dashboard/{Dashboard.tsx,InsightsCard.tsx}` plus `frontend/src/hooks/useDashboard.ts` for `money_by_container` including `unassigned` bucket.
-- [ ] 4.3 Backend tests: add/extend `backend/internal/handlers/{expenses,incomes}/payment_method_test.go`, `backend/internal/handlers/imports/{preview_test.go,commit_test.go}`, `backend/internal/handlers/dashboard/summary_test.go`, and new payment-container handler tests.
-- [ ] 4.4 Frontend tests: extend `frontend/src/features/paymentMethod.runtime.test.ts`, `frontend/src/features/dashboard/Dashboard.test.ts`, and add tests for `ExpenseForm.tsx`/`IncomeForm.tsx` optional selection behavior.
-- [ ] 4.5 Verification run: `go test ./...` in `backend/` and `npm test` + `npm run build` in `frontend/`; confirm all spec scenarios (legacy-only create, split rejection, card backing rule, fallback labels, unassigned breakdown).
+- [x] 4.1 Update `backend/internal/handlers/imports/{mapping.go,commit.go,types.go}` to keep alias behavior and optionally attach deterministic normalized refs only when safe.
+- [x] 4.2 Update `backend/internal/handlers/dashboard/summary.go` and `frontend/src/features/dashboard/{Dashboard.tsx,InsightsCard.tsx}` plus `frontend/src/hooks/useDashboard.ts` for `money_by_container` including `unassigned` bucket.
+- [x] 4.3 Backend tests: add/extend `backend/internal/handlers/{expenses,incomes}/payment_method_test.go`, `backend/internal/handlers/imports/{preview_test.go,commit_test.go}`, `backend/internal/handlers/dashboard/summary_test.go`, and new payment-container handler tests.
+- [x] 4.4 Frontend tests: extend `frontend/src/features/paymentMethod.runtime.test.ts`, `frontend/src/features/dashboard/Dashboard.test.ts`, and preserve PR4 coverage for `ExpenseForm.tsx`/`IncomeForm.tsx` optional selection behavior.
+- [x] 4.5 Verification run: `go test ./...` in `backend/` and `npm test` + `npm run build` in `frontend/`; confirm all spec scenarios (legacy-only create, split rejection, card backing rule, fallback labels, unassigned breakdown).

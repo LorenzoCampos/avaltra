@@ -17,6 +17,7 @@ import { InsightsCard } from './InsightsCard';
 import { getDashboardErrorMessage } from './dashboardErrorMessage';
 import { getDashboardCardAmounts } from './dashboardSummaryCards';
 import { getDashboardCurrency } from './dashboardCurrency';
+import { getDashboardMoneyByContainerItems } from './dashboardMoneyByContainer';
 import type { Currency } from '@/schemas/account.schema';
 
 export const Dashboard = () => {
@@ -127,6 +128,7 @@ export const Dashboard = () => {
     period,
     primary_currency,
     expenses_by_category,
+    money_by_container,
     top_expenses,
     recent_transactions,
   } = dashboard || {};
@@ -134,6 +136,7 @@ export const Dashboard = () => {
   const { currentAvailableBalance, totalExpenses, totalIncome } = getDashboardCardAmounts(dashboard);
 
   const primaryCurrency = getDashboardCurrency(primary_currency, activeAccount.currency as Currency);
+  const moneyByContainerItems = getDashboardMoneyByContainerItems(money_by_container, t('moneyByContainer.unassigned'));
 
   return (
     <div className="space-y-6">
@@ -201,6 +204,44 @@ export const Dashboard = () => {
       <FeatureErrorBoundary featureName="Monthly Insights">
         <InsightsCard />
       </FeatureErrorBoundary>
+
+      {moneyByContainerItems.length > 0 && (
+        <FeatureErrorBoundary featureName="Money by Container">
+          <Card className="animate-slide-up animation-delay-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {t('moneyByContainer.title')}
+                <InfoTooltip content={t('tooltips.moneyByContainer')} />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {moneyByContainerItems.map((item) => (
+                  <div key={item.key}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {item.label}
+                      </span>
+                      <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
+                        {formatMoney(item.total, primaryCurrency)}
+                        <span className="text-gray-500 dark:text-gray-400 ml-2">({item.percentage.toFixed(1)}%)</span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${
+                          item.isUnassigned ? 'bg-gray-400 dark:bg-gray-500' : 'bg-blue-500 dark:bg-blue-400'
+                        }`}
+                        style={{ width: `${Math.min(item.percentage, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </FeatureErrorBoundary>
+      )}
 
       {/* Quick Actions - Hidden but exists for tour */}
       <div data-tour="quick-actions" className="grid grid-cols-1 md:grid-cols-2 gap-4">

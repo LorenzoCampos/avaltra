@@ -36,6 +36,15 @@ export interface UpcomingRecurringSummary {
   items: UpcomingRecurringItem[];
 }
 
+export interface MoneyByContainer {
+  container_id: string | null;
+  name: string;
+  type: 'bank' | 'wallet' | 'cash' | 'other' | null;
+  total: number;
+  percentage: number;
+  is_unassigned: boolean;
+}
+
 export interface DashboardSummary {
   period: string; // YYYY-MM
   primary_currency: string;
@@ -48,4 +57,5 @@ export interface DashboardSummary {
   top_expenses: Expense[];
   recent_transactions: Transaction[];
   upcoming_recurring: UpcomingRecurringSummary;
+  money_by_container?: MoneyByContainer[];
 }

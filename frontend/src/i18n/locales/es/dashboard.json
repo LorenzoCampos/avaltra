@@ -45,6 +45,8 @@
     "versus": "{{current}} vs {{previous}}",
     "topCategory": "Categoría principal: {{name}}",
     "categoryPercentage": "{{amount}} ({{percent}}% de los gastos)",
+    "topContainer": "Mayor saldo por lugar: {{name}}",
+    "containerPercentage": "{{amount}} ({{percent}}% del saldo distribuido)",
     "savingsGoal": "Ahorro: {{name}}",
     "savingsProgress": "{{current}} / {{target}} ({{percent}}%)",
     "savingsAlmostThere": "¡Ya casi llegás!",
@@ -56,6 +58,10 @@
     "inDays": "En {{count}} días",
     "noUpcoming": "No hay gastos recurrentes en los próximos 7 días",
     "noInsights": "Agregá algunas transacciones para ver tus insights"
+  },
+  "moneyByContainer": {
+    "title": "Dinero por lugar",
+    "unassigned": "Sin asignar"
   },
   
   "expensesByCategory": "Gastos por Categoría",
@@ -77,6 +83,7 @@
     "expenses": "Son todos los gastos que registraste este mes. Incluye compras, servicios, y cualquier dinero que hayas gastado.",
     "income": "Son los ingresos que registraste este mes. Puede ser tu sueldo, un trabajo extra, o cualquier dinero que hayas recibido.",
     "expensesByCategory": "Acá podés ver en qué categorías gastás más plata. Te ayuda a identificar dónde podés ahorrar.",
+    "moneyByContainer": "Muestra el saldo histórico agrupado por lugar de dinero. Las transacciones sin lugar normalizado aparecen como Sin asignar.",
     "recentTransactions": "Tu actividad más reciente. Acá aparecen los últimos gastos e ingresos que registraste.",
     "account": "Una 'cuenta' es como una billetera virtual donde organizás tu plata. Podés tener varias cuentas para diferentes propósitos (ej: Personal, Familia, Ahorros)."
   }

@@ -4,59 +4,64 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/internal/transactions"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/LorenzoCampos/avaltra/internal/middleware"
-	"github.com/LorenzoCampos/avaltra/pkg/logger"
 )
 
 // CreateRecurringIncomeRequest representa el JSON para crear un ingreso recurrente
 type CreateRecurringIncomeRequest struct {
-	Description       string   `json:"description" binding:"required"`
-	Amount            float64  `json:"amount" binding:"required,gt=0"`
-	Currency          string   `json:"currency" binding:"required,oneof=ARS USD EUR"`
-	CategoryID        *string  `json:"category_id"`
-	FamilyMemberID    *string  `json:"family_member_id"`
-	
+	Description    string  `json:"description" binding:"required"`
+	Amount         float64 `json:"amount" binding:"required,gt=0"`
+	Currency       string  `json:"currency" binding:"required,oneof=ARS USD EUR"`
+	CategoryID     *string `json:"category_id"`
+	FamilyMemberID *string `json:"family_member_id"`
+
 	// Recurrence configuration
-	RecurrenceFrequency   string `json:"recurrence_frequency" binding:"required,oneof=daily weekly monthly yearly"`
-	RecurrenceInterval    int    `json:"recurrence_interval" binding:"omitempty,gt=0"`
-	RecurrenceDayOfMonth  *int   `json:"recurrence_day_of_month" binding:"omitempty,gte=1,lte=31"`
-	RecurrenceDayOfWeek   *int   `json:"recurrence_day_of_week" binding:"omitempty,gte=0,lte=6"`
-	
+	RecurrenceFrequency  string `json:"recurrence_frequency" binding:"required,oneof=daily weekly monthly yearly"`
+	RecurrenceInterval   int    `json:"recurrence_interval" binding:"omitempty,gt=0"`
+	RecurrenceDayOfMonth *int   `json:"recurrence_day_of_month" binding:"omitempty,gte=1,lte=31"`
+	RecurrenceDayOfWeek  *int   `json:"recurrence_day_of_week" binding:"omitempty,gte=0,lte=6"`
+
 	// Time boundaries
-	StartDate         string  `json:"start_date" binding:"required"` // YYYY-MM-DD
-	EndDate           *string `json:"end_date"`                      // YYYY-MM-DD (nullable)
-	TotalOccurrences  *int    `json:"total_occurrences" binding:"omitempty,gt=0"`
-	
+	StartDate        string  `json:"start_date" binding:"required"` // YYYY-MM-DD
+	EndDate          *string `json:"end_date"`                      // YYYY-MM-DD (nullable)
+	TotalOccurrences *int    `json:"total_occurrences" binding:"omitempty,gt=0"`
+
 	// Multi-currency (optional)
-	ExchangeRate              *float64 `json:"exchange_rate,omitempty"`
-	AmountInPrimaryCurrency   *float64 `json:"amount_in_primary_currency,omitempty"`
+	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`
+	AmountInPrimaryCurrency *float64 `json:"amount_in_primary_currency,omitempty"`
+	DestinationContainerID  *string  `json:"destination_container_id"`
+	DestinationInstrumentID *string  `json:"destination_instrument_id"`
 }
 
 // CreateRecurringIncomeResponse representa la respuesta después de crear
 type CreateRecurringIncomeResponse struct {
-	ID                        string   `json:"id"`
-	AccountID                 string   `json:"account_id"`
-	Description               string   `json:"description"`
-	Amount                    float64  `json:"amount"`
-	Currency                  string   `json:"currency"`
-	CategoryID                *string  `json:"category_id,omitempty"`
-	CategoryName              *string  `json:"category_name,omitempty"`
-	FamilyMemberID            *string  `json:"family_member_id,omitempty"`
-	FamilyMemberName          *string  `json:"family_member_name,omitempty"`
-	RecurrenceFrequency       string   `json:"recurrence_frequency"`
-	RecurrenceInterval        int      `json:"recurrence_interval"`
-	RecurrenceDayOfMonth      *int     `json:"recurrence_day_of_month,omitempty"`
-	RecurrenceDayOfWeek       *int     `json:"recurrence_day_of_week,omitempty"`
-	StartDate                 string   `json:"start_date"`
-	EndDate                   *string  `json:"end_date,omitempty"`
-	TotalOccurrences          *int     `json:"total_occurrences,omitempty"`
-	CurrentOccurrence         int      `json:"current_occurrence"`
-	ExchangeRate              *float64 `json:"exchange_rate,omitempty"`
-	AmountInPrimaryCurrency   *float64 `json:"amount_in_primary_currency,omitempty"`
-	IsActive                  bool     `json:"is_active"`
-	CreatedAt                 string   `json:"created_at"`
+	ID                      string   `json:"id"`
+	AccountID               string   `json:"account_id"`
+	Description             string   `json:"description"`
+	Amount                  float64  `json:"amount"`
+	Currency                string   `json:"currency"`
+	CategoryID              *string  `json:"category_id,omitempty"`
+	CategoryName            *string  `json:"category_name,omitempty"`
+	FamilyMemberID          *string  `json:"family_member_id,omitempty"`
+	FamilyMemberName        *string  `json:"family_member_name,omitempty"`
+	RecurrenceFrequency     string   `json:"recurrence_frequency"`
+	RecurrenceInterval      int      `json:"recurrence_interval"`
+	RecurrenceDayOfMonth    *int     `json:"recurrence_day_of_month,omitempty"`
+	RecurrenceDayOfWeek     *int     `json:"recurrence_day_of_week,omitempty"`
+	StartDate               string   `json:"start_date"`
+	EndDate                 *string  `json:"end_date,omitempty"`
+	TotalOccurrences        *int     `json:"total_occurrences,omitempty"`
+	CurrentOccurrence       int      `json:"current_occurrence"`
+	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`
+	AmountInPrimaryCurrency *float64 `json:"amount_in_primary_currency,omitempty"`
+	DestinationContainerID  *string  `json:"destination_container_id"`
+	DestinationInstrumentID *string  `json:"destination_instrument_id"`
+	IsActive                bool     `json:"is_active"`
+	CreatedAt               string   `json:"created_at"`
 }
 
 // CreateRecurringIncome maneja POST /api/recurring-expenses
@@ -108,7 +113,7 @@ func CreateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 				})
 				return
 			}
-			
+
 			// end_date debe ser >= start_date
 			if parsed.Before(startDate) {
 				c.JSON(http.StatusBadRequest, gin.H{
@@ -116,7 +121,7 @@ func CreateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 				})
 				return
 			}
-			
+
 			endDate = &parsed
 		}
 
@@ -149,6 +154,11 @@ func CreateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "recurrence_day_of_month solo aplica a frequency=monthly/yearly",
 			})
+			return
+		}
+
+		if err := transactions.ValidateActivePaymentContext(ctx, pool, accountID, transactions.PaymentContextValidationInput{ContainerID: req.DestinationContainerID, InstrumentID: req.DestinationInstrumentID, ContainerField: "destination_container_id", InstrumentField: "destination_instrument_id"}); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -241,8 +251,8 @@ func CreateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 				account_id, description, amount, currency, category_id, family_member_id,
 				recurrence_frequency, recurrence_interval, recurrence_day_of_month, recurrence_day_of_week,
 				start_date, end_date, total_occurrences,
-				exchange_rate, amount_in_primary_currency
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+				exchange_rate, amount_in_primary_currency, destination_container_id, destination_instrument_id
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 			RETURNING id, current_occurrence, is_active, created_at
 		`
 
@@ -269,6 +279,8 @@ func CreateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 			req.TotalOccurrences,
 			exchangeRate,
 			amountInPrimaryCurrency,
+			req.DestinationContainerID,
+			req.DestinationInstrumentID,
 		).Scan(&recurringID, &currentOccurrence, &isActive, &createdAt)
 
 		if err != nil {
@@ -304,13 +316,13 @@ func CreateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 		// Log de creación exitosa
 		logger.Info("recurring_expense.created", "Ingreso recurrente creado", map[string]interface{}{
 			"recurring_income_id": recurringID,
-			"account_id":           accountID,
-			"user_id":              userID,
-			"description":          req.Description,
-			"frequency":            req.RecurrenceFrequency,
-			"amount":               req.Amount,
-			"currency":             req.Currency,
-			"ip":                   c.ClientIP(),
+			"account_id":          accountID,
+			"user_id":             userID,
+			"description":         req.Description,
+			"frequency":           req.RecurrenceFrequency,
+			"amount":              req.Amount,
+			"currency":            req.Currency,
+			"ip":                  c.ClientIP(),
 		})
 
 		// Retornar respuesta
@@ -334,13 +346,15 @@ func CreateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 			CurrentOccurrence:       currentOccurrence,
 			ExchangeRate:            &exchangeRate,
 			AmountInPrimaryCurrency: &amountInPrimaryCurrency,
+			DestinationContainerID:  req.DestinationContainerID,
+			DestinationInstrumentID: req.DestinationInstrumentID,
 			IsActive:                isActive,
 			CreatedAt:               createdAt.Format(time.RFC3339),
 		}
 
 		c.JSON(http.StatusCreated, gin.H{
-			"message":           "Ingreso recurrente creado exitosamente",
-			"recurring_expense": response,
+			"message":          "Ingreso recurrente creado exitosamente",
+			"recurring_income": response,
 		})
 	}
 }

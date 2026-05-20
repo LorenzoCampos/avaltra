@@ -29,6 +29,8 @@ type RecurringExpenseTemplate struct {
 	CurrentOccurrence       int
 	ExchangeRate            *float64
 	AmountInPrimaryCurrency *float64
+	SourceContainerID       *string
+	SourceInstrumentID      *string
 }
 
 // GenerateDailyRecurringExpenses genera gastos recurrentes para el día de hoy
@@ -173,7 +175,8 @@ func getTemplatesForToday(pool *pgxpool.Pool, ctx context.Context, today time.Ti
 			recurrence_day_of_month, recurrence_day_of_week,
 			start_date, end_date,
 			total_occurrences, current_occurrence,
-			exchange_rate, amount_in_primary_currency
+			exchange_rate, amount_in_primary_currency,
+			source_container_id, source_instrument_id
 		FROM recurring_expenses
 		WHERE is_active = true
 		  AND start_date <= $1
@@ -201,6 +204,7 @@ func getTemplatesForToday(pool *pgxpool.Pool, ctx context.Context, today time.Ti
 			&startDate, &endDate,
 			&t.TotalOccurrences, &t.CurrentOccurrence,
 			&t.ExchangeRate, &t.AmountInPrimaryCurrency,
+			&t.SourceContainerID, &t.SourceInstrumentID,
 		)
 		if err != nil {
 			return nil, err
@@ -274,8 +278,9 @@ func generateExpenseFromTemplate(pool *pgxpool.Pool, ctx context.Context, t Recu
 			exchange_rate, amount_in_primary_currency,
 			expense_type, date,
 			recurring_expense_id,
+			source_container_id, source_instrument_id,
 			created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
 		RETURNING id
 	`
 
@@ -306,6 +311,8 @@ func generateExpenseFromTemplate(pool *pgxpool.Pool, ctx context.Context, t Recu
 		"recurring", // expense_type
 		expenseDate,
 		t.ID, // recurring_expense_id (FK al template)
+		t.SourceContainerID,
+		t.SourceInstrumentID,
 	).Scan(&expenseID)
 
 	if err != nil {

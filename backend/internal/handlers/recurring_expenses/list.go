@@ -28,6 +28,8 @@ type RecurringExpenseListItem struct {
 	IsActive                bool     `json:"is_active"`
 	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`
 	AmountInPrimaryCurrency *float64 `json:"amount_in_primary_currency,omitempty"`
+	SourceContainerID       *string  `json:"source_container_id"`
+	SourceInstrumentID      *string  `json:"source_instrument_id"`
 	CreatedAt               string   `json:"created_at"`
 }
 
@@ -82,6 +84,8 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 				re.is_active,
 				re.exchange_rate,
 				re.amount_in_primary_currency,
+				re.source_container_id,
+				re.source_instrument_id,
 				re.created_at
 			FROM recurring_expenses re
 			LEFT JOIN expense_categories ec ON re.category_id = ec.id
@@ -135,7 +139,7 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 
 		for rows.Next() {
 			var item RecurringExpenseListItem
-			var categoryName, familyMemberName *string
+			var categoryName, familyMemberName, sourceContainerID, sourceInstrumentID *string
 			var dayOfMonth, dayOfWeek, totalOccurrences *int
 			var exchangeRate, amountInPrimaryCurrency *float64
 			var startDate, endDate, createdAt interface{}
@@ -158,6 +162,8 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 				&item.IsActive,
 				&exchangeRate,
 				&amountInPrimaryCurrency,
+				&sourceContainerID,
+				&sourceInstrumentID,
 				&createdAt,
 			)
 
@@ -177,6 +183,8 @@ func ListRecurringExpenses(pool *pgxpool.Pool) gin.HandlerFunc {
 			item.TotalOccurrences = totalOccurrences
 			item.ExchangeRate = exchangeRate
 			item.AmountInPrimaryCurrency = amountInPrimaryCurrency
+			item.SourceContainerID = sourceContainerID
+			item.SourceInstrumentID = sourceInstrumentID
 
 			// Convertir dates a string
 			if startDate != nil {

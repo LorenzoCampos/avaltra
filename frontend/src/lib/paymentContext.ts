@@ -5,6 +5,8 @@ import type { PaymentContext, CreateExpenseRequest } from '@/types/expense';
 import type { CreateIncomeRequest } from '@/types/income';
 import type { PaymentInstrument } from '@/types/paymentInstrument';
 import type { PaymentMethod } from '@/types/paymentMethod';
+import type { RecurringExpenseFormData } from '@/types/recurringExpense';
+import type { RecurringIncomeFormData } from '@/types/recurringIncome';
 
 export const normalizeOptionalUuid = (value: unknown) => (value === '' ? undefined : value);
 
@@ -81,6 +83,47 @@ export function withIncomePaymentContext(
   instruments?: PaymentInstrument[],
   existing?: ExistingPaymentContextIds,
 ): CreateIncomeRequest {
+  const editableData = withIncomeEditClearing(data, existing);
+  const { containerId, instrumentId } = resolvePaymentContextSelection({
+    containerId: editableData.destination_container_id,
+    instrumentId: editableData.destination_instrument_id,
+    instruments,
+  });
+
+  return {
+    ...editableData,
+    destination_container_id: containerId,
+    destination_instrument_id: instrumentId,
+  };
+}
+
+type RecurringExpensePaymentContext = Partial<Pick<RecurringExpenseFormData, 'source_container_id' | 'source_instrument_id'>>;
+type RecurringIncomePaymentContext = Partial<Pick<RecurringIncomeFormData, 'destination_container_id' | 'destination_instrument_id'>>;
+
+export function withRecurringExpensePaymentContext<T extends RecurringExpensePaymentContext & Record<string, unknown>>(
+  data: T,
+  instruments?: PaymentInstrument[],
+  existing?: ExistingPaymentContextIds,
+): T {
+  const editableData = withEditClearing(data, existing);
+  const { containerId, instrumentId } = resolvePaymentContextSelection({
+    containerId: editableData.source_container_id,
+    instrumentId: editableData.source_instrument_id,
+    instruments,
+  });
+
+  return {
+    ...editableData,
+    source_container_id: containerId,
+    source_instrument_id: instrumentId,
+  };
+}
+
+export function withRecurringIncomePaymentContext<T extends RecurringIncomePaymentContext & Record<string, unknown>>(
+  data: T,
+  instruments?: PaymentInstrument[],
+  existing?: ExistingPaymentContextIds,
+): T {
   const editableData = withIncomeEditClearing(data, existing);
   const { containerId, instrumentId } = resolvePaymentContextSelection({
     containerId: editableData.destination_container_id,

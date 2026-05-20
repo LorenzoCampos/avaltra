@@ -10,29 +10,31 @@ import (
 
 // RecurringIncomeDetail representa el detalle completo de un ingreso recurrente
 type RecurringIncomeDetail struct {
-	ID                        string   `json:"id"`
-	AccountID                 string   `json:"account_id"`
-	Description               string   `json:"description"`
-	Amount                    float64  `json:"amount"`
-	Currency                  string   `json:"currency"`
-	CategoryID                *string  `json:"category_id,omitempty"`
-	CategoryName              *string  `json:"category_name,omitempty"`
-	FamilyMemberID            *string  `json:"family_member_id,omitempty"`
-	FamilyMemberName          *string  `json:"family_member_name,omitempty"`
-	RecurrenceFrequency       string   `json:"recurrence_frequency"`
-	RecurrenceInterval        int      `json:"recurrence_interval"`
-	RecurrenceDayOfMonth      *int     `json:"recurrence_day_of_month,omitempty"`
-	RecurrenceDayOfWeek       *int     `json:"recurrence_day_of_week,omitempty"`
-	StartDate                 string   `json:"start_date"`
-	EndDate                   *string  `json:"end_date,omitempty"`
-	TotalOccurrences          *int     `json:"total_occurrences,omitempty"`
-	CurrentOccurrence         int      `json:"current_occurrence"`
-	ExchangeRate              *float64 `json:"exchange_rate,omitempty"`
-	AmountInPrimaryCurrency   *float64 `json:"amount_in_primary_currency,omitempty"`
-	IsActive                  bool     `json:"is_active"`
-	CreatedAt                 string   `json:"created_at"`
-	UpdatedAt                 string   `json:"updated_at"`
-	GeneratedExpensesCount    int      `json:"generated_expenses_count"` // Cuántos gastos se generaron
+	ID                      string   `json:"id"`
+	AccountID               string   `json:"account_id"`
+	Description             string   `json:"description"`
+	Amount                  float64  `json:"amount"`
+	Currency                string   `json:"currency"`
+	CategoryID              *string  `json:"category_id,omitempty"`
+	CategoryName            *string  `json:"category_name,omitempty"`
+	FamilyMemberID          *string  `json:"family_member_id,omitempty"`
+	FamilyMemberName        *string  `json:"family_member_name,omitempty"`
+	RecurrenceFrequency     string   `json:"recurrence_frequency"`
+	RecurrenceInterval      int      `json:"recurrence_interval"`
+	RecurrenceDayOfMonth    *int     `json:"recurrence_day_of_month,omitempty"`
+	RecurrenceDayOfWeek     *int     `json:"recurrence_day_of_week,omitempty"`
+	StartDate               string   `json:"start_date"`
+	EndDate                 *string  `json:"end_date,omitempty"`
+	TotalOccurrences        *int     `json:"total_occurrences,omitempty"`
+	CurrentOccurrence       int      `json:"current_occurrence"`
+	ExchangeRate            *float64 `json:"exchange_rate,omitempty"`
+	AmountInPrimaryCurrency *float64 `json:"amount_in_primary_currency,omitempty"`
+	DestinationContainerID  *string  `json:"destination_container_id"`
+	DestinationInstrumentID *string  `json:"destination_instrument_id"`
+	IsActive                bool     `json:"is_active"`
+	CreatedAt               string   `json:"created_at"`
+	UpdatedAt               string   `json:"updated_at"`
+	GeneratedExpensesCount  int      `json:"generated_expenses_count"` // Cuántos gastos se generaron
 }
 
 // GetRecurringIncome maneja GET /api/recurring-expenses/:id
@@ -73,6 +75,8 @@ func GetRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 				re.current_occurrence,
 				re.exchange_rate,
 				re.amount_in_primary_currency,
+				re.destination_container_id,
+				re.destination_instrument_id,
 				re.is_active,
 				re.created_at,
 				re.updated_at
@@ -83,7 +87,7 @@ func GetRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 		`
 
 		var detail RecurringIncomeDetail
-		var categoryID, categoryName, familyMemberID, familyMemberName *string
+		var categoryID, categoryName, familyMemberID, familyMemberName, destinationContainerID, destinationInstrumentID *string
 		var dayOfMonth, dayOfWeek, totalOccurrences *int
 		var exchangeRate, amountInPrimaryCurrency *float64
 		var startDate, endDate, createdAt, updatedAt interface{}
@@ -108,6 +112,8 @@ func GetRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 			&detail.CurrentOccurrence,
 			&exchangeRate,
 			&amountInPrimaryCurrency,
+			&destinationContainerID,
+			&destinationInstrumentID,
 			&detail.IsActive,
 			&createdAt,
 			&updatedAt,
@@ -130,21 +136,23 @@ func GetRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 		detail.TotalOccurrences = totalOccurrences
 		detail.ExchangeRate = exchangeRate
 		detail.AmountInPrimaryCurrency = amountInPrimaryCurrency
-		
+		detail.DestinationContainerID = destinationContainerID
+		detail.DestinationInstrumentID = destinationInstrumentID
+
 		// Convertir dates a string
 		if startDate != nil {
 			detail.StartDate = fmt.Sprint(startDate)
 		}
-		
+
 		if endDate != nil {
 			endDateStr := fmt.Sprint(endDate)
 			detail.EndDate = &endDateStr
 		}
-		
+
 		if createdAt != nil {
 			detail.CreatedAt = fmt.Sprint(createdAt)
 		}
-		
+
 		if updatedAt != nil {
 			detail.UpdatedAt = fmt.Sprint(updatedAt)
 		}

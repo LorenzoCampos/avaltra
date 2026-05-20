@@ -18,6 +18,9 @@ import {
   useUpdateRecurringExpense 
 } from '@/hooks/useRecurringExpenses';
 import { useExpenseCategories, useFamilyMembers } from '@/hooks/useExpenses';
+import { usePaymentContainers } from '@/hooks/usePaymentContainers';
+import { usePaymentInstruments } from '@/hooks/usePaymentInstruments';
+import { withRecurringExpensePaymentContext } from '@/lib/paymentContext';
 import { useAccountStore } from '@/stores/account.store';
 import type { RecurrenceFrequency } from '@/types/recurringExpense';
 
@@ -36,6 +39,8 @@ const createRecurringExpenseSchema = (t: (key: string) => string) => z.object({
   end_date: z.string().nullable().optional(),
   total_occurrences: z.number().int().positive().nullable().optional(),
   amount_in_primary_currency: z.number().positive().nullable().optional(),
+  source_container_id: z.string().nullable().optional(),
+  source_instrument_id: z.string().nullable().optional(),
   is_active: z.boolean(),
 }).refine((data) => {
   // If monthly or yearly, require day_of_month
@@ -71,6 +76,8 @@ export const RecurringExpenseForm = () => {
   const { data: expenseData, isLoading: isLoadingExpense } = useRecurringExpense(id ?? '');
   const { data: categories, isLoading: isLoadingCategories } = useExpenseCategories();
   const { data: familyMembers, isLoading: isLoadingFamilyMembers } = useFamilyMembers();
+  const { data: containersData, isLoading: isLoadingContainers } = usePaymentContainers({ includeInactive: isEditing });
+  const { data: instrumentsData, isLoading: isLoadingInstruments } = usePaymentInstruments({ includeInactive: isEditing });
   const { mutate: createExpense, isPending: isCreating, isSuccess: createSuccess } = useCreateRecurringExpense();
   const { mutate: updateExpense, isPending: isUpdating, isSuccess: updateSuccess } = useUpdateRecurringExpense();
 
@@ -92,6 +99,8 @@ export const RecurringExpenseForm = () => {
       end_date: null,
       total_occurrences: null,
       amount_in_primary_currency: null,
+      source_container_id: null,
+      source_instrument_id: null,
       is_active: true,
     },
     mode: 'onChange',
@@ -117,6 +126,8 @@ export const RecurringExpenseForm = () => {
       setValue('start_date', expenseData.start_date);
       setValue('end_date', expenseData.end_date);
       setValue('total_occurrences', expenseData.total_occurrences);
+      setValue('source_container_id', expenseData.source_container_id ?? null);
+      setValue('source_instrument_id', expenseData.source_instrument_id ?? null);
       setValue('is_active', expenseData.is_active);
       
       // Load amount_in_primary_currency if it exists (for multi-currency expenses)
@@ -183,15 +194,26 @@ export const RecurringExpenseForm = () => {
       cleanedData.amount_in_primary_currency = null;
     }
 
+    const payload = withRecurringExpensePaymentContext(cleanedData, instrumentsData?.payment_instruments ?? [], isEditing ? {
+      containerId: expenseData?.source_container_id,
+      instrumentId: expenseData?.source_instrument_id,
+    } : undefined);
+
     if (isEditing && id) {
-      updateExpense({ id, ...cleanedData });
+      updateExpense({ id, ...payload });
     } else {
-      createExpense(cleanedData);
+      createExpense(payload);
     }
   };
 
   const categoryOptions = categories?.map(cat => ({ label: cat.name, value: cat.id })) || [];
   const memberOptions = familyMembers?.map(member => ({ label: member.name, value: member.id })) || [];
+  const containerOptions = (containersData?.payment_containers ?? [])
+    .filter((container) => container.is_active || container.id === expenseData?.source_container_id)
+    .map((container) => ({ label: container.is_active ? container.name : `${container.name} (inactive)`, value: container.id }));
+  const instrumentOptions = (instrumentsData?.payment_instruments ?? [])
+    .filter((instrument) => instrument.is_active || instrument.id === expenseData?.source_instrument_id)
+    .map((instrument) => ({ label: instrument.is_active ? instrument.name : `${instrument.name} (inactive)`, value: instrument.id }));
 
   const currencyOptions = [
     { label: t('common:currencies.ars'), value: 'ARS' },
@@ -221,7 +243,7 @@ export const RecurringExpenseForm = () => {
     return t('expenses.form.intervalHelper', { frequency: t(`expenses.frequency.${selectedFrequency}`) });
   };
 
-  if (isLoadingExpense || isLoadingCategories || isLoadingFamilyMembers) {
+  if (isLoadingExpense || isLoadingCategories || isLoadingFamilyMembers || isLoadingContainers || isLoadingInstruments) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="mb-4">
@@ -347,6 +369,21 @@ export const RecurringExpenseForm = () => {
                 disabled={isLoadingFamilyMembers}
               />
             )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Select
+                label="Payment container"
+                options={[{ label: 'No container', value: '' }, ...containerOptions]}
+                error={errors.source_container_id?.message}
+                {...register('source_container_id')}
+              />
+              <Select
+                label="Payment instrument"
+                options={[{ label: 'No instrument', value: '' }, ...instrumentOptions]}
+                error={errors.source_instrument_id?.message}
+                {...register('source_instrument_id')}
+              />
+            </div>
 
             {/* Recurrence Settings */}
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg space-y-4">

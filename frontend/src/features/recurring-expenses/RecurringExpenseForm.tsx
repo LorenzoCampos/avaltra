@@ -208,12 +208,13 @@ export const RecurringExpenseForm = () => {
 
   const categoryOptions = categories?.map(cat => ({ label: cat.name, value: cat.id })) || [];
   const memberOptions = familyMembers?.map(member => ({ label: member.name, value: member.id })) || [];
+  const inactiveSuffix = t('recurring:paymentContext.inactiveSuffix');
   const containerOptions = (containersData?.payment_containers ?? [])
     .filter((container) => container.is_active || container.id === expenseData?.source_container_id)
-    .map((container) => ({ label: container.is_active ? container.name : `${container.name} (inactive)`, value: container.id }));
+    .map((container) => ({ label: container.is_active ? container.name : `${container.name} ${inactiveSuffix}`, value: container.id }));
   const instrumentOptions = (instrumentsData?.payment_instruments ?? [])
     .filter((instrument) => instrument.is_active || instrument.id === expenseData?.source_instrument_id)
-    .map((instrument) => ({ label: instrument.is_active ? instrument.name : `${instrument.name} (inactive)`, value: instrument.id }));
+    .map((instrument) => ({ label: instrument.is_active ? instrument.name : `${instrument.name} ${inactiveSuffix}`, value: instrument.id }));
 
   const currencyOptions = [
     { label: t('common:currencies.ars'), value: 'ARS' },
@@ -372,14 +373,14 @@ export const RecurringExpenseForm = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
-                label="Payment container"
-                options={[{ label: 'No container', value: '' }, ...containerOptions]}
+                label={t('recurring:paymentContext.container')}
+                options={[{ label: t('recurring:paymentContext.noContainer'), value: '' }, ...containerOptions]}
                 error={errors.source_container_id?.message}
                 {...register('source_container_id')}
               />
               <Select
-                label="Payment instrument"
-                options={[{ label: 'No instrument', value: '' }, ...instrumentOptions]}
+                label={t('recurring:paymentContext.instrument')}
+                options={[{ label: t('recurring:paymentContext.noInstrument'), value: '' }, ...instrumentOptions]}
                 error={errors.source_instrument_id?.message}
                 {...register('source_instrument_id')}
               />

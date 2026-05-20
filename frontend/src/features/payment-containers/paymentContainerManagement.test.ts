@@ -97,13 +97,24 @@ describe('payment container management behavior', () => {
     expect(renderManagementPage()).toContain('No se pudieron cargar los lugares y medios de pago. Intentá de nuevo.');
   });
 
-  it('renders empty management lists without hiding the create forms', () => {
+  it('renders empty management lists with explicit create CTAs instead of always-open forms', () => {
     const html = renderManagementPage();
 
-    expect(html).toContain('Nuevo lugar');
-    expect(html).toContain('Nuevo medio');
+    expect(html).toContain('Agregar lugar');
+    expect(html).toContain('Agregar medio');
+    expect(html).not.toContain('<form');
     expect(html).toContain('Todavía no hay lugares cargados.');
     expect(html).toContain('Todavía no hay medios cargados.');
+  });
+
+  it('keeps create and edit forms behind panel state instead of rendering inline on page load', async () => {
+    const page = await readSource('features/payment-containers/PaymentContainersPage.tsx');
+
+    expect(page).toContain("setPanel({ type: 'container', mode: 'create' })");
+    expect(page).toContain("setPanel({ type: 'instrument', mode: 'create' })");
+    expect(page).toContain('activePanel');
+    expect(page).not.toContain('key={editingContainer?.id ??');
+    expect(page).not.toContain('key={editingInstrument?.id ??');
   });
 
   it('renders active and inactive containers and instruments with backing-container labels', () => {
@@ -137,7 +148,7 @@ describe('payment container management behavior', () => {
   });
 
   it('validates container submissions and trims names before create/update mutation payloads', () => {
-    expect(getContainerFormSubmission({ name: '   ', kind: 'bank' })).toEqual({ ok: false, error: 'Name is required' });
+    expect(getContainerFormSubmission({ name: '   ', kind: 'bank' })).toEqual({ ok: false, errorKey: 'paymentContainersPage.forms.validation.nameRequired' });
 
     expect(getContainerFormSubmission({ name: '  Main wallet  ', kind: 'wallet' })).toEqual({
       ok: true,
@@ -180,7 +191,7 @@ describe('payment container management behavior', () => {
 
     expect(getInstrumentFormSubmission({ name: 'Visa debit', kind: 'debit_card', backingContainerId: '' })).toEqual({
       ok: false,
-      error: 'Card instruments require a backing container',
+      errorKey: 'paymentContainersPage.forms.validation.backingRequired',
     });
 
     expect(getInstrumentFormSubmission({ name: '  Visa debit  ', kind: 'debit_card', backingContainerId: 'container-1' })).toEqual({
@@ -201,5 +212,33 @@ describe('payment container management behavior', () => {
     expect(page).toContain('usePaymentInstruments');
     expect(page).not.toContain('ExpenseForm');
     expect(page).not.toContain('IncomeForm');
+  });
+
+  it('keeps management validation and mutation fallback copy in locale resources', async () => {
+    const submissions = await readSource('features/payment-containers/formSubmissions.ts');
+    const containerHook = await readSource('hooks/usePaymentContainers.ts');
+    const instrumentHook = await readSource('hooks/usePaymentInstruments.ts');
+
+    expect(submissions).not.toContain('Name is required');
+    expect(submissions).not.toContain('Card instruments require a backing container');
+    expect(containerHook).toContain("t('paymentContainersPage.toasts.containerCreated')");
+    expect(containerHook).not.toContain('Payment container created');
+    expect(instrumentHook).toContain("t('paymentContainersPage.toasts.instrumentCreated')");
+    expect(instrumentHook).not.toContain('Payment instrument created');
+  });
+
+  it('localizes recurring payment context labels that were introduced with management polish', async () => {
+    const expenseForm = await readSource('features/recurring-expenses/RecurringExpenseForm.tsx');
+    const incomeForm = await readSource('features/recurring-incomes/RecurringIncomeForm.tsx');
+
+    expect(expenseForm).toContain("t('recurring:paymentContext.container')");
+    expect(expenseForm).toContain("t('recurring:paymentContext.noInstrument')");
+    expect(incomeForm).toContain("t('recurring:paymentContext.container')");
+    expect(incomeForm).not.toContain('label="Payment container"');
+    expect(incomeForm).not.toContain("label: 'No instrument'");
+    expect(expenseForm).toContain("t('recurring:paymentContext.inactiveSuffix')");
+    expect(incomeForm).toContain("t('recurring:paymentContext.inactiveSuffix')");
+    expect(expenseForm).not.toContain('(inactive)');
+    expect(incomeForm).not.toContain('(inactive)');
   });
 });

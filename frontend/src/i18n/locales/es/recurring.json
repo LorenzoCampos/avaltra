@@ -105,6 +105,13 @@
     "generatedTransactions": "Transacciones Generadas",
     "status": "Estado"
   },
+  "paymentContext": {
+    "container": "Lugar de pago",
+    "instrument": "Medio de pago",
+    "noContainer": "Sin lugar de pago",
+    "noInstrument": "Sin medio de pago",
+    "inactiveSuffix": "(inactivo)"
+  },
   "tooltips": {
     "recurring": "Los gastos/ingresos recurrentes se repiten automáticamente según la frecuencia que configures. Por ejemplo: alquiler mensual, sueldo quincenal, Netflix todos los meses.",
     "frequency": "¿Cada cuánto se repite? Diario (todos los días), Semanal (todas las semanas), Mensual (todos los meses), Anual (todos los años).",

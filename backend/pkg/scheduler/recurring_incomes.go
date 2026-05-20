@@ -5,29 +5,31 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // RecurringIncomeTemplate representa un template activo que puede generar ingresos
 type RecurringIncomeTemplate struct {
-	ID                        string
-	AccountID                 string
-	Description               string
-	Amount                    float64
-	Currency                  string
-	CategoryID                *string
-	FamilyMemberID            *string
-	RecurrenceFrequency       string
-	RecurrenceInterval        int
-	RecurrenceDayOfMonth      *int
-	RecurrenceDayOfWeek       *int
-	StartDate                 time.Time
-	EndDate                   *time.Time
-	TotalOccurrences          *int
-	CurrentOccurrence         int
-	ExchangeRate              *float64
-	AmountInPrimaryCurrency   *float64
+	ID                      string
+	AccountID               string
+	Description             string
+	Amount                  float64
+	Currency                string
+	CategoryID              *string
+	FamilyMemberID          *string
+	RecurrenceFrequency     string
+	RecurrenceInterval      int
+	RecurrenceDayOfMonth    *int
+	RecurrenceDayOfWeek     *int
+	StartDate               time.Time
+	EndDate                 *time.Time
+	TotalOccurrences        *int
+	CurrentOccurrence       int
+	ExchangeRate            *float64
+	AmountInPrimaryCurrency *float64
+	DestinationContainerID  *string
+	DestinationInstrumentID *string
 }
 
 // GenerateDailyRecurringIncomes genera ingresos recurrentes para el día de hoy
@@ -172,7 +174,8 @@ func getIncomeTemplatesForToday(pool *pgxpool.Pool, ctx context.Context, today t
 			recurrence_day_of_month, recurrence_day_of_week,
 			start_date, end_date,
 			total_occurrences, current_occurrence,
-			exchange_rate, amount_in_primary_currency
+			exchange_rate, amount_in_primary_currency,
+			destination_container_id, destination_instrument_id
 		FROM recurring_incomes
 		WHERE is_active = true
 		  AND start_date <= $1
@@ -200,6 +203,7 @@ func getIncomeTemplatesForToday(pool *pgxpool.Pool, ctx context.Context, today t
 			&startDate, &endDate,
 			&t.TotalOccurrences, &t.CurrentOccurrence,
 			&t.ExchangeRate, &t.AmountInPrimaryCurrency,
+			&t.DestinationContainerID, &t.DestinationInstrumentID,
 		)
 		if err != nil {
 			return nil, err
@@ -249,7 +253,7 @@ func shouldGenerateIncomeToday(t RecurringIncomeTemplate, today time.Time) bool 
 		if t.RecurrenceDayOfMonth == nil {
 			return false
 		}
-		
+
 		// Edge case: día 31 en meses cortos → último día del mes
 		targetDay := *t.RecurrenceDayOfMonth
 		lastDayOfMonth := time.Date(today.Year(), today.Month()+1, 0, 0, 0, 0, 0, time.UTC).Day()
@@ -325,8 +329,9 @@ func generateActualIncomeFromTemplate(pool *pgxpool.Pool, ctx context.Context, t
 			exchange_rate, amount_in_primary_currency,
 			income_type, date,
 			recurring_income_id,
+			destination_container_id, destination_instrument_id,
 			created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
 		RETURNING id
 	`
 
@@ -357,6 +362,8 @@ func generateActualIncomeFromTemplate(pool *pgxpool.Pool, ctx context.Context, t
 		"recurring", // income_type
 		incomeDate,
 		t.ID, // recurring_income_id (FK al template)
+		t.DestinationContainerID,
+		t.DestinationInstrumentID,
 	).Scan(&incomeID)
 
 	if err != nil {
@@ -366,11 +373,11 @@ func generateActualIncomeFromTemplate(pool *pgxpool.Pool, ctx context.Context, t
 	logger.Info("scheduler.income.generated", "Gasto generado desde template", map[string]interface{}{
 		"income_id":           incomeID,
 		"recurring_income_id": t.ID,
-		"account_id":           t.AccountID,
-		"description":          t.Description,
-		"amount":               t.Amount,
-		"currency":             t.Currency,
-		"date":                 incomeDate.Format("2006-01-02"),
+		"account_id":          t.AccountID,
+		"description":         t.Description,
+		"amount":              t.Amount,
+		"currency":            t.Currency,
+		"date":                incomeDate.Format("2006-01-02"),
 	})
 
 	return nil

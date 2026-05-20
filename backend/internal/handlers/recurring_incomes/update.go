@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/internal/transactions"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -28,8 +29,10 @@ type UpdateRecurringIncomeRequest struct {
 	IsActive             *bool    `json:"is_active"` // Para activar/desactivar
 
 	// Multi-currency (optional) - Para actualizar campos de conversión
-	ExchangeRate            *float64 `json:"exchange_rate" binding:"omitempty,gt=0"`
-	AmountInPrimaryCurrency *float64 `json:"amount_in_primary_currency" binding:"omitempty,gt=0"`
+	ExchangeRate            *float64                         `json:"exchange_rate" binding:"omitempty,gt=0"`
+	AmountInPrimaryCurrency *float64                         `json:"amount_in_primary_currency" binding:"omitempty,gt=0"`
+	DestinationContainerID  transactions.NullableStringField `json:"destination_container_id"`
+	DestinationInstrumentID transactions.NullableStringField `json:"destination_instrument_id"`
 }
 
 // UpdateRecurringIncome maneja PUT /api/recurring-expenses/:id
@@ -223,6 +226,41 @@ func UpdateRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 			updateFields = append(updateFields, "amount_in_primary_currency = $"+itoa(argCount))
 			args = append(args, *req.AmountInPrimaryCurrency)
 			argCount++
+		}
+
+		if req.DestinationContainerID.Set || req.DestinationInstrumentID.Set {
+			containerSet, containerID, instrumentSet, instrumentID, err := transactions.ResolvePaymentContextFinalPairForUpdate(ctx, pool, accountID, transactions.PaymentContextUpdateInput{
+				RecordTable:      "recurring_incomes",
+				RecordID:         recurringID,
+				ContainerColumn:  "destination_container_id",
+				InstrumentColumn: "destination_instrument_id",
+				ContainerField:   "destination_container_id",
+				InstrumentField:  "destination_instrument_id",
+				ContainerUpdate:  req.DestinationContainerID,
+				InstrumentUpdate: req.DestinationInstrumentID,
+			})
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			if containerSet {
+				if containerID == nil {
+					updateFields = append(updateFields, "destination_container_id = NULL")
+				} else {
+					updateFields = append(updateFields, "destination_container_id = $"+itoa(argCount))
+					args = append(args, *containerID)
+					argCount++
+				}
+			}
+			if instrumentSet {
+				if instrumentID == nil {
+					updateFields = append(updateFields, "destination_instrument_id = NULL")
+				} else {
+					updateFields = append(updateFields, "destination_instrument_id = $"+itoa(argCount))
+					args = append(args, *instrumentID)
+					argCount++
+				}
+			}
 		}
 
 		// Si no hay campos para actualizar

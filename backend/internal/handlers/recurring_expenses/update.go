@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/internal/transactions"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -28,8 +29,10 @@ type UpdateRecurringExpenseRequest struct {
 	IsActive             *bool    `json:"is_active"` // Para activar/desactivar
 
 	// Multi-currency (optional) - Para actualizar campos de conversión
-	ExchangeRate            *float64 `json:"exchange_rate" binding:"omitempty,gt=0"`
-	AmountInPrimaryCurrency *float64 `json:"amount_in_primary_currency" binding:"omitempty,gt=0"`
+	ExchangeRate            *float64                         `json:"exchange_rate" binding:"omitempty,gt=0"`
+	AmountInPrimaryCurrency *float64                         `json:"amount_in_primary_currency" binding:"omitempty,gt=0"`
+	SourceContainerID       transactions.NullableStringField `json:"source_container_id"`
+	SourceInstrumentID      transactions.NullableStringField `json:"source_instrument_id"`
 }
 
 // UpdateRecurringExpense maneja PUT /api/recurring-expenses/:id
@@ -223,6 +226,41 @@ func UpdateRecurringExpense(pool *pgxpool.Pool) gin.HandlerFunc {
 			updateFields = append(updateFields, "amount_in_primary_currency = $"+itoa(argCount))
 			args = append(args, *req.AmountInPrimaryCurrency)
 			argCount++
+		}
+
+		if req.SourceContainerID.Set || req.SourceInstrumentID.Set {
+			containerSet, containerID, instrumentSet, instrumentID, err := transactions.ResolvePaymentContextFinalPairForUpdate(ctx, pool, accountID, transactions.PaymentContextUpdateInput{
+				RecordTable:      "recurring_expenses",
+				RecordID:         recurringID,
+				ContainerColumn:  "source_container_id",
+				InstrumentColumn: "source_instrument_id",
+				ContainerField:   "source_container_id",
+				InstrumentField:  "source_instrument_id",
+				ContainerUpdate:  req.SourceContainerID,
+				InstrumentUpdate: req.SourceInstrumentID,
+			})
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			if containerSet {
+				if containerID == nil {
+					updateFields = append(updateFields, "source_container_id = NULL")
+				} else {
+					updateFields = append(updateFields, "source_container_id = $"+itoa(argCount))
+					args = append(args, *containerID)
+					argCount++
+				}
+			}
+			if instrumentSet {
+				if instrumentID == nil {
+					updateFields = append(updateFields, "source_instrument_id = NULL")
+				} else {
+					updateFields = append(updateFields, "source_instrument_id = $"+itoa(argCount))
+					args = append(args, *instrumentID)
+					argCount++
+				}
+			}
 		}
 
 		// Si no hay campos para actualizar

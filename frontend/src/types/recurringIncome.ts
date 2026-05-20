@@ -19,6 +19,8 @@ export interface RecurringIncome {
   current_occurrence: number;
   exchange_rate?: number;
   amount_in_primary_currency?: number;
+  destination_container_id?: string | null;
+  destination_instrument_id?: string | null;
   is_active: boolean;
   created_at: string;
   generated_incomes_count?: number;
@@ -38,6 +40,8 @@ export interface RecurringIncomeFormData {
   end_date?: string | null;
   total_occurrences?: number | null;
   amount_in_primary_currency?: number | null;
+  destination_container_id?: string | null;
+  destination_instrument_id?: string | null;
   is_active?: boolean;
 }
 

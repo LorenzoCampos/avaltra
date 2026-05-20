@@ -4,7 +4,7 @@ import { expenseSchema } from '@/schemas/expense.schema';
 import { incomeSchema } from '@/schemas/income.schema';
 import { buildExpenseSubmitPayload } from '@/features/expenses/formSubmissions';
 import { buildIncomeSubmitPayload } from '@/features/incomes/formSubmissions';
-import { getPaymentContextLabel, resolvePaymentContextSelection } from '@/lib/paymentContext';
+import { getPaymentContextLabel, resolvePaymentContextSelection, withRecurringExpensePaymentContext, withRecurringIncomePaymentContext } from '@/lib/paymentContext';
 import type { PaymentInstrument } from '@/types/paymentInstrument';
 
 const instrument = (overrides: Partial<PaymentInstrument> = {}): PaymentInstrument => ({
@@ -78,6 +78,19 @@ describe('transaction payment context form behavior', () => {
         instrumentId: '11111111-1111-4111-8111-111111111111',
       }),
     ).toMatchObject({ destination_container_id: null, destination_instrument_id: null });
+  });
+
+  it('builds recurring expense and income context payloads with edit clearing', () => {
+    const instruments = [instrument()];
+
+    expect(withRecurringExpensePaymentContext({ description: 'Rent', source_instrument_id: instruments[0].id }, instruments)).toMatchObject({
+      source_container_id: instruments[0].backing_container_id,
+      source_instrument_id: instruments[0].id,
+    });
+    expect(withRecurringIncomePaymentContext({ description: 'Salary' }, [], { containerId: '22222222-2222-4222-8222-222222222222', instrumentId: instruments[0].id })).toMatchObject({
+      destination_container_id: null,
+      destination_instrument_id: null,
+    });
   });
 });
 

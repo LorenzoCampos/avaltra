@@ -56,6 +56,8 @@
       "inactive": "Inactivo"
     },
     "actions": {
+      "createContainer": "Agregar lugar",
+      "createInstrument": "Agregar medio",
       "edit": "Editar",
       "deactivate": "Desactivar",
       "cancel": "Cancelar"
@@ -109,7 +111,25 @@
         "backingOptionalHelp": "Opcional para medios que no sean tarjetas.",
         "create": "Crear medio",
         "save": "Guardar medio"
+      },
+      "validation": {
+        "nameRequired": "El nombre es obligatorio",
+        "backingRequired": "Las tarjetas requieren un lugar asociado"
       }
+    },
+    "toasts": {
+      "containerCreated": "Lugar de pago creado",
+      "containerUpdated": "Lugar de pago actualizado",
+      "containerDeactivated": "Lugar de pago desactivado",
+      "containerCreateFailed": "No se pudo crear el lugar de pago",
+      "containerUpdateFailed": "No se pudo actualizar el lugar de pago",
+      "containerDeactivateFailed": "No se pudo desactivar el lugar de pago",
+      "instrumentCreated": "Medio de pago creado",
+      "instrumentUpdated": "Medio de pago actualizado",
+      "instrumentDeactivated": "Medio de pago desactivado",
+      "instrumentCreateFailed": "No se pudo crear el medio de pago",
+      "instrumentUpdateFailed": "No se pudo actualizar el medio de pago",
+      "instrumentDeactivateFailed": "No se pudo desactivar el medio de pago"
     }
   }
 }

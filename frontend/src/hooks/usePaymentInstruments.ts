@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import { api } from '@/api/axios';
@@ -32,6 +33,7 @@ export function usePaymentInstruments(options: PaymentInstrumentsOptions = {}) {
 }
 
 export function useCreatePaymentInstrument() {
+  const { t } = useTranslation('navigation');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -41,15 +43,16 @@ export function useCreatePaymentInstrument() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-instruments'] });
-      toast.success('Payment instrument created');
+      toast.success(t('paymentContainersPage.toasts.instrumentCreated'));
     },
     onError: (error: unknown) => {
-      toast.error(getMutationErrorMessage(error, 'Failed to create payment instrument'));
+      toast.error(getMutationErrorMessage(error, t('paymentContainersPage.toasts.instrumentCreateFailed')));
     },
   });
 }
 
 export function useUpdatePaymentInstrument() {
+  const { t } = useTranslation('navigation');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -59,15 +62,16 @@ export function useUpdatePaymentInstrument() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-instruments'] });
-      toast.success('Payment instrument updated');
+      toast.success(t('paymentContainersPage.toasts.instrumentUpdated'));
     },
     onError: (error: unknown) => {
-      toast.error(getMutationErrorMessage(error, 'Failed to update payment instrument'));
+      toast.error(getMutationErrorMessage(error, t('paymentContainersPage.toasts.instrumentUpdateFailed')));
     },
   });
 }
 
 export function useDeactivatePaymentInstrument() {
+  const { t } = useTranslation('navigation');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -77,10 +81,10 @@ export function useDeactivatePaymentInstrument() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-instruments'] });
-      toast.success('Payment instrument deactivated');
+      toast.success(t('paymentContainersPage.toasts.instrumentDeactivated'));
     },
     onError: (error: unknown) => {
-      toast.error(getMutationErrorMessage(error, 'Failed to deactivate payment instrument'));
+      toast.error(getMutationErrorMessage(error, t('paymentContainersPage.toasts.instrumentDeactivateFailed')));
     },
   });
 }

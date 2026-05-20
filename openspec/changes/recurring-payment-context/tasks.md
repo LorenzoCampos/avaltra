@@ -45,14 +45,14 @@ PR1 is recurring-only: recurring template payment-context persistence, scheduler
 
 ## Phase 3: Payment Context UX + i18n Polish
 
-- [ ] 3.1 Refactor `frontend/src/features/payment-containers/*` to use explicit Create CTA and separate modal/panel create/edit surfaces (no always-open inline forms).
-- [ ] 3.2 Update `frontend/src/hooks/usePaymentContainers.ts` and `frontend/src/hooks/usePaymentInstruments.ts` so inactive items are excluded from general selectors.
+- [x] 3.1 Refactor `frontend/src/features/payment-containers/*` to use explicit Create CTA and separate modal/panel create/edit surfaces (no always-open inline forms).
+- [x] 3.2 Update `frontend/src/hooks/usePaymentContainers.ts` and `frontend/src/hooks/usePaymentInstruments.ts` so inactive items are excluded from general selectors.
 - [x] 3.3 Implement recurring-edit exception: if selected container/instrument is inactive, keep it visible/editable in that template form only (context retention without global reselectability).
-- [ ] 3.4 Localize remaining management strings in `frontend/src/i18n/locales/en/*.json` and `frontend/src/i18n/locales/es/*.json` for validation, CTA, edit labels, and mutation toasts.
+- [x] 3.4 Localize remaining management strings in `frontend/src/i18n/locales/en/*.json` and `frontend/src/i18n/locales/es/*.json` for validation, CTA, edit labels, and mutation toasts.
 
 ## Phase 4: Tests and Verification
 
 - [ ] 4.1 Add backend tests for recurring handlers validating omit vs explicit `null`, invalid instrument-container rejection, and list/get field exposure.
 - [ ] 4.2 Add scheduler tests proving generation snapshots current template refs and template edits do not mutate previously generated rows.
-- [ ] 4.3 Extend frontend tests (including `paymentContainerManagement.test.ts`) for create CTA/edit surface flow, localized feedback, inactive exclusion, and recurring-edit inactive visibility exception.
+- [x] 4.3 Extend frontend tests (including `paymentContainerManagement.test.ts`) for create CTA/edit surface flow, localized feedback, inactive exclusion, and recurring-edit inactive visibility exception.
 - [ ] 4.4 Run full verification for changed areas (backend recurring + scheduler + frontend recurring/payment-containers) and document pass/fail evidence in apply/verify phase outputs.

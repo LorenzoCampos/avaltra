@@ -4,11 +4,11 @@ import { paymentInstrumentRequiresBackingContainer } from '@/types/paymentInstru
 
 type ContainerFormSubmission =
   | { ok: true; values: { name: string; kind: PaymentContainerKind; is_active?: boolean } }
-  | { ok: false; error: string };
+  | { ok: false; errorKey: string };
 
 type InstrumentFormSubmission =
   | { ok: true; values: { name: string; kind: PaymentInstrumentKind; backing_container_id?: string | null; is_active?: boolean } }
-  | { ok: false; error: string };
+  | { ok: false; errorKey: string };
 
 export function getContainerFormSubmission(values: {
   name: string;
@@ -18,7 +18,7 @@ export function getContainerFormSubmission(values: {
   const trimmedName = values.name.trim();
 
   if (!trimmedName) {
-    return { ok: false, error: 'Name is required' };
+    return { ok: false, errorKey: 'paymentContainersPage.forms.validation.nameRequired' };
   }
 
   return {
@@ -39,10 +39,10 @@ export function getInstrumentFormSubmission(values: {
   const trimmedName = values.name.trim();
 
   if (!trimmedName) {
-    return { ok: false, error: 'Name is required' };
+    return { ok: false, errorKey: 'paymentContainersPage.forms.validation.nameRequired' };
   }
   if (paymentInstrumentRequiresBackingContainer(values.kind) && !values.backingContainerId) {
-    return { ok: false, error: 'Card instruments require a backing container' };
+    return { ok: false, errorKey: 'paymentContainersPage.forms.validation.backingRequired' };
   }
 
   return {

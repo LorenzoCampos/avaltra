@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import { api } from '@/api/axios';
@@ -32,6 +33,7 @@ export function usePaymentContainers(options: PaymentContainersOptions = {}) {
 }
 
 export function useCreatePaymentContainer() {
+  const { t } = useTranslation('navigation');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -41,15 +43,16 @@ export function useCreatePaymentContainer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-containers'] });
-      toast.success('Payment container created');
+      toast.success(t('paymentContainersPage.toasts.containerCreated'));
     },
     onError: (error: unknown) => {
-      toast.error(getMutationErrorMessage(error, 'Failed to create payment container'));
+      toast.error(getMutationErrorMessage(error, t('paymentContainersPage.toasts.containerCreateFailed')));
     },
   });
 }
 
 export function useUpdatePaymentContainer() {
+  const { t } = useTranslation('navigation');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -59,15 +62,16 @@ export function useUpdatePaymentContainer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-containers'] });
-      toast.success('Payment container updated');
+      toast.success(t('paymentContainersPage.toasts.containerUpdated'));
     },
     onError: (error: unknown) => {
-      toast.error(getMutationErrorMessage(error, 'Failed to update payment container'));
+      toast.error(getMutationErrorMessage(error, t('paymentContainersPage.toasts.containerUpdateFailed')));
     },
   });
 }
 
 export function useDeactivatePaymentContainer() {
+  const { t } = useTranslation('navigation');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -77,10 +81,10 @@ export function useDeactivatePaymentContainer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-containers'] });
-      toast.success('Payment container deactivated');
+      toast.success(t('paymentContainersPage.toasts.containerDeactivated'));
     },
     onError: (error: unknown) => {
-      toast.error(getMutationErrorMessage(error, 'Failed to deactivate payment container'));
+      toast.error(getMutationErrorMessage(error, t('paymentContainersPage.toasts.containerDeactivateFailed')));
     },
   });
 }

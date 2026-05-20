@@ -45,7 +45,7 @@ export function InstrumentForm({ instrument, containers, isSubmitting = false, o
     });
 
     if (!result.ok) {
-      setError(result.error);
+      setError(t(result.errorKey));
       return;
     }
 

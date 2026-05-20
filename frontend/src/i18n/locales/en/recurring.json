@@ -105,6 +105,13 @@
     "generatedTransactions": "Generated Transactions",
     "status": "Status"
   },
+  "paymentContext": {
+    "container": "Payment place",
+    "instrument": "Payment method",
+    "noContainer": "No payment place",
+    "noInstrument": "No payment method",
+    "inactiveSuffix": "(inactive)"
+  },
   "tooltips": {
     "recurring": "Recurring expenses/income repeat automatically based on the frequency you set. For example: monthly rent, bi-weekly salary, Netflix every month.",
     "frequency": "How often does it repeat? Daily (every day), Weekly (every week), Monthly (every month), Yearly (every year).",

@@ -27,7 +27,7 @@ export function ContainerForm({ container, isSubmitting = false, onSubmit, onCan
     const result = getContainerFormSubmission({ name, kind, existingContainer: container });
 
     if (!result.ok) {
-      setError(result.error);
+      setError(t(result.errorKey));
       return;
     }
 

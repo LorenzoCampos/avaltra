@@ -56,6 +56,8 @@
       "inactive": "Inactive"
     },
     "actions": {
+      "createContainer": "Add place",
+      "createInstrument": "Add method",
       "edit": "Edit",
       "deactivate": "Deactivate",
       "cancel": "Cancel"
@@ -109,7 +111,25 @@
         "backingOptionalHelp": "Optional for non-card methods.",
         "create": "Create method",
         "save": "Save method"
+      },
+      "validation": {
+        "nameRequired": "Name is required",
+        "backingRequired": "Card methods require an associated place"
       }
+    },
+    "toasts": {
+      "containerCreated": "Payment place created",
+      "containerUpdated": "Payment place updated",
+      "containerDeactivated": "Payment place deactivated",
+      "containerCreateFailed": "Failed to create payment place",
+      "containerUpdateFailed": "Failed to update payment place",
+      "containerDeactivateFailed": "Failed to deactivate payment place",
+      "instrumentCreated": "Payment method created",
+      "instrumentUpdated": "Payment method updated",
+      "instrumentDeactivated": "Payment method deactivated",
+      "instrumentCreateFailed": "Failed to create payment method",
+      "instrumentUpdateFailed": "Failed to update payment method",
+      "instrumentDeactivateFailed": "Failed to deactivate payment method"
     }
   }
 }

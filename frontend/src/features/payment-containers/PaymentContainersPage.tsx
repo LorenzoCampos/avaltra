@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CreditCard, Pencil, WalletCards } from 'lucide-react';
+import { CreditCard, Pencil, Plus, WalletCards } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import {
@@ -25,10 +25,15 @@ const statusClassName = (isActive: boolean) =>
     ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
     : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300';
 
+type ManagementPanel =
+  | { type: 'container'; mode: 'create'; item?: null }
+  | { type: 'container'; mode: 'edit'; item: PaymentContainer }
+  | { type: 'instrument'; mode: 'create'; item?: null }
+  | { type: 'instrument'; mode: 'edit'; item: PaymentInstrument };
+
 export function PaymentContainersPage() {
   const { t } = useTranslation('navigation');
-  const [editingContainer, setEditingContainer] = useState<PaymentContainer | null>(null);
-  const [editingInstrument, setEditingInstrument] = useState<PaymentInstrument | null>(null);
+  const [activePanel, setPanel] = useState<ManagementPanel | null>(null);
 
   const containersQuery = usePaymentContainers({ includeInactive: true });
   const instrumentsQuery = usePaymentInstruments({ includeInactive: true });
@@ -48,6 +53,8 @@ export function PaymentContainersPage() {
 
   const isLoading = containersQuery.isLoading || instrumentsQuery.isLoading;
   const error = containersQuery.error || instrumentsQuery.error;
+  const panelContainer = activePanel?.type === 'container' && activePanel.mode === 'edit' ? activePanel.item : null;
+  const panelInstrument = activePanel?.type === 'instrument' && activePanel.mode === 'edit' ? activePanel.item : null;
 
   if (isLoading) {
     return <div className="rounded-2xl bg-white p-6 text-gray-600 shadow-sm dark:bg-gray-900 dark:text-gray-300">{t('paymentContainersPage.loading')}</div>;
@@ -71,45 +78,54 @@ export function PaymentContainersPage() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ContainerForm
-          key={editingContainer?.id ?? 'new-container'}
-          container={editingContainer}
-          isSubmitting={createContainer.isPending || updateContainer.isPending}
-          onCancel={editingContainer ? () => setEditingContainer(null) : undefined}
-          onSubmit={(values) => {
-            if (editingContainer) {
-              updateContainer.mutate({ id: editingContainer.id, ...values }, { onSuccess: () => setEditingContainer(null) });
-              return;
-            }
-            createContainer.mutate(values);
-          }}
-        />
-
-        <InstrumentForm
-          key={editingInstrument?.id ?? 'new-instrument'}
-          instrument={editingInstrument}
-          containers={containers}
-          isSubmitting={createInstrument.isPending || updateInstrument.isPending}
-          onCancel={editingInstrument ? () => setEditingInstrument(null) : undefined}
-          onSubmit={(values) => {
-            if (editingInstrument) {
-              updateInstrument.mutate({ id: editingInstrument.id, ...values }, { onSuccess: () => setEditingInstrument(null) });
-              return;
-            }
-            createInstrument.mutate(values);
-          }}
-        />
-      </div>
+      {activePanel && (
+        <aside className="rounded-3xl border border-brand-primary/20 bg-brand-primary/5 p-4 shadow-sm dark:border-brand-primary/30 dark:bg-brand-primary/10">
+          {activePanel.type === 'container' ? (
+            <ContainerForm
+              key={panelContainer?.id ?? 'create-container-panel'}
+              container={panelContainer}
+              isSubmitting={createContainer.isPending || updateContainer.isPending}
+              onCancel={() => setPanel(null)}
+              onSubmit={(values) => {
+                if (panelContainer) {
+                  updateContainer.mutate({ id: panelContainer.id, ...values }, { onSuccess: () => setPanel(null) });
+                  return;
+                }
+                createContainer.mutate(values, { onSuccess: () => setPanel(null) });
+              }}
+            />
+          ) : (
+            <InstrumentForm
+              key={panelInstrument?.id ?? 'create-instrument-panel'}
+              instrument={panelInstrument}
+              containers={containers}
+              isSubmitting={createInstrument.isPending || updateInstrument.isPending}
+              onCancel={() => setPanel(null)}
+              onSubmit={(values) => {
+                if (panelInstrument) {
+                  updateInstrument.mutate({ id: panelInstrument.id, ...values }, { onSuccess: () => setPanel(null) });
+                  return;
+                }
+                createInstrument.mutate(values, { onSuccess: () => setPanel(null) });
+              }}
+            />
+          )}
+        </aside>
+      )}
 
       <section className="grid gap-6 xl:grid-cols-2">
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex items-center gap-3 border-b border-gray-200 p-5 dark:border-gray-800">
-            <WalletCards className="h-5 w-5 text-brand-primary" aria-hidden="true" />
-            <div>
+          <div className="flex flex-col gap-4 border-b border-gray-200 p-5 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <WalletCards className="h-5 w-5 text-brand-primary" aria-hidden="true" />
+              <div>
               <h2 className="font-semibold text-gray-900 dark:text-white">{t('paymentContainersPage.containers.title')}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('paymentContainersPage.containers.description')}</p>
+              </div>
             </div>
+            <Button type="button" size="sm" onClick={() => setPanel({ type: 'container', mode: 'create' })}>
+              <Plus className="mr-1 h-4 w-4" aria-hidden="true" /> {t('paymentContainersPage.actions.createContainer')}
+            </Button>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {containers.length === 0 ? (
@@ -127,7 +143,7 @@ export function PaymentContainersPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400">{t(`paymentContainersPage.containerKinds.${container.kind}`)}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button type="button" size="sm" variant="ghost" onClick={() => setEditingContainer(container)}>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setPanel({ type: 'container', mode: 'edit', item: container })}>
                       <Pencil className="mr-1 h-4 w-4" aria-hidden="true" /> {t('paymentContainersPage.actions.edit')}
                     </Button>
                     {container.is_active && (
@@ -143,12 +159,17 @@ export function PaymentContainersPage() {
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex items-center gap-3 border-b border-gray-200 p-5 dark:border-gray-800">
-            <CreditCard className="h-5 w-5 text-brand-primary" aria-hidden="true" />
-            <div>
+          <div className="flex flex-col gap-4 border-b border-gray-200 p-5 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <CreditCard className="h-5 w-5 text-brand-primary" aria-hidden="true" />
+              <div>
               <h2 className="font-semibold text-gray-900 dark:text-white">{t('paymentContainersPage.instruments.title')}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('paymentContainersPage.instruments.description')}</p>
+              </div>
             </div>
+            <Button type="button" size="sm" onClick={() => setPanel({ type: 'instrument', mode: 'create' })}>
+              <Plus className="mr-1 h-4 w-4" aria-hidden="true" /> {t('paymentContainersPage.actions.createInstrument')}
+            </Button>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {instruments.length === 0 ? (
@@ -169,7 +190,7 @@ export function PaymentContainersPage() {
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Button type="button" size="sm" variant="ghost" onClick={() => setEditingInstrument(instrument)}>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setPanel({ type: 'instrument', mode: 'edit', item: instrument })}>
                       <Pencil className="mr-1 h-4 w-4" aria-hidden="true" /> {t('paymentContainersPage.actions.edit')}
                     </Button>
                     {instrument.is_active && (

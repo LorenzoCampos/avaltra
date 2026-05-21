@@ -64,6 +64,13 @@ func resolveIncomePaymentContextUpdate(ctx context.Context, db incomeStore, acco
 	if err != nil {
 		return false, nil, false, nil, err
 	}
+	if containerSet && !instrumentSet {
+		// Instruments are soft-deprecated for primary place-only saves. A current
+		// client that saves a destination container without an instrument clears any
+		// legacy instrument ref instead of preserving stale, mismatched context.
+		instrumentSet = true
+		instrumentID = nil
+	}
 	if err := validateIncomePaymentContext(ctx, db, accountID, incomePaymentContextRequest{ContainerID: containerID, InstrumentID: instrumentID}); err != nil {
 		return false, nil, false, nil, err
 	}

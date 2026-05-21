@@ -127,16 +127,27 @@ func TestCreateExpensePaymentContextScenarios(t *testing.T) {
 	createdAt := time.Date(2026, time.January, 16, 10, 0, 0, 0, time.UTC)
 
 	tests := []struct {
-		name         string
-		body         string
-		expectStatus int
-		expectDB     bool
+		name                       string
+		body                       string
+		expectStatus               int
+		expectDB                   bool
+		expectInstrumentValidation bool
+		expectedInstrument         any
 	}{
 		{
-			name:         "normalized refs are validated stored and returned",
-			body:         `{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","payment_method":"cash","source_container_id":"` + testExpenseContainerID + `","source_instrument_id":"` + testExpenseInstrumentID + `"}`,
-			expectStatus: http.StatusCreated,
-			expectDB:     true,
+			name:                       "normalized refs are validated stored and returned",
+			body:                       `{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","payment_method":"cash","source_container_id":"` + testExpenseContainerID + `","source_instrument_id":"` + testExpenseInstrumentID + `"}`,
+			expectStatus:               http.StatusCreated,
+			expectDB:                   true,
+			expectInstrumentValidation: true,
+			expectedInstrument:         testExpenseInstrumentID,
+		},
+		{
+			name:               "place-only container is validated stored and returned without instrument",
+			body:               `{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","payment_method":"cash","source_container_id":"` + testExpenseContainerID + `"}`,
+			expectStatus:       http.StatusCreated,
+			expectDB:           true,
+			expectedInstrument: nil,
 		},
 		{
 			name:         "inactive or foreign container is rejected",
@@ -160,9 +171,11 @@ func TestCreateExpensePaymentContextScenarios(t *testing.T) {
 				mock.ExpectQuery(`SELECT EXISTS\(SELECT 1 FROM payment_containers`).
 					WithArgs(testExpenseContainerID, testExpenseAccountID).
 					WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(true))
-				mock.ExpectQuery(`SELECT backing_container_id FROM payment_instruments`).
-					WithArgs(testExpenseInstrumentID, testExpenseAccountID).
-					WillReturnRows(mock.NewRows([]string{"backing_container_id"}).AddRow(stringPtr(testExpenseContainerID)))
+				if tt.expectInstrumentValidation {
+					mock.ExpectQuery(`SELECT backing_container_id FROM payment_instruments`).
+						WithArgs(testExpenseInstrumentID, testExpenseAccountID).
+						WillReturnRows(mock.NewRows([]string{"backing_container_id"}).AddRow(stringPtr(testExpenseContainerID)))
+				}
 				mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 					WithArgs(testExpenseAccountID).
 					WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
@@ -172,7 +185,7 @@ func TestCreateExpensePaymentContextScenarios(t *testing.T) {
 			expense_type, date, end_date, payment_method, source_container_id, source_instrument_id
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at`)).
-					WithArgs(testExpenseAccountID, nilString, nilString, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", "2026-01-16", nilString, stringPtr("cash"), stringPtr(testExpenseContainerID), stringPtr(testExpenseInstrumentID)).
+					WithArgs(testExpenseAccountID, nilString, nilString, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", "2026-01-16", nilString, stringPtr("cash"), stringPtr(testExpenseContainerID), paymentMethodRowValue(tt.expectedInstrument)).
 					WillReturnRows(mock.NewRows([]string{"id", "created_at"}).AddRow(testExpenseID, createdAt))
 			} else {
 				mock.ExpectQuery(`SELECT EXISTS\(SELECT 1 FROM payment_containers`).
@@ -197,8 +210,8 @@ func TestCreateExpensePaymentContextScenarios(t *testing.T) {
 				if got := response["source_container_id"]; got != testExpenseContainerID {
 					t.Fatalf("source_container_id = %#v, want %#v", got, testExpenseContainerID)
 				}
-				if got := response["source_instrument_id"]; got != testExpenseInstrumentID {
-					t.Fatalf("source_instrument_id = %#v, want %#v", got, testExpenseInstrumentID)
+				if got := response["source_instrument_id"]; got != tt.expectedInstrument {
+					t.Fatalf("source_instrument_id = %#v, want %#v", got, tt.expectedInstrument)
 				}
 			}
 			if err := mock.ExpectationsWereMet(); err != nil {
@@ -340,6 +353,16 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 			returnedContainer:     nil,
 			returnedInstrument:    nil,
 		},
+		{
+			name:                  "place-only save clears legacy instrument ref",
+			body:                  `{"source_container_id":"` + testExpenseAltContainerID + `"}`,
+			expectedContainerSet:  true,
+			expectedContainer:     stringPtr(testExpenseAltContainerID),
+			expectedInstrumentSet: true,
+			expectedInstrument:    (*string)(nil),
+			returnedContainer:     testExpenseAltContainerID,
+			returnedInstrument:    nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -357,13 +380,17 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 				WithArgs(testExpenseID, testExpenseAccountID).
 				WillReturnRows(mock.NewRows([]string{"expense_type", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "date", "deleted_at"}).AddRow("one-time", 25000.0, "ARS", 1.0, 25000.0, "2026-01-16", nil))
 
-			if tt.returnedContainer != nil {
+			if expectedContainer, ok := tt.expectedContainer.(*string); ok && expectedContainer != nil {
+				expectedContainerValue := *expectedContainer
 				mock.ExpectQuery(`SELECT EXISTS\(SELECT 1 FROM payment_containers`).
-					WithArgs(testExpenseContainerID, testExpenseAccountID).
+					WithArgs(expectedContainerValue, testExpenseAccountID).
 					WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(true))
+			}
+			if expectedInstrument, ok := tt.expectedInstrument.(*string); ok && expectedInstrument != nil {
+				expectedInstrumentValue := *expectedInstrument
 				mock.ExpectQuery(`SELECT backing_container_id FROM payment_instruments`).
-					WithArgs(testExpenseInstrumentID, testExpenseAccountID).
-					WillReturnRows(mock.NewRows([]string{"backing_container_id"}).AddRow(stringPtr(testExpenseContainerID)))
+					WithArgs(expectedInstrumentValue, testExpenseAccountID).
+					WillReturnRows(mock.NewRows([]string{"backing_container_id"}).AddRow(tt.expectedContainer))
 			}
 
 			mock.ExpectQuery(`UPDATE expenses SET`).
@@ -396,7 +423,7 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 	}
 }
 
-func TestUpdateExpensePaymentContextValidatesFinalPairWithExistingCounterpart(t *testing.T) {
+func TestUpdateExpensePaymentContextLegacyInstrumentCompatibility(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -406,7 +433,7 @@ func TestUpdateExpensePaymentContextValidatesFinalPairWithExistingCounterpart(t 
 		expectInstrument bool
 	}{
 		{
-			name:            "changed container is rejected when existing instrument is backed by another container",
+			name:            "place-only container change skips existing legacy instrument validation",
 			body:            `{"source_container_id":"` + testExpenseAltContainerID + `"}`,
 			expectContainer: true,
 		},
@@ -440,17 +467,18 @@ func TestUpdateExpensePaymentContextValidatesFinalPairWithExistingCounterpart(t 
 					WillReturnRows(mock.NewRows([]string{"backing_container_id"}).AddRow(stringPtr(testExpenseAltContainerID)))
 			}
 
-			mock.ExpectQuery(`SELECT source_container_id, source_instrument_id FROM expenses`).
-				WithArgs(testExpenseID, testExpenseAccountID).
-				WillReturnRows(mock.NewRows([]string{"source_container_id", "source_instrument_id"}).AddRow(stringPtr(testExpenseContainerID), stringPtr(testExpenseInstrumentID)))
-			mock.ExpectQuery(`SELECT backing_container_id FROM payment_instruments`).
-				WithArgs(testExpenseInstrumentID, testExpenseAccountID).
-				WillReturnRows(mock.NewRows([]string{"backing_container_id"}).AddRow(func() *string {
-					if tt.expectInstrument {
-						return stringPtr(testExpenseAltContainerID)
-					}
-					return stringPtr(testExpenseContainerID)
-				}()))
+			if tt.expectInstrument {
+				mock.ExpectQuery(`SELECT source_container_id, source_instrument_id FROM expenses`).
+					WithArgs(testExpenseID, testExpenseAccountID).
+					WillReturnRows(mock.NewRows([]string{"source_container_id", "source_instrument_id"}).AddRow(stringPtr(testExpenseContainerID), stringPtr(testExpenseInstrumentID)))
+				mock.ExpectQuery(`SELECT backing_container_id FROM payment_instruments`).
+					WithArgs(testExpenseInstrumentID, testExpenseAccountID).
+					WillReturnRows(mock.NewRows([]string{"backing_container_id"}).AddRow(stringPtr(testExpenseAltContainerID)))
+			} else {
+				mock.ExpectQuery(`UPDATE expenses SET`).
+					WithArgs((*string)(nil), (*string)(nil), (*string)(nil), (*float64)(nil), (*string)(nil), (*string)(nil), (*string)(nil), (*string)(nil), testExpenseID, testExpenseAccountID, (*float64)(nil), (*float64)(nil), false, (*string)(nil), true, stringPtr(testExpenseAltContainerID), true, (*string)(nil)).
+					WillReturnRows(mock.NewRows([]string{"id", "account_id", "family_member_id", "category_id", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "expense_type", "date", "end_date", "payment_method", "source_container_id", "source_instrument_id", "created_at"}).AddRow(testExpenseID, testExpenseAccountID, nil, nil, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", &time.Time{}, nil, nil, stringPtr(testExpenseAltContainerID), nil, time.Time{}))
+			}
 
 			recorder := httptest.NewRecorder()
 			router := expenseTestRouter(updateExpenseHandler(mock))
@@ -458,8 +486,12 @@ func TestUpdateExpensePaymentContextValidatesFinalPairWithExistingCounterpart(t 
 			req.Header.Set("Content-Type", "application/json")
 			router.ServeHTTP(recorder, req)
 
-			if recorder.Code != http.StatusBadRequest {
-				t.Fatalf("status = %d, want %d, body = %s", recorder.Code, http.StatusBadRequest, recorder.Body.String())
+			wantStatus := http.StatusOK
+			if tt.expectInstrument {
+				wantStatus = http.StatusBadRequest
+			}
+			if recorder.Code != wantStatus {
+				t.Fatalf("status = %d, want %d, body = %s", recorder.Code, wantStatus, recorder.Body.String())
 			}
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Fatalf("mock expectations: %v", err)

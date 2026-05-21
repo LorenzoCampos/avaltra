@@ -163,6 +163,14 @@ func ResolvePaymentContextFinalPairForUpdate(ctx context.Context, db paymentCont
 	if instrumentSet {
 		finalInstrumentID = instrumentID
 	}
+	if containerSet && !instrumentSet {
+		// Instruments are soft-deprecated for primary place-only saves. When a
+		// current client saves a new container without an instrument, clear any
+		// legacy instrument ref instead of validating it as part of the new context.
+		instrumentSet = true
+		instrumentID = nil
+		finalInstrumentID = nil
+	}
 
 	if err := ValidateActivePaymentContext(ctx, db, accountID, PaymentContextValidationInput{
 		ContainerID:     finalContainerID,

@@ -39,7 +39,7 @@ func TestListActivityIncludesPaymentMethodAndOriginalAmounts(t *testing.T) {
 			AddRow("expense", 200.0).
 			AddRow("savings_deposit", 50.0))
 
-	mock.ExpectQuery(`SELECT\s+i.id,`).
+	mock.ExpectQuery(`SELECT\s+i.id,[\s\S]*COALESCE\(pc.name, pi.name\)::TEXT as payment_context_label[\s\S]*COALESCE\(pc.name, pi.name\)::TEXT as payment_context_label`).
 		WithArgs(activityTestAccountID, 50, 0).
 		WillReturnRows(mock.NewRows([]string{"id", "type", "description", "amount", "currency", "amount_in_primary_currency", "payment_method", "payment_context_label", "category_name", "goal_name", "goal_id", "date", "created_at"}).
 			AddRow("income-id", "income", "Salario", 1000.0, "ARS", 1000.0, stringPtr("bank_transfer"), stringPtr("Cuenta sueldo"), stringPtr("Salario"), nil, nil, incomeDate, createdAt).

@@ -42,9 +42,6 @@ func TestPreviewExcelTemplateClassifiesRowsWithoutWriting(t *testing.T) {
 	mock.ExpectQuery(`FROM payment_containers`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"id", "name"}).AddRow("cash-container", "Efectivo"))
-	mock.ExpectQuery(`FROM payment_instruments`).
-		WithArgs(testImportAccountID).
-		WillReturnRows(mock.NewRows([]string{"id", "name", "backing_container_id"}))
 
 	recorder := httptest.NewRecorder()
 	router := importTestRouter(previewHandler(mock))
@@ -73,6 +70,9 @@ func TestPreviewExcelTemplateClassifiesRowsWithoutWriting(t *testing.T) {
 	}
 	if response.Importable[0].SourceContainerID == nil || *response.Importable[0].SourceContainerID != "cash-container" {
 		t.Fatalf("first importable source_container_id = %v, want cash-container", response.Importable[0].SourceContainerID)
+	}
+	if response.Importable[0].SourceInstrumentID != nil {
+		t.Fatalf("first importable source_instrument_id = %v, want nil for places-only import", response.Importable[0].SourceInstrumentID)
 	}
 	if response.Importable[0].PaymentMethod == nil || *response.Importable[0].PaymentMethod != "cash" {
 		t.Fatalf("first importable payment_method = %v, want legacy cash alias preserved", response.Importable[0].PaymentMethod)
@@ -131,7 +131,7 @@ func TestPreviewExcelTemplateClassifiesRowsWithoutWriting(t *testing.T) {
 	}
 }
 
-func TestResolveImportPaymentContextOnlyAttachesDeterministicMatches(t *testing.T) {
+func TestResolveImportPaymentContextOnlyAttachesDeterministicContainerMatches(t *testing.T) {
 	containerID := "container-1"
 	instrumentID := "instrument-1"
 	backingID := "backing-1"
@@ -144,9 +144,14 @@ func TestResolveImportPaymentContextOnlyAttachesDeterministicMatches(t *testing.
 		},
 	}}
 
-	container, instrument := resolveImportPaymentContext("Visa", catalog)
-	if container == nil || *container != backingID || instrument == nil || *instrument != instrumentID {
-		t.Fatalf("resolveImportPaymentContext(Visa) = (%v, %v), want backed instrument", container, instrument)
+	container, instrument := resolveImportPaymentContext("Efectivo", catalog)
+	if container == nil || *container != containerID || instrument != nil {
+		t.Fatalf("resolveImportPaymentContext(Efectivo) = (%v, %v), want deterministic container only", container, instrument)
+	}
+
+	container, instrument = resolveImportPaymentContext("Visa", catalog)
+	if container != nil || instrument != nil {
+		t.Fatalf("resolveImportPaymentContext(Visa) = (%v, %v), want nil for instrument-name primary mapping", container, instrument)
 	}
 
 	container, instrument = resolveImportPaymentContext("Banco", catalog)
@@ -206,9 +211,6 @@ func expectEmptyImportPaymentContextCatalog(mock pgxmock.PgxPoolIface) {
 	mock.ExpectQuery(`FROM payment_containers`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"id", "name"}))
-	mock.ExpectQuery(`FROM payment_instruments`).
-		WithArgs(testImportAccountID).
-		WillReturnRows(mock.NewRows([]string{"id", "name", "backing_container_id"}))
 }
 
 func nilStringPtr() *string {

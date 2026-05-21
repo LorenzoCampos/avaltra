@@ -9,11 +9,11 @@
 | Chained PRs recommended | Yes |
 | Suggested split | PR1 backend core → PR2 frontend UX/i18n + PR23 salvage → PR3 importer/recurring/tests/spec sync |
 | Delivery strategy | ask-on-risk |
-| Chain strategy | pending |
+| Chain strategy | stacked-to-main |
 
 Decision needed before apply: Yes
 Chained PRs recommended: Yes
-Chain strategy: pending
+Chain strategy: stacked-to-main
 400-line budget risk: High
 
 ### Suggested Work Units
@@ -41,21 +41,21 @@ Chain strategy: pending
 
 ## Phase 3: Importer, Activity, Dashboard, and Recurring Generation
 
-- [ ] 3.1 Update importer mapping/commit flow in `backend/internal/handlers/imports/{mapping,commit}.go` to prefer deterministic container matches and avoid assigning instrument IDs for new rows.
-- [ ] 3.2 Update activity label precedence in `backend/internal/handlers/activity/list.go` to `COALESCE(container, instrument, payment_method)`.
-- [ ] 3.3 Update recurring handlers and `backend/pkg/scheduler/recurring_{expenses,incomes}.go` so future occurrences copy container IDs and write null instrument IDs.
-- [ ] 3.4 Verify dashboard and transaction read models consuming payment context still render legacy rows without blank labels.
+- [x] 3.1 Update importer mapping/commit flow in `backend/internal/handlers/imports/{mapping,commit}.go` to prefer deterministic container matches and avoid assigning instrument IDs for new rows.
+- [x] 3.2 Update activity label precedence in `backend/internal/handlers/activity/list.go` to `COALESCE(container, instrument, payment_method)`.
+- [x] 3.3 Update recurring handlers and `backend/pkg/scheduler/recurring_{expenses,incomes}.go` so future occurrences copy container IDs and write null instrument IDs.
+- [x] 3.4 Verify dashboard and transaction read models consuming payment context still render legacy rows without blank labels.
 
 ## Phase 4: Tests and Verification
 
 - [x] 4.1 Add/adjust backend tests for container-only create/update acceptance, legacy instrument compatibility, and clear-on-save behavior.
-- [ ] 4.2 Add recurring tests for future-only inheritance and scheduler null-instrument generation from place-only templates.
+- [x] 4.2 Add recurring tests for future-only inheritance and scheduler null-instrument generation from place-only templates.
 - [x] 4.3 Add frontend runtime/unit tests proving no instrument selector in primary flows and submission payloads contain only container fields.
-- [ ] 4.4 Add importer/activity regression tests for deterministic place mapping and fallback label precedence.
+- [x] 4.4 Add importer/activity regression tests for deterministic place mapping and fallback label precedence.
 - [ ] 4.5 Run `go test ./...`, `pnpm test`, `pnpm typecheck`, and a targeted manual smoke for expense/income/recurring/import flows.
 
 ## Phase 5: Deprecation Staging and Spec Sync
 
-- [ ] 5.1 Record soft-deprecation completion in change docs: no physical schema removal in this PR; legacy data remains readable.
+- [x] 5.1 Record soft-deprecation completion in change docs: no physical schema removal in this PR; legacy data remains readable.
 - [ ] 5.2 Plan follow-up migration task set: deterministic instrument→container backfill, then null remaining instrument refs where safe.
 - [ ] 5.3 Plan final physical-removal phase after confidence window (drop columns/tables only in later change).

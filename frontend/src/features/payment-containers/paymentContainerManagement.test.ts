@@ -107,7 +107,7 @@ describe('payment container management behavior', () => {
     expect(html).toContain('Todavía no hay medios cargados.');
   });
 
-  it('renders active and inactive containers and instruments with backing-container labels', () => {
+  it('renders active places first and moves inactive places to a reactivation section', () => {
     hookState.containersQuery = {
       data: {
         payment_containers: [container(), container({ id: 'container-2', name: 'Cash box', kind: 'cash', is_active: false })],
@@ -127,14 +127,24 @@ describe('payment container management behavior', () => {
 
     const html = renderManagementPage();
 
-    expect(html).toContain('Main bank account');
-    expect(html).toContain('Cuenta bancaria');
-    expect(html).toContain('Cash box');
-    expect(html).toContain('Inactivo');
+    expect(html).toContain('Lugares activos');
+    expect(html).toContain('Lugares archivados');
+    expect(html.indexOf('Main bank account')).toBeLessThan(html.indexOf('Lugares archivados'));
+    expect(html.indexOf('Lugares archivados')).toBeLessThan(html.indexOf('Cash box'));
+    expect(html).toContain('Reactivar');
+    expect(html).not.toContain('Desactivar');
     expect(html).toContain('Visa debit');
     expect(html).toContain('Tarjeta de débito asociado a Main bank account');
     expect(html).toContain('Manual transfer');
     expect(html).toContain('Transferencia bancaria');
+  });
+
+  it('keeps legacy deactivation de-emphasized in source while exposing reactivation through update payloads', async () => {
+    const page = await readSource('features/payment-containers/PaymentContainersPage.tsx');
+
+    expect(page).not.toContain('variant="danger"');
+    expect(page).not.toContain('deactivateContainer.mutate');
+    expect(page).toContain('is_active: true');
   });
 
   it('validates container submissions and trims names before create/update mutation payloads', () => {

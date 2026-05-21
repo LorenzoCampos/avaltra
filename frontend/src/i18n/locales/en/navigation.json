@@ -58,11 +58,15 @@
     "actions": {
       "edit": "Edit",
       "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
       "cancel": "Cancel"
     },
     "containers": {
       "title": "Places",
+      "activeTitle": "Active places",
+      "inactiveTitle": "Archived places",
       "description": "Active places appear as the source or destination in expenses and incomes.",
+      "inactiveDescription": "If you use one of these places again, reactivating it returns it to the primary forms.",
       "empty": "No places yet."
     },
     "instruments": {

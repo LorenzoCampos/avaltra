@@ -93,6 +93,39 @@ describe('dashboard money by container breakdown', () => {
 		]);
 	});
 
+	it('shows only places with a current positive available balance', () => {
+		expect(
+			getDashboardMoneyByContainerItems([
+				{
+					container_id: 'wallet-1',
+					name: 'Mercado Pago',
+					type: 'wallet',
+					total: 800,
+					percentage: 80,
+					is_unassigned: false,
+				},
+				{
+					container_id: 'cash-1',
+					name: 'Cash',
+					type: 'cash',
+					total: 0,
+					percentage: 0,
+					is_unassigned: false,
+				},
+				{
+					container_id: 'bank-1',
+					name: 'Overdrawn bank',
+					type: 'bank',
+					total: -50,
+					percentage: 0,
+					is_unassigned: false,
+				},
+			], 'Unassigned'),
+		).toEqual([
+			{ key: 'wallet-1', label: 'Mercado Pago', total: 800, percentage: 80, isUnassigned: false },
+		]);
+	});
+
 	it('returns an empty list when the backend omits the optional field', () => {
 		expect(getDashboardMoneyByContainerItems(undefined, 'Unassigned')).toEqual([]);
 	});
@@ -106,6 +139,8 @@ describe('dashboard copy clarifies current balance vs monthly flow', () => {
 		expect(dashboardEs.cards.expenses.title).toContain('Mes');
 		expect(dashboardEs.cards.income.title).toContain('Mes');
 		expect(dashboardEs.tooltips.availableBalance).toContain('acumulado');
+		expect(dashboardEs.moneyByContainer.title).toContain('actual');
+		expect(dashboardEs.tooltips.moneyByContainer).toContain('disponible actual');
 		expect(tourEs.steps.availableBalance).toContain('actual');
 	});
 
@@ -116,6 +151,8 @@ describe('dashboard copy clarifies current balance vs monthly flow', () => {
 		expect(dashboardEn.cards.expenses.subtitle).toContain('this month');
 		expect(dashboardEn.cards.income.subtitle).toContain('this month');
 		expect(dashboardEn.tooltips.availableBalance).toContain('accumulated');
+		expect(dashboardEn.moneyByContainer.title).toContain('current');
+		expect(dashboardEn.tooltips.moneyByContainer).toContain('current available');
 		expect(tourEn.steps.availableBalance).toContain('current');
 	});
 });

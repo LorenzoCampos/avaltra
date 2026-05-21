@@ -60,7 +60,7 @@
     "noInsights": "Add some transactions to see your insights"
   },
   "moneyByContainer": {
-    "title": "Money by location",
+    "title": "current balance by location",
     "unassigned": "Unassigned"
   },
   
@@ -83,7 +83,7 @@
     "expenses": "All the expenses you've recorded this month. Includes purchases, services, and any money you've spent.",
     "income": "The income you've recorded this month. This could be your salary, side work, or any money you've received.",
     "expensesByCategory": "Here you can see which categories you spend the most on. It helps you identify where you can save.",
-    "moneyByContainer": "Shows historical balance grouped by money location. Transactions without a normalized location appear as Unassigned.",
+    "moneyByContainer": "Shows current available balance by money location and hides places with a 0 balance to reduce noise. Transactions without a normalized location appear as Unassigned.",
     "recentTransactions": "Your most recent activity. The latest expenses and income you've recorded appear here.",
     "account": "An 'account' is like a virtual wallet where you organize your money. You can have multiple accounts for different purposes (e.g., Personal, Family, Savings)."
   }

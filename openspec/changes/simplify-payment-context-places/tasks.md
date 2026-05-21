@@ -7,7 +7,7 @@
 | Estimated changed lines | 650-950 |
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
-| Suggested split | PR1 backend core → PR2 frontend UX/i18n + PR23 salvage → PR3 importer/recurring/tests/spec sync |
+| Suggested split | PR1 backend core → PR2 frontend UX/i18n + PR23 salvage → PR3 importer/recurring/tests/spec sync → PR4 dashboard/places polish |
 | Delivery strategy | ask-on-risk |
 | Chain strategy | stacked-to-main |
 
@@ -23,6 +23,7 @@ Chain strategy: stacked-to-main
 | 1 | Backend place-first contract + legacy clear-on-save | PR 1 | Base main; include handler/scheduler tests |
 | 2 | Frontend place-only forms/selectors + i18n + PR #23 reconciliation | PR 2 | Depends PR1 API behavior; cherry-pick neutral PR #23 UI/i18n only |
 | 3 | Importer/activity/dashboard + recurring generation parity + final verification | PR 3 | Depends PR1-PR2; include spec-alignment and regression tests |
+| 4 | Dashboard current-place-balance polish + places management UX polish | PR 4 | Depends merged PR1-PR3; implements manual-testing feedback only |
 
 ## Phase 1: Foundation and Contract Alignment
 
@@ -59,3 +60,11 @@ Chain strategy: stacked-to-main
 - [x] 5.1 Record soft-deprecation completion in change docs: no physical schema removal in this PR; legacy data remains readable.
 - [ ] 5.2 Plan follow-up migration task set: deterministic instrument→container backfill, then null remaining instrument refs where safe.
 - [ ] 5.3 Plan final physical-removal phase after confidence window (drop columns/tables only in later change).
+
+## Phase 6: PR4 Manual Testing Polish
+
+- [x] 6.1 Clarify dashboard place breakdown as current available balance by place, preserving monthly cards separately and keeping transfers out of scope.
+- [x] 6.2 Hide zero/negative place-balance rows in frontend dashboard rendering as a safety net against noisy API payloads.
+- [x] 6.3 Polish places management so active places are primary, legacy methods remain collapsed, and inactive places move to an archived/reactivation path.
+- [x] 6.4 De-emphasize deactivation by removing primary destructive deactivate buttons from places management and reusing update `is_active: true` for reactivation.
+- [x] 6.5 Add focused frontend tests for current place balances, zero-balance filtering, copy, active/archived places, and reactivation; rerun targeted backend dashboard/payment-container tests.

@@ -107,7 +107,7 @@ func TestValidateActivePaymentContext(t *testing.T) {
 	}
 }
 
-func TestResolvePaymentContextFinalPairForUpdateRejectsPartialContainerMismatch(t *testing.T) {
+func TestResolvePaymentContextFinalPairForUpdateClearsLegacyInstrumentOnPlaceOnlySave(t *testing.T) {
 	accountID := "account-1"
 	recordID := uuid.New().String()
 	oldContainerID := uuid.New().String()
@@ -117,10 +117,9 @@ func TestResolvePaymentContextFinalPairForUpdateRejectsPartialContainerMismatch(
 	store := &paymentContextStore{rows: []paymentContextRow{
 		{values: []any{&oldContainerID, &instrumentID}},
 		{values: []any{true}},
-		{values: []any{&oldContainerID}},
 	}}
 
-	_, _, _, _, err := ResolvePaymentContextFinalPairForUpdate(context.Background(), store, accountID, PaymentContextUpdateInput{
+	containerSet, containerID, instrumentSet, instrumentIDResult, err := ResolvePaymentContextFinalPairForUpdate(context.Background(), store, accountID, PaymentContextUpdateInput{
 		RecordTable:      "recurring_expenses",
 		RecordID:         recordID,
 		ContainerColumn:  "source_container_id",
@@ -130,8 +129,14 @@ func TestResolvePaymentContextFinalPairForUpdateRejectsPartialContainerMismatch(
 		ContainerUpdate:  NullableStringField{Set: true, Valid: true, Value: newContainerID},
 	})
 
-	if err == nil || err.Error() != "source_instrument_id is not backed by source_container_id" {
-		t.Fatalf("ResolvePaymentContextFinalPairForUpdate() error = %v, want backing mismatch", err)
+	if err != nil {
+		t.Fatalf("ResolvePaymentContextFinalPairForUpdate() error = %v, want nil", err)
+	}
+	if !containerSet || containerID == nil || *containerID != newContainerID {
+		t.Fatalf("container update = (%v, %v), want set %s", containerSet, containerID, newContainerID)
+	}
+	if !instrumentSet || instrumentIDResult != nil {
+		t.Fatalf("instrument update = (%v, %v), want set nil to clear legacy instrument", instrumentSet, instrumentIDResult)
 	}
 }
 

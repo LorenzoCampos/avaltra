@@ -66,8 +66,10 @@
       "empty": "No places yet."
     },
     "instruments": {
-      "title": "Methods",
-      "description": "Cards require an associated place, such as an account or wallet.",
+      "title": "Legacy methods",
+      "legacyTitle": "Legacy methods",
+      "legacyDescription": "Compatibility only for older data. New expenses and incomes use places.",
+      "description": "Hidden by default because primary flows now use places.",
       "empty": "No methods yet.",
       "backedBy": "associated with {{container}}",
       "unknownContainer": "unknown place"

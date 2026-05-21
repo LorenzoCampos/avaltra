@@ -97,11 +97,12 @@ describe('payment container management behavior', () => {
     expect(renderManagementPage()).toContain('No se pudieron cargar los lugares y medios de pago. Intentá de nuevo.');
   });
 
-  it('renders empty management lists without hiding the create forms', () => {
+  it('renders empty management lists with places primary and legacy instruments collapsed', () => {
     const html = renderManagementPage();
 
     expect(html).toContain('Nuevo lugar');
-    expect(html).toContain('Nuevo medio');
+    expect(html).toContain('Medios heredados');
+    expect(html.indexOf('Nuevo lugar')).toBeLessThan(html.indexOf('Medios heredados'));
     expect(html).toContain('Todavía no hay lugares cargados.');
     expect(html).toContain('Todavía no hay medios cargados.');
   });

@@ -16,13 +16,10 @@ import { useAccountStore } from '@/stores/account.store';
 import { useUser } from '@/hooks/useUser';
 import { useAccounts } from '@/hooks/useAccounts';
 import { usePaymentContainers } from '@/hooks/usePaymentContainers';
-import { usePaymentInstruments } from '@/hooks/usePaymentInstruments';
 import type { ActionFeedbackState } from '@/hooks/useActionFeedback';
 import { incomeSchema } from '@/schemas/income.schema';
 import type { Currency } from '@/schemas/account.schema';
-import { getPaymentMethodOptions } from '@/lib/paymentMethods';
 import { buildIncomeSubmitPayload } from './formSubmissions';
-import { normalizePaymentMethodForForm } from '@/types/paymentMethod';
 
 type IncomeFormInput = z.input<typeof incomeSchema>;
 type IncomeFormData = z.output<typeof incomeSchema>;
@@ -47,7 +44,6 @@ export const IncomeForm = () => {
   const { data: categories, isLoading: isLoadingCategories } = useIncomeCategories();
   const { data: familyMembers, isLoading: isLoadingFamilyMembers } = useFamilyMembers();
   const { data: paymentContainers, isLoading: isLoadingPaymentContainers } = usePaymentContainers();
-  const { data: paymentInstruments, isLoading: isLoadingPaymentInstruments } = usePaymentInstruments();
 
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const [pendingFeedback, setPendingFeedback] = useState<ActionFeedbackState['actionFeedback']>();
@@ -75,21 +71,14 @@ export const IncomeForm = () => {
       date: defaultDate,
       category_id: lastCategoryId ?? undefined,
       family_member_id: undefined,
-      payment_method: undefined,
       destination_container_id: undefined,
-      destination_instrument_id: undefined,
     },
     mode: 'onChange',
   });
 
   const selectedCurrency = watch('currency');
-  const selectedDestinationContainerId = watch('destination_container_id');
-  const selectedDestinationInstrumentId = watch('destination_instrument_id');
   const showMultiCurrencyFields = activeAccount && selectedCurrency !== activeAccount.currency;
   const activePaymentContainers = paymentContainers?.payment_containers ?? [];
-  const activePaymentInstruments = paymentInstruments?.payment_instruments ?? [];
-  const selectedDestinationInstrument = activePaymentInstruments.find((instrument) => instrument.id === selectedDestinationInstrumentId);
-  const selectedDestinationInstrumentBacking = activePaymentContainers.find((container) => container.id === selectedDestinationInstrument?.backing_container_id);
 
   // ============================================================================
   // AUTO-COMPLETAR CURRENCY basado en default account (solo para nuevos ingresos)
@@ -109,9 +98,7 @@ export const IncomeForm = () => {
       setValue('date', incomeData.date);
       setValue('category_id', incomeData.category_id ?? undefined);
       setValue('family_member_id', incomeData.family_member_id ?? undefined);
-      setValue('payment_method', normalizePaymentMethodForForm(incomeData.payment_method));
       setValue('destination_container_id', incomeData.destination_container_id ?? undefined);
-      setValue('destination_instrument_id', incomeData.destination_instrument_id ?? undefined);
       
       // Load amount_in_primary_currency if it exists (multi-currency)
       if (incomeData.amount_in_primary_currency !== null && 
@@ -137,24 +124,12 @@ export const IncomeForm = () => {
       if (duplicateData.family_member_id) {
         setValue('family_member_id', duplicateData.family_member_id);
       }
-      if (duplicateData.payment_method) {
-        setValue('payment_method', duplicateData.payment_method);
-      }
       if (duplicateData.destination_container_id) {
         setValue('destination_container_id', duplicateData.destination_container_id);
-      }
-      if (duplicateData.destination_instrument_id) {
-        setValue('destination_instrument_id', duplicateData.destination_instrument_id);
       }
       // Date uses default (today) - not copied from original
     }
   }, [location.state, isEditing, setValue]);
-
-  useEffect(() => {
-    if (selectedDestinationInstrument?.backing_container_id && selectedDestinationContainerId !== selectedDestinationInstrument.backing_container_id) {
-      setValue('destination_container_id', selectedDestinationInstrument.backing_container_id, { shouldValidate: true });
-    }
-  }, [selectedDestinationContainerId, selectedDestinationInstrument, setValue]);
 
   useEffect(() => {
     if (redirectCountdown === null) {
@@ -187,9 +162,8 @@ export const IncomeForm = () => {
     }
 
     try {
-      const payload = buildIncomeSubmitPayload(data, isEditing, incomeData?.payment_method, activePaymentInstruments, {
+      const payload = buildIncomeSubmitPayload(data, isEditing, {
         containerId: incomeData?.destination_container_id,
-        instrumentId: incomeData?.destination_instrument_id,
       });
 
       const savedIncome = isEditing && incomeId
@@ -218,28 +192,11 @@ export const IncomeForm = () => {
     { label: t('form.currency.eur'), value: 'EUR' },
   ];
 
-  const paymentMethodOptions = [
-    { label: t('form.paymentMethod.empty'), value: '' },
-    ...getPaymentMethodOptions(t),
-  ];
   const paymentContainerOptions = [
     { label: t('form.paymentContext.destinationContainer.empty'), value: '' },
     ...activePaymentContainers.map((container) => ({ label: container.name, value: container.id })),
   ];
-  const paymentInstrumentOptions = [
-    { label: t('form.paymentContext.instrument.empty'), value: '' },
-    ...activePaymentInstruments.map((instrument) => ({
-      label: instrument.backing_container_id
-        ? t('form.paymentContext.instrument.backedByOption', {
-            name: instrument.name,
-            container: activePaymentContainers.find((container) => container.id === instrument.backing_container_id)?.name ?? t('form.paymentContext.instrument.selectedContainer'),
-          })
-        : instrument.name,
-      value: instrument.id,
-    })),
-  ];
-
-  if (isLoadingIncome || isLoadingCategories || isLoadingFamilyMembers || isLoadingPaymentContainers || isLoadingPaymentInstruments) {
+  if (isLoadingIncome || isLoadingCategories || isLoadingFamilyMembers || isLoadingPaymentContainers) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="mb-4">
@@ -400,46 +357,15 @@ export const IncomeForm = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('form.paymentMethod.label')}
+                  {t('form.paymentContext.destinationContainer.label')}
                 </label>
-                <InfoTooltip content={t('form.paymentMethod.help')} />
+                <InfoTooltip content={t('form.paymentContext.destinationContainer.help')} />
               </div>
               <Select
-                options={paymentMethodOptions}
-                error={errors.payment_method?.message}
-                {...register('payment_method')}
+                options={paymentContainerOptions}
+                error={errors.destination_container_id?.message}
+                {...register('destination_container_id')}
               />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {t('form.paymentContext.destinationContainer.label')}
-                  </label>
-                  <InfoTooltip content={t('form.paymentContext.destinationContainer.help')} />
-                </div>
-                <Select
-                  options={paymentContainerOptions}
-                  error={errors.destination_container_id?.message}
-                  {...register('destination_container_id')}
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {t('form.paymentContext.instrument.label')}
-                  </label>
-                  <InfoTooltip content={t('form.paymentContext.instrument.help')} />
-                </div>
-                <Select
-                  options={paymentInstrumentOptions}
-                  error={errors.destination_instrument_id?.message}
-                  helperText={selectedDestinationInstrumentBacking ? t('form.paymentContext.instrument.backedBy', { container: selectedDestinationInstrumentBacking.name }) : undefined}
-                  {...register('destination_instrument_id')}
-                />
-              </div>
             </div>
 
             {activeAccount?.type === 'family' && (

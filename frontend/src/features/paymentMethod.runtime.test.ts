@@ -1,14 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildQuickAddExpensePayload } from '@/components/QuickAddExpenseModal';
-import {
-  buildExpenseSubmitPayload,
-  getExpenseFormPaymentMethodValue,
-} from '@/features/expenses/formSubmissions';
-import {
-  buildIncomeSubmitPayload,
-  getIncomeFormPaymentMethodValue,
-} from '@/features/incomes/formSubmissions';
+import { buildExpenseSubmitPayload } from '@/features/expenses/formSubmissions';
+import { buildIncomeSubmitPayload } from '@/features/incomes/formSubmissions';
 
 const expenseBase = {
   description: 'Supermercado',
@@ -25,28 +19,18 @@ const incomeBase = {
 };
 
 describe('Payment Method Semantics / Distinguish concepts', () => {
-  it('keeps expense payment_method independent from account context during submit mapping', () => {
+  it('keeps primary expense payment context place-only during submit mapping', () => {
     expect(buildExpenseSubmitPayload({ ...expenseBase, payment_method: 'credit_card' }, false)).toMatchObject({
-      payment_method: 'credit_card',
       currency: 'ARS',
     });
-  });
-
-  it('renders existing form values from stored payment methods only when present', () => {
-    expect(getExpenseFormPaymentMethodValue('credit_card')).toBe('credit_card');
-    expect(getExpenseFormPaymentMethodValue(null)).toBeUndefined();
-    expect(getIncomeFormPaymentMethodValue('bank_transfer')).toBe('bank_transfer');
-    expect(getIncomeFormPaymentMethodValue(undefined)).toBeUndefined();
+    expect(buildExpenseSubmitPayload({ ...expenseBase, payment_method: 'credit_card' }, false)).not.toHaveProperty('payment_method');
   });
 });
 
 describe('Expense Visibility', () => {
-  it('omits an empty expense selector on create without forcing null', () => {
+  it('omits expense payment_method in the primary create/edit payload', () => {
     expect(buildExpenseSubmitPayload({ ...expenseBase, payment_method: '' as never }, false).payment_method).toBeUndefined();
-  });
-
-  it('clears an existing expense payment method with null on update', () => {
-    expect(buildExpenseSubmitPayload({ ...expenseBase, payment_method: '' as never }, true, 'cash').payment_method).toBeNull();
+    expect(buildExpenseSubmitPayload({ ...expenseBase, payment_method: '' as never }, true).payment_method).toBeUndefined();
   });
 
   it('keeps quick add optional while preserving normalized values when selected', () => {
@@ -82,8 +66,8 @@ describe('MVP Boundaries / Out-of-scope request', () => {
 });
 
 describe('IncomeForm runtime behavior', () => {
-  it('omits an empty income selector on create and clears it on update when needed', () => {
+  it('omits income payment_method in the primary create/edit payload', () => {
     expect(buildIncomeSubmitPayload({ ...incomeBase, payment_method: '' as never }, false).payment_method).toBeUndefined();
-    expect(buildIncomeSubmitPayload({ ...incomeBase, payment_method: '' as never }, true, 'bank_transfer').payment_method).toBeNull();
+    expect(buildIncomeSubmitPayload({ ...incomeBase, payment_method: '' as never }, true).payment_method).toBeUndefined();
   });
 });

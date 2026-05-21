@@ -71,7 +71,7 @@ export function PaymentContainersPage() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.75fr)]">
         <ContainerForm
           key={editingContainer?.id ?? 'new-container'}
           container={editingContainer}
@@ -86,23 +86,29 @@ export function PaymentContainersPage() {
           }}
         />
 
-        <InstrumentForm
-          key={editingInstrument?.id ?? 'new-instrument'}
-          instrument={editingInstrument}
-          containers={containers}
-          isSubmitting={createInstrument.isPending || updateInstrument.isPending}
-          onCancel={editingInstrument ? () => setEditingInstrument(null) : undefined}
-          onSubmit={(values) => {
-            if (editingInstrument) {
-              updateInstrument.mutate({ id: editingInstrument.id, ...values }, { onSuccess: () => setEditingInstrument(null) });
-              return;
-            }
-            createInstrument.mutate(values);
-          }}
-        />
+        <details className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-5 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-300">
+          <summary className="cursor-pointer font-semibold text-gray-900 dark:text-white">
+            {t('paymentContainersPage.instruments.legacyTitle')}
+          </summary>
+          <p className="mt-2 mb-4 text-gray-500 dark:text-gray-400">{t('paymentContainersPage.instruments.legacyDescription')}</p>
+          <InstrumentForm
+            key={editingInstrument?.id ?? 'new-instrument'}
+            instrument={editingInstrument}
+            containers={containers}
+            isSubmitting={createInstrument.isPending || updateInstrument.isPending}
+            onCancel={editingInstrument ? () => setEditingInstrument(null) : undefined}
+            onSubmit={(values) => {
+              if (editingInstrument) {
+                updateInstrument.mutate({ id: editingInstrument.id, ...values }, { onSuccess: () => setEditingInstrument(null) });
+                return;
+              }
+              createInstrument.mutate(values);
+            }}
+          />
+        </details>
       </div>
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section className="space-y-6">
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center gap-3 border-b border-gray-200 p-5 dark:border-gray-800">
             <WalletCards className="h-5 w-5 text-brand-primary" aria-hidden="true" />
@@ -142,14 +148,14 @@ export function PaymentContainersPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex items-center gap-3 border-b border-gray-200 p-5 dark:border-gray-800">
+        <details className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <summary className="flex cursor-pointer items-center gap-3 border-b border-gray-200 p-5 dark:border-gray-800">
             <CreditCard className="h-5 w-5 text-brand-primary" aria-hidden="true" />
             <div>
-              <h2 className="font-semibold text-gray-900 dark:text-white">{t('paymentContainersPage.instruments.title')}</h2>
+              <span className="font-semibold text-gray-900 dark:text-white">{t('paymentContainersPage.instruments.legacyTitle')}</span>
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('paymentContainersPage.instruments.description')}</p>
             </div>
-          </div>
+          </summary>
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {instruments.length === 0 ? (
               <p className="p-5 text-sm text-gray-500 dark:text-gray-400">{t('paymentContainersPage.instruments.empty')}</p>
@@ -182,7 +188,7 @@ export function PaymentContainersPage() {
               ))
             )}
           </div>
-        </div>
+        </details>
       </section>
     </div>
   );

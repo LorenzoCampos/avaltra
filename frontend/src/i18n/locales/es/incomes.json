@@ -30,8 +30,8 @@
     },
     "paymentContext": {
       "destinationContainer": {
-        "label": "Contenedor de destino",
-        "empty": "Sin contenedor de destino",
+        "label": "Lugar de destino",
+        "empty": "Sin lugar de destino",
         "help": "Lugar opcional donde se deposita la plata."
       },
       "instrument": {

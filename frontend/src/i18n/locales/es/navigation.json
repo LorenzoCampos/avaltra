@@ -58,11 +58,15 @@
     "actions": {
       "edit": "Editar",
       "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
       "cancel": "Cancelar"
     },
     "containers": {
       "title": "Lugares",
+      "activeTitle": "Lugares activos",
+      "inactiveTitle": "Lugares archivados",
       "description": "Los lugares activos aparecen como origen o destino en gastos e ingresos.",
+      "inactiveDescription": "Si volvés a usar uno de estos lugares, reactivarlo lo devuelve a los formularios principales.",
       "empty": "Todavía no hay lugares cargados."
     },
     "instruments": {

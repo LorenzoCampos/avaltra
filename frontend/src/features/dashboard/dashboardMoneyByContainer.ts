@@ -14,11 +14,13 @@ export const getDashboardMoneyByContainerItems = (
 ): DashboardMoneyByContainerItem[] => {
   if (!moneyByContainer) return [];
 
-  return moneyByContainer.map((item) => ({
-    key: item.container_id ?? 'unassigned',
-    label: item.is_unassigned ? unassignedLabel : item.name,
-    total: item.total,
-    percentage: item.percentage,
-    isUnassigned: item.is_unassigned,
-  }));
+  return moneyByContainer
+    .filter((item) => item.total > 0)
+    .map((item) => ({
+      key: item.container_id ?? 'unassigned',
+      label: item.is_unassigned ? unassignedLabel : item.name,
+      total: item.total,
+      percentage: item.percentage,
+      isUnassigned: item.is_unassigned,
+    }));
 };

@@ -5,13 +5,11 @@ import { CreditCard, Pencil, WalletCards } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import {
   useCreatePaymentContainer,
-  useDeactivatePaymentContainer,
   usePaymentContainers,
   useUpdatePaymentContainer,
 } from '@/hooks/usePaymentContainers';
 import {
   useCreatePaymentInstrument,
-  useDeactivatePaymentInstrument,
   usePaymentInstruments,
   useUpdatePaymentInstrument,
 } from '@/hooks/usePaymentInstruments';
@@ -34,13 +32,15 @@ export function PaymentContainersPage() {
   const instrumentsQuery = usePaymentInstruments({ includeInactive: true });
   const createContainer = useCreatePaymentContainer();
   const updateContainer = useUpdatePaymentContainer();
-  const deactivateContainer = useDeactivatePaymentContainer();
   const createInstrument = useCreatePaymentInstrument();
   const updateInstrument = useUpdatePaymentInstrument();
-  const deactivateInstrument = useDeactivatePaymentInstrument();
 
   const containers = useMemo(() => containersQuery.data?.payment_containers ?? [], [containersQuery.data?.payment_containers]);
-  const instruments = instrumentsQuery.data?.payment_instruments ?? [];
+  const instruments = useMemo(() => instrumentsQuery.data?.payment_instruments ?? [], [instrumentsQuery.data?.payment_instruments]);
+  const activeContainers = useMemo(() => containers.filter((container) => container.is_active), [containers]);
+  const inactiveContainers = useMemo(() => containers.filter((container) => !container.is_active), [containers]);
+  const activeInstruments = useMemo(() => instruments.filter((instrument) => instrument.is_active), [instruments]);
+  const inactiveInstruments = useMemo(() => instruments.filter((instrument) => !instrument.is_active), [instruments]);
   const containerNames = useMemo(
     () => new Map(containers.map((container) => [container.id, container.name])),
     [containers],
@@ -113,7 +113,7 @@ export function PaymentContainersPage() {
           <div className="flex items-center gap-3 border-b border-gray-200 p-5 dark:border-gray-800">
             <WalletCards className="h-5 w-5 text-brand-primary" aria-hidden="true" />
             <div>
-              <h2 className="font-semibold text-gray-900 dark:text-white">{t('paymentContainersPage.containers.title')}</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-white">{t('paymentContainersPage.containers.activeTitle')}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('paymentContainersPage.containers.description')}</p>
             </div>
           </div>
@@ -121,7 +121,7 @@ export function PaymentContainersPage() {
             {containers.length === 0 ? (
               <p className="p-5 text-sm text-gray-500 dark:text-gray-400">{t('paymentContainersPage.containers.empty')}</p>
             ) : (
-              containers.map((container) => (
+              activeContainers.map((container) => (
                 <div key={container.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -136,17 +136,44 @@ export function PaymentContainersPage() {
                     <Button type="button" size="sm" variant="ghost" onClick={() => setEditingContainer(container)}>
                       <Pencil className="mr-1 h-4 w-4" aria-hidden="true" /> {t('paymentContainersPage.actions.edit')}
                     </Button>
-                    {container.is_active && (
-                      <Button type="button" size="sm" variant="danger" onClick={() => deactivateContainer.mutate(container.id)}>
-                        {t('paymentContainersPage.actions.deactivate')}
-                      </Button>
-                    )}
                   </div>
                 </div>
               ))
             )}
           </div>
         </div>
+
+        {inactiveContainers.length > 0 && (
+          <details className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <summary className="cursor-pointer border-b border-gray-200 p-5 dark:border-gray-800">
+              <span className="font-semibold text-gray-900 dark:text-white">{t('paymentContainersPage.containers.inactiveTitle')}</span>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('paymentContainersPage.containers.inactiveDescription')}</p>
+            </summary>
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {inactiveContainers.map((container) => (
+                <div key={container.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-medium text-gray-900 dark:text-white">{container.name}</h3>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusClassName(container.is_active)}`}>
+                        {t('paymentContainersPage.status.inactive')}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t(`paymentContainersPage.containerKinds.${container.kind}`)}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setEditingContainer(container)}>
+                      <Pencil className="mr-1 h-4 w-4" aria-hidden="true" /> {t('paymentContainersPage.actions.edit')}
+                    </Button>
+                    <Button type="button" size="sm" onClick={() => updateContainer.mutate({ id: container.id, is_active: true })}>
+                      {t('paymentContainersPage.actions.reactivate')}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
 
         <details className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <summary className="flex cursor-pointer items-center gap-3 border-b border-gray-200 p-5 dark:border-gray-800">
@@ -160,7 +187,7 @@ export function PaymentContainersPage() {
             {instruments.length === 0 ? (
               <p className="p-5 text-sm text-gray-500 dark:text-gray-400">{t('paymentContainersPage.instruments.empty')}</p>
             ) : (
-              instruments.map((instrument) => (
+              [...activeInstruments, ...inactiveInstruments].map((instrument) => (
                 <div key={instrument.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -178,9 +205,9 @@ export function PaymentContainersPage() {
                     <Button type="button" size="sm" variant="ghost" onClick={() => setEditingInstrument(instrument)}>
                       <Pencil className="mr-1 h-4 w-4" aria-hidden="true" /> {t('paymentContainersPage.actions.edit')}
                     </Button>
-                    {instrument.is_active && (
-                      <Button type="button" size="sm" variant="danger" onClick={() => deactivateInstrument.mutate(instrument.id)}>
-                        {t('paymentContainersPage.actions.deactivate')}
+                    {!instrument.is_active && (
+                      <Button type="button" size="sm" onClick={() => updateInstrument.mutate({ id: instrument.id, is_active: true })}>
+                        {t('paymentContainersPage.actions.reactivate')}
                       </Button>
                     )}
                   </div>

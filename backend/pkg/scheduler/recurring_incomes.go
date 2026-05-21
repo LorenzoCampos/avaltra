@@ -362,8 +362,8 @@ func generateActualIncomeFromTemplate(pool *pgxpool.Pool, ctx context.Context, t
 		"recurring", // income_type
 		incomeDate,
 		t.ID, // recurring_income_id (FK al template)
-		t.DestinationContainerID,
-		t.DestinationInstrumentID,
+		generatedIncomeContainerIDForTemplate(t),
+		generatedIncomeInstrumentIDForTemplate(t),
 	).Scan(&incomeID)
 
 	if err != nil {
@@ -380,6 +380,14 @@ func generateActualIncomeFromTemplate(pool *pgxpool.Pool, ctx context.Context, t
 		"date":                incomeDate.Format("2006-01-02"),
 	})
 
+	return nil
+}
+
+func generatedIncomeContainerIDForTemplate(t RecurringIncomeTemplate) *string {
+	return t.DestinationContainerID
+}
+
+func generatedIncomeInstrumentIDForTemplate(_ RecurringIncomeTemplate) *string {
 	return nil
 }
 

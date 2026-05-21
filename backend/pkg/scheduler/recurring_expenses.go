@@ -311,8 +311,8 @@ func generateExpenseFromTemplate(pool *pgxpool.Pool, ctx context.Context, t Recu
 		"recurring", // expense_type
 		expenseDate,
 		t.ID, // recurring_expense_id (FK al template)
-		t.SourceContainerID,
-		t.SourceInstrumentID,
+		generatedExpenseContainerIDForTemplate(t),
+		generatedExpenseInstrumentIDForTemplate(t),
 	).Scan(&expenseID)
 
 	if err != nil {
@@ -329,6 +329,14 @@ func generateExpenseFromTemplate(pool *pgxpool.Pool, ctx context.Context, t Recu
 		"date":                 expenseDate.Format("2006-01-02"),
 	})
 
+	return nil
+}
+
+func generatedExpenseContainerIDForTemplate(t RecurringExpenseTemplate) *string {
+	return t.SourceContainerID
+}
+
+func generatedExpenseInstrumentIDForTemplate(_ RecurringExpenseTemplate) *string {
 	return nil
 }
 

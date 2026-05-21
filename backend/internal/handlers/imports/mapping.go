@@ -228,34 +228,6 @@ func loadPaymentContextCatalog(ctx context.Context, db queryStore, accountID str
 		return paymentContextCatalog{}, err
 	}
 
-	instrumentRows, err := db.Query(ctx, `
-		SELECT id, name, backing_container_id
-		FROM payment_instruments
-		WHERE account_id = $1 AND is_active = true
-	`, accountID)
-	if err != nil {
-		return paymentContextCatalog{}, err
-	}
-	defer instrumentRows.Close()
-
-	for instrumentRows.Next() {
-		var id, name string
-		var backingContainerID *string
-		if err := instrumentRows.Scan(&id, &name, &backingContainerID); err != nil {
-			return paymentContextCatalog{}, err
-		}
-		instrumentID := id
-		ref := paymentContextRef{InstrumentID: &instrumentID}
-		if backingContainerID != nil {
-			containerID := *backingContainerID
-			ref.ContainerID = &containerID
-		}
-		catalog.add(name, ref)
-	}
-	if err := instrumentRows.Err(); err != nil {
-		return paymentContextCatalog{}, err
-	}
-
 	return catalog, nil
 }
 
@@ -274,6 +246,9 @@ func resolveImportPaymentContext(raw string, catalog paymentContextCatalog) (*st
 	}
 	matches := catalog.byLookupKey[key]
 	if len(matches) != 1 {
+		return nil, nil
+	}
+	if matches[0].InstrumentID != nil {
 		return nil, nil
 	}
 	return matches[0].ContainerID, matches[0].InstrumentID

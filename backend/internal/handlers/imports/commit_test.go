@@ -78,9 +78,6 @@ func TestCommitExcelTemplatePersistsApprovedRowsInOneTransaction(t *testing.T) {
 	mock.ExpectQuery(`FROM payment_containers`).
 		WithArgs(testImportAccountID).
 		WillReturnRows(mock.NewRows([]string{"id", "name"}).AddRow("cash-container", "Efectivo").AddRow("bank-container", "Transferencia"))
-	mock.ExpectQuery(`FROM payment_instruments`).
-		WithArgs(testImportAccountID).
-		WillReturnRows(mock.NewRows([]string{"id", "name", "backing_container_id"}))
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 		WithArgs(testImportAccountID).

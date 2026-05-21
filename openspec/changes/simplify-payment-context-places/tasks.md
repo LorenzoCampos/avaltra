@@ -33,11 +33,11 @@ Chain strategy: pending
 
 ## Phase 2: Frontend Simplification and PR #23 Reconciliation
 
-- [ ] 2.1 Refactor `frontend/src/lib/paymentContext.ts` to normalize/submit container fields only and preserve display fallback container → instrument → `payment_method`.
-- [ ] 2.2 Remove instrument selectors/hooks/autofill from `frontend/src/features/{expenses,incomes}/**` and ensure duplicate/edit submits do not copy legacy instrument IDs.
-- [ ] 2.3 Simplify recurring template forms in `frontend/src/features/recurring-*/**` to container-only primary input.
-- [ ] 2.4 Reconcile paused PR #23: salvage neutral container/i18n polish, explicitly abandon or rewrite any instrument-management UI assumptions.
-- [ ] 2.5 Update locale copy in `frontend/src/i18n/locales/**` from instrument-centric wording to place/container language.
+- [x] 2.1 Refactor `frontend/src/lib/paymentContext.ts` to normalize/submit container fields only and preserve display fallback container → instrument → `payment_method`.
+- [x] 2.2 Remove instrument selectors/hooks/autofill from `frontend/src/features/{expenses,incomes}/**` and ensure duplicate/edit submits do not copy legacy instrument IDs.
+- [x] 2.3 Simplify recurring template forms in `frontend/src/features/recurring-*/**` to container-only primary input.
+- [x] 2.4 Reconcile paused PR #23: salvage neutral container/i18n polish, explicitly abandon or rewrite any instrument-management UI assumptions.
+- [x] 2.5 Update locale copy in `frontend/src/i18n/locales/**` from instrument-centric wording to place/container language.
 
 ## Phase 3: Importer, Activity, Dashboard, and Recurring Generation
 
@@ -50,7 +50,7 @@ Chain strategy: pending
 
 - [x] 4.1 Add/adjust backend tests for container-only create/update acceptance, legacy instrument compatibility, and clear-on-save behavior.
 - [ ] 4.2 Add recurring tests for future-only inheritance and scheduler null-instrument generation from place-only templates.
-- [ ] 4.3 Add frontend runtime/unit tests proving no instrument selector in primary flows and submission payloads contain only container fields.
+- [x] 4.3 Add frontend runtime/unit tests proving no instrument selector in primary flows and submission payloads contain only container fields.
 - [ ] 4.4 Add importer/activity regression tests for deterministic place mapping and fallback label precedence.
 - [ ] 4.5 Run `go test ./...`, `pnpm test`, `pnpm typecheck`, and a targeted manual smoke for expense/income/recurring/import flows.
 

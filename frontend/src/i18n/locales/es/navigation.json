@@ -66,8 +66,10 @@
       "empty": "Todavía no hay lugares cargados."
     },
     "instruments": {
-      "title": "Medios",
-      "description": "Las tarjetas requieren un lugar asociado, como una cuenta o billetera.",
+      "title": "Medios heredados",
+      "legacyTitle": "Medios heredados",
+      "legacyDescription": "Solo para compatibilidad con datos antiguos. Los gastos e ingresos nuevos usan lugares.",
+      "description": "Se mantienen ocultos por defecto porque los flujos principales ya usan lugares.",
       "empty": "Todavía no hay medios cargados.",
       "backedBy": "asociado a {{container}}",
       "unknownContainer": "lugar desconocido"

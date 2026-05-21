@@ -30,8 +30,8 @@
     },
     "paymentContext": {
       "sourceContainer": {
-        "label": "Contenedor de origen",
-        "empty": "Sin contenedor de origen",
+        "label": "Lugar de origen",
+        "empty": "Sin lugar de origen",
         "help": "Lugar opcional desde donde sale la plata."
       },
       "instrument": {

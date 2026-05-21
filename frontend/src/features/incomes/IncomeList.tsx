@@ -63,7 +63,6 @@ export const IncomeList = () => {
           family_member_id: income.family_member_id,
           payment_method: income.payment_method,
           destination_container_id: income.destination_container_id,
-          destination_instrument_id: income.destination_instrument_id,
           // Date is NOT included - will use today's date
         }
       }

@@ -30,8 +30,8 @@
     },
     "paymentContext": {
       "destinationContainer": {
-        "label": "Destination container",
-        "empty": "No destination container",
+        "label": "Destination place",
+        "empty": "No destination place",
         "help": "Optional place where the money is deposited."
       },
       "instrument": {

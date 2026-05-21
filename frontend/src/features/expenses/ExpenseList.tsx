@@ -63,7 +63,6 @@ export const ExpenseList = () => {
           family_member_id: expense.family_member_id,
           payment_method: expense.payment_method,
           source_container_id: expense.source_container_id,
-          source_instrument_id: expense.source_instrument_id,
           // Date is NOT included - will use today's date
         }
       }

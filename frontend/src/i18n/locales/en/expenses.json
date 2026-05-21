@@ -30,8 +30,8 @@
     },
     "paymentContext": {
       "sourceContainer": {
-        "label": "Source container",
-        "empty": "No source container",
+        "label": "Source place",
+        "empty": "No source place",
         "help": "Optional place where the money comes from."
       },
       "instrument": {

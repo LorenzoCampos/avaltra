@@ -321,7 +321,7 @@ func calculateIncomeGenerationDate(t RecurringIncomeTemplate, today time.Time) t
 }
 
 // generateActualIncomeFromTemplate crea un income desde un template
-func generateActualIncomeFromTemplate(pool *pgxpool.Pool, ctx context.Context, t RecurringIncomeTemplate, incomeDate time.Time) error {
+func generateActualIncomeFromTemplate(pool recurringGeneratorDB, ctx context.Context, t RecurringIncomeTemplate, incomeDate time.Time) error {
 	insertQuery := `
 		INSERT INTO incomes (
 			account_id, family_member_id, category_id,

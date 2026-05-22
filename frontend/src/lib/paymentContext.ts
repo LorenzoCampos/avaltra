@@ -47,14 +47,18 @@ function withIncomeEditClearing<T extends { destination_container_id?: string | 
   };
 }
 
-function withoutExpenseInstrument<T extends { source_instrument_id?: string | null }>(data: T): Omit<T, 'source_instrument_id'> {
-  const { source_instrument_id: _sourceInstrumentId, ...placeOnlyData } = data;
+function omitField<T extends Record<string, unknown>, K extends keyof T>(data: T, field: K): Omit<T, K> {
+  const placeOnlyData = { ...data };
+  delete placeOnlyData[field];
   return placeOnlyData;
 }
 
+function withoutExpenseInstrument<T extends { source_instrument_id?: string | null }>(data: T): Omit<T, 'source_instrument_id'> {
+  return omitField(data, 'source_instrument_id');
+}
+
 function withoutIncomeInstrument<T extends { destination_instrument_id?: string | null }>(data: T): Omit<T, 'destination_instrument_id'> {
-  const { destination_instrument_id: _destinationInstrumentId, ...placeOnlyData } = data;
-  return placeOnlyData;
+  return omitField(data, 'destination_instrument_id');
 }
 
 export function withExpensePaymentContext(

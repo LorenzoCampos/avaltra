@@ -6,7 +6,8 @@ export const buildExpenseSubmitPayload = (
   _isEditing: boolean,
   existingContext?: { containerId?: string | null },
 ): CreateExpenseRequest => {
-  const { payment_method: _paymentMethod, ...placeOnlyData } = data;
+  const placeOnlyData = { ...data };
+  delete placeOnlyData.payment_method;
 
   return withExpensePaymentContext(placeOnlyData, existingContext);
 };

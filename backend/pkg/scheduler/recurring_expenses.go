@@ -7,8 +7,13 @@ import (
 
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/LorenzoCampos/avaltra/pkg/recurrence"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type recurringGeneratorDB interface {
+	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+}
 
 // RecurringExpenseTemplate representa un template activo que puede generar gastos
 type RecurringExpenseTemplate struct {
@@ -270,7 +275,7 @@ func calculateExpenseDate(t RecurringExpenseTemplate, today time.Time) time.Time
 }
 
 // generateExpenseFromTemplate crea un expense desde un template
-func generateExpenseFromTemplate(pool *pgxpool.Pool, ctx context.Context, t RecurringExpenseTemplate, expenseDate time.Time) error {
+func generateExpenseFromTemplate(pool recurringGeneratorDB, ctx context.Context, t RecurringExpenseTemplate, expenseDate time.Time) error {
 	insertQuery := `
 		INSERT INTO expenses (
 			account_id, family_member_id, category_id,

@@ -6,7 +6,8 @@ export const buildIncomeSubmitPayload = (
   _isEditing: boolean,
   existingContext?: { containerId?: string | null },
 ): CreateIncomeRequest => {
-  const { payment_method: _paymentMethod, ...placeOnlyData } = data;
+  const placeOnlyData = { ...data };
+  delete placeOnlyData.payment_method;
 
   return withIncomePaymentContext(placeOnlyData, existingContext);
 };

@@ -22,6 +22,9 @@ func TestCreateExpenseRejectsCategoryFromAnotherAccount(t *testing.T) {
 	defer mock.Close()
 
 	categoryID := testExpenseCategoryID
+	mock.ExpectQuery(`SELECT EXISTS\(SELECT 1 FROM payment_containers`).
+		WithArgs(testExpenseContainerID, testExpenseAccountID).
+		WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(true))
 	mock.ExpectQuery(`SELECT EXISTS\(`).
 		WithArgs(&categoryID, testExpenseAccountID).
 		WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(false))
@@ -29,7 +32,7 @@ func TestCreateExpenseRejectsCategoryFromAnotherAccount(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	router := expenseTestRouter(createExpenseHandler(mock))
 
-	req := httptest.NewRequest(http.MethodPost, "/expenses", bytes.NewBufferString(`{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","category_id":"`+categoryID+`"}`))
+	req := httptest.NewRequest(http.MethodPost, "/expenses", bytes.NewBufferString(`{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","category_id":"`+categoryID+`","source_container_id":"`+testExpenseContainerID+`"}`))
 	req.Header.Set("Content-Type", "application/json")
 
 	router.ServeHTTP(recorder, req)

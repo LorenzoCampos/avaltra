@@ -55,6 +55,13 @@ func validateIncomePaymentContext(ctx context.Context, db incomeStore, accountID
 	return nil
 }
 
+func requireIncomePaymentContainer(input incomePaymentContextRequest) error {
+	if input.ContainerID == nil || *input.ContainerID == "" {
+		return fmt.Errorf("destination_container_id is required for one-time incomes")
+	}
+	return nil
+}
+
 func resolveIncomePaymentContextUpdate(ctx context.Context, db incomeStore, accountID any, incomeID string, input incomePaymentContextUpdate) (bool, *string, bool, *string, error) {
 	containerSet, containerID, err := resolveNullableUUIDField("destination_container_id", input.ContainerID)
 	if err != nil {
@@ -78,6 +85,32 @@ func resolveIncomePaymentContextUpdate(ctx context.Context, db incomeStore, acco
 		return false, nil, false, nil, err
 	}
 	return containerSet, containerID, instrumentSet, instrumentID, nil
+}
+
+func validateIncomeRequiredPlaceOnUpdate(ctx context.Context, db incomeStore, accountID any, incomeID string, finalIncomeType string, containerSet bool, containerID *string) error {
+	if finalIncomeType != "one-time" {
+		return nil
+	}
+	if containerSet {
+		if containerID == nil {
+			return fmt.Errorf("destination_container_id is required for one-time incomes")
+		}
+		return nil
+	}
+
+	var exists bool
+	if err := db.QueryRow(ctx, `SELECT EXISTS(
+		SELECT 1
+		FROM incomes i
+		JOIN payment_containers pc ON pc.id = i.destination_container_id
+		WHERE i.id = $1 AND i.account_id = $2 AND i.deleted_at IS NULL AND pc.account_id = $2 AND pc.is_active = true
+	)`, incomeID, accountID).Scan(&exists); err != nil {
+		return fmt.Errorf("failed to validate destination_container_id")
+	}
+	if !exists {
+		return fmt.Errorf("destination_container_id is required for one-time incomes")
+	}
+	return nil
 }
 
 func validateIncomePaymentContextUpdateFinalPair(ctx context.Context, db incomeStore, accountID any, incomeID string, containerSet bool, containerID *string, instrumentSet bool, instrumentID *string) error {

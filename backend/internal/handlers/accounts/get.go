@@ -3,9 +3,9 @@ package accounts
 import (
 	"net/http"
 
+	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
-	"github.com/LorenzoCampos/avaltra/internal/middleware"
 )
 
 // FamilyMemberDetail representa un miembro de la familia
@@ -18,12 +18,14 @@ type FamilyMemberDetail struct {
 
 // AccountDetail representa el detalle completo de una cuenta
 type AccountDetail struct {
-	ID        string               `json:"id"`
-	Name      string               `json:"name"`
-	Type      string               `json:"type"`
-	Currency  string               `json:"currency"`
-	CreatedAt string               `json:"createdAt"`
-	Members   []FamilyMemberDetail `json:"members,omitempty"` // Solo para cuentas family
+	ID                        string               `json:"id"`
+	Name                      string               `json:"name"`
+	Type                      string               `json:"type"`
+	Currency                  string               `json:"currency"`
+	DefaultExpenseContainerID *string              `json:"default_expense_container_id"`
+	DefaultIncomeContainerID  *string              `json:"default_income_container_id"`
+	CreatedAt                 string               `json:"createdAt"`
+	Members                   []FamilyMemberDetail `json:"members,omitempty"` // Solo para cuentas family
 }
 
 // GetAccount maneja GET /api/accounts/:id
@@ -57,17 +59,21 @@ func (h *Handler) GetAccount(c *gin.Context) {
 			name,
 			type,
 			currency,
+			default_expense_container_id,
+			default_income_container_id,
 			created_at::TEXT
 		FROM accounts
 		WHERE id = $1 AND user_id = $2
 	`
 
 	var account AccountDetail
-	err := h.db.Pool.QueryRow(ctx, query, accountID, userID).Scan(
+	err := h.db.QueryRow(ctx, query, accountID, userID).Scan(
 		&account.ID,
 		&account.Name,
 		&account.Type,
 		&account.Currency,
+		&account.DefaultExpenseContainerID,
+		&account.DefaultIncomeContainerID,
 		&account.CreatedAt,
 	)
 
@@ -98,7 +104,7 @@ func (h *Handler) GetAccount(c *gin.Context) {
 			ORDER BY created_at ASC
 		`
 
-		rows, err := h.db.Pool.Query(ctx, membersQuery, accountID)
+		rows, err := h.db.Query(ctx, membersQuery, accountID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "Error obteniendo miembros de la familia",

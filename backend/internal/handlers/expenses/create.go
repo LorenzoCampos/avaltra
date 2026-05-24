@@ -108,7 +108,14 @@ func createExpenseHandler(db expenseStore) gin.HandlerFunc {
 			return
 		}
 
-		if err := validateExpensePaymentContext(c.Request.Context(), db, accountID, expensePaymentContextRequest{ContainerID: req.SourceContainerID, InstrumentID: req.SourceInstrumentID}); err != nil {
+		paymentContext := expensePaymentContextRequest{ContainerID: req.SourceContainerID, InstrumentID: req.SourceInstrumentID}
+		if expenseType == "one-time" {
+			if err := requireExpensePaymentContainer(paymentContext); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+		}
+		if err := validateExpensePaymentContext(c.Request.Context(), db, accountID, paymentContext); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

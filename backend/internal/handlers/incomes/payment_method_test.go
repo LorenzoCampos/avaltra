@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v5"
 )
 
@@ -37,7 +36,7 @@ func TestCreateIncomePaymentMethodScenarios(t *testing.T) {
 	}{
 		{
 			name:              "valid value is stored and returned",
-			body:              `{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20","payment_method":"bank_transfer"}`,
+			body:              `{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20","payment_method":"bank_transfer","destination_container_id":"` + testIncomeContainerID + `"}`,
 			expectStatus:      http.StatusCreated,
 			expectedMethod:    "bank_transfer",
 			expectDB:          true,
@@ -45,7 +44,7 @@ func TestCreateIncomePaymentMethodScenarios(t *testing.T) {
 		},
 		{
 			name:              "omitted field stores null",
-			body:              `{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20"}`,
+			body:              `{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20","destination_container_id":"` + testIncomeContainerID + `"}`,
 			expectStatus:      http.StatusCreated,
 			expectedMethod:    nil,
 			expectDB:          true,
@@ -53,7 +52,7 @@ func TestCreateIncomePaymentMethodScenarios(t *testing.T) {
 		},
 		{
 			name:              "explicit null stores null",
-			body:              `{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20","payment_method":null}`,
+			body:              `{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20","payment_method":null,"destination_container_id":"` + testIncomeContainerID + `"}`,
 			expectStatus:      http.StatusCreated,
 			expectedMethod:    nil,
 			expectDB:          true,
@@ -79,6 +78,9 @@ func TestCreateIncomePaymentMethodScenarios(t *testing.T) {
 			var nilString *string
 
 			if tt.expectDB {
+				mock.ExpectQuery(`SELECT EXISTS\(SELECT 1 FROM payment_containers`).
+					WithArgs(testIncomeContainerID, testIncomeAccountID).
+					WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(true))
 				mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 					WithArgs(testIncomeAccountID).
 					WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
@@ -89,7 +91,7 @@ func TestCreateIncomePaymentMethodScenarios(t *testing.T) {
 			income_type, date, end_date, payment_method, destination_container_id, destination_instrument_id
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at`)).
-					WithArgs(testIncomeAccountID, nilString, nilString, "Sueldo", 200000.0, "ARS", 1.0, 200000.0, "one-time", "2026-01-20", nilString, tt.expectedInsertArg, nilString, nilString).
+					WithArgs(testIncomeAccountID, nilString, nilString, "Sueldo", 200000.0, "ARS", 1.0, 200000.0, "one-time", "2026-01-20", nilString, tt.expectedInsertArg, stringPtr(testIncomeContainerID), nilString).
 					WillReturnRows(mock.NewRows([]string{"id", "created_at"}).AddRow(testIncomeID, createdAt))
 			}
 
@@ -151,7 +153,7 @@ func TestCreateIncomePaymentContextScenarios(t *testing.T) {
 			expectedInstrument: nil,
 		},
 		{
-			name:         "inactive or foreign instrument is rejected",
+			name:         "missing container is rejected before instrument validation",
 			body:         `{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20","destination_instrument_id":"` + testIncomeInstrumentID + `"}`,
 			expectStatus: http.StatusBadRequest,
 			expectDB:     false,
@@ -188,10 +190,6 @@ func TestCreateIncomePaymentContextScenarios(t *testing.T) {
 		RETURNING id, created_at`)).
 					WithArgs(testIncomeAccountID, nilString, nilString, "Sueldo", 200000.0, "ARS", 1.0, 200000.0, "one-time", "2026-01-20", nilString, stringPtr("bank_transfer"), stringPtr(testIncomeContainerID), paymentMethodRowValue(tt.expectedInstrument)).
 					WillReturnRows(mock.NewRows([]string{"id", "created_at"}).AddRow(testIncomeID, createdAt))
-			} else {
-				mock.ExpectQuery(`SELECT backing_container_id FROM payment_instruments`).
-					WithArgs(testIncomeInstrumentID, testIncomeAccountID).
-					WillReturnError(pgx.ErrNoRows)
 			}
 
 			recorder := httptest.NewRecorder()
@@ -219,6 +217,29 @@ func TestCreateIncomePaymentContextScenarios(t *testing.T) {
 				t.Fatalf("mock expectations: %v", err)
 			}
 		})
+	}
+}
+
+func TestCreateIncomeRequiresDestinationContainerForOneTime(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	recorder := httptest.NewRecorder()
+	router := incomeTestRouter(createIncomeHandler(mock))
+	req := httptest.NewRequest(http.MethodPost, "/incomes", bytes.NewBufferString(`{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20"}`))
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body = %s", recorder.Code, http.StatusBadRequest, recorder.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
 	}
 }
 
@@ -284,6 +305,9 @@ func TestUpdateIncomePaymentMethodScenarios(t *testing.T) {
 				WillReturnRows(mock.NewRows([]string{"income_type", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "date", "deleted_at"}).AddRow("one-time", 200000.0, "ARS", 1.0, 200000.0, "2026-01-20", nil))
 
 			if tt.expectStatus == http.StatusOK {
+				mock.ExpectQuery(`SELECT EXISTS\(`).
+					WithArgs(testIncomeID, testIncomeAccountID).
+					WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(true))
 				mock.ExpectQuery(`UPDATE incomes SET`).
 					WithArgs(nilString, nilString, nilString, nilFloat, nilString, nilString, nilString, nilString, testIncomeID, testIncomeAccountID, nilFloat, nilFloat, tt.expectedSetArg, tt.expectedValueArg, false, nilString, false, nilString).
 					WillReturnRows(mock.NewRows([]string{"id", "account_id", "family_member_id", "category_id", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "income_type", "date", "end_date", "payment_method", "destination_container_id", "destination_instrument_id", "created_at"}).AddRow(testIncomeID, testIncomeAccountID, nil, nil, "Sueldo", 200000.0, "ARS", 1.0, 200000.0, "one-time", &transactionDate, nil, paymentMethodRowValue(tt.expectedMethod), nil, nil, createdAt))
@@ -327,6 +351,8 @@ func TestUpdateIncomePaymentContextScenarios(t *testing.T) {
 	tests := []struct {
 		name                  string
 		body                  string
+		expectStatus          int
+		expectedIncomeType    any
 		expectedContainerSet  bool
 		expectedContainer     any
 		expectedInstrumentSet bool
@@ -337,6 +363,8 @@ func TestUpdateIncomePaymentContextScenarios(t *testing.T) {
 		{
 			name:                  "valid refs replace current refs",
 			body:                  `{"destination_container_id":"` + testIncomeContainerID + `","destination_instrument_id":"` + testIncomeInstrumentID + `"}`,
+			expectStatus:          http.StatusOK,
+			expectedIncomeType:    (*string)(nil),
 			expectedContainerSet:  true,
 			expectedContainer:     stringPtr(testIncomeContainerID),
 			expectedInstrumentSet: true,
@@ -345,8 +373,10 @@ func TestUpdateIncomePaymentContextScenarios(t *testing.T) {
 			returnedInstrument:    testIncomeInstrumentID,
 		},
 		{
-			name:                  "explicit null clears refs",
-			body:                  `{"destination_container_id":null,"destination_instrument_id":null}`,
+			name:                  "explicit null clears refs when changing to recurring",
+			body:                  `{"income_type":"recurring","destination_container_id":null,"destination_instrument_id":null}`,
+			expectStatus:          http.StatusOK,
+			expectedIncomeType:    stringPtr("recurring"),
 			expectedContainerSet:  true,
 			expectedContainer:     (*string)(nil),
 			expectedInstrumentSet: true,
@@ -357,6 +387,8 @@ func TestUpdateIncomePaymentContextScenarios(t *testing.T) {
 		{
 			name:                  "place-only save clears legacy instrument ref",
 			body:                  `{"destination_container_id":"` + testIncomeAltContainerID + `"}`,
+			expectStatus:          http.StatusOK,
+			expectedIncomeType:    (*string)(nil),
 			expectedContainerSet:  true,
 			expectedContainer:     stringPtr(testIncomeAltContainerID),
 			expectedInstrumentSet: true,
@@ -395,7 +427,7 @@ func TestUpdateIncomePaymentContextScenarios(t *testing.T) {
 			}
 
 			mock.ExpectQuery(`UPDATE incomes SET`).
-				WithArgs(nilString, nilString, nilString, nilFloat, nilString, nilString, nilString, nilString, testIncomeID, testIncomeAccountID, nilFloat, nilFloat, false, nilString, tt.expectedContainerSet, tt.expectedContainer, tt.expectedInstrumentSet, tt.expectedInstrument).
+				WithArgs(nilString, nilString, nilString, nilFloat, nilString, tt.expectedIncomeType, nilString, nilString, testIncomeID, testIncomeAccountID, nilFloat, nilFloat, false, nilString, tt.expectedContainerSet, tt.expectedContainer, tt.expectedInstrumentSet, tt.expectedInstrument).
 				WillReturnRows(mock.NewRows([]string{"id", "account_id", "family_member_id", "category_id", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "income_type", "date", "end_date", "payment_method", "destination_container_id", "destination_instrument_id", "created_at"}).AddRow(testIncomeID, testIncomeAccountID, nil, nil, "Sueldo", 200000.0, "ARS", 1.0, 200000.0, "one-time", &transactionDate, nil, nil, paymentMethodRowValue(tt.returnedContainer), paymentMethodRowValue(tt.returnedInstrument), createdAt))
 
 			recorder := httptest.NewRecorder()
@@ -404,8 +436,8 @@ func TestUpdateIncomePaymentContextScenarios(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 			router.ServeHTTP(recorder, req)
 
-			if recorder.Code != http.StatusOK {
-				t.Fatalf("status = %d, want %d, body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+			if recorder.Code != tt.expectStatus {
+				t.Fatalf("status = %d, want %d, body = %s", recorder.Code, tt.expectStatus, recorder.Body.String())
 			}
 			var response map[string]any
 			if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
@@ -416,6 +448,58 @@ func TestUpdateIncomePaymentContextScenarios(t *testing.T) {
 			}
 			if got := response["destination_instrument_id"]; got != tt.returnedInstrument {
 				t.Fatalf("destination_instrument_id = %#v, want %#v", got, tt.returnedInstrument)
+			}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Fatalf("mock expectations: %v", err)
+			}
+		})
+	}
+}
+
+func TestUpdateIncomeRequiresActiveDestinationContainerForOneTime(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name          string
+		body          string
+		expectDBCheck bool
+	}{
+		{
+			name: "explicit null destination container is rejected",
+			body: `{"destination_container_id":null,"destination_instrument_id":null}`,
+		},
+		{
+			name:          "omitted destination container is rejected when existing place is missing or inactive",
+			body:          `{}`,
+			expectDBCheck: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatalf("pgxmock.NewPool() error = %v", err)
+			}
+			defer mock.Close()
+
+			mock.ExpectQuery(`SELECT income_type, amount, currency, exchange_rate, amount_in_primary_currency, date::TEXT, deleted_at\s+FROM incomes WHERE id = \$1 AND account_id = \$2`).
+				WithArgs(testIncomeID, testIncomeAccountID).
+				WillReturnRows(mock.NewRows([]string{"income_type", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "date", "deleted_at"}).AddRow("one-time", 200000.0, "ARS", 1.0, 200000.0, "2026-01-20", nil))
+			if tt.expectDBCheck {
+				mock.ExpectQuery(`SELECT EXISTS\(`).
+					WithArgs(testIncomeID, testIncomeAccountID).
+					WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(false))
+			}
+
+			recorder := httptest.NewRecorder()
+			router := incomeTestRouter(updateIncomeHandler(mock))
+			req := httptest.NewRequest(http.MethodPut, "/incomes/"+testIncomeID, bytes.NewBufferString(tt.body))
+			req.Header.Set("Content-Type", "application/json")
+			router.ServeHTTP(recorder, req)
+
+			if recorder.Code != http.StatusBadRequest {
+				t.Fatalf("status = %d, want %d, body = %s", recorder.Code, http.StatusBadRequest, recorder.Body.String())
 			}
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Fatalf("mock expectations: %v", err)

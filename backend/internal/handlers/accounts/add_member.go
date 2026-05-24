@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/LorenzoCampos/avaltra/internal/middleware"
-	"github.com/LorenzoCampos/avaltra/pkg/logger"
 )
 
 // AddMemberRequest representa la request para agregar un miembro
@@ -77,7 +77,7 @@ func (h *Handler) AddMember(c *gin.Context) {
 		FROM accounts 
 		WHERE id = $1 AND user_id = $2
 	`
-	err := h.db.Pool.QueryRow(ctx, checkAccountQuery, accountID, userID).Scan(&accountType)
+	err := h.db.QueryRow(ctx, checkAccountQuery, accountID, userID).Scan(&accountType)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -112,7 +112,7 @@ func (h *Handler) AddMember(c *gin.Context) {
 			  AND is_active = true
 		)
 	`
-	err = h.db.Pool.QueryRow(ctx, checkDuplicateQuery, accountID, req.Name).Scan(&exists)
+	err = h.db.QueryRow(ctx, checkDuplicateQuery, accountID, req.Name).Scan(&exists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Error verificando duplicados",
@@ -137,7 +137,7 @@ func (h *Handler) AddMember(c *gin.Context) {
 	`
 
 	var member AddMemberResponse
-	err = h.db.Pool.QueryRow(
+	err = h.db.QueryRow(
 		ctx,
 		insertMemberQuery,
 		memberID,

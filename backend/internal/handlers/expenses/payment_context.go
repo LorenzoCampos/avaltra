@@ -55,6 +55,13 @@ func validateExpensePaymentContext(ctx context.Context, db expenseStore, account
 	return nil
 }
 
+func requireExpensePaymentContainer(input expensePaymentContextRequest) error {
+	if input.ContainerID == nil || *input.ContainerID == "" {
+		return fmt.Errorf("source_container_id is required for one-time expenses")
+	}
+	return nil
+}
+
 func resolveExpensePaymentContextUpdate(ctx context.Context, db expenseStore, accountID any, expenseID string, input expensePaymentContextUpdate) (bool, *string, bool, *string, error) {
 	containerSet, containerID, err := resolveNullableUUIDField("source_container_id", input.ContainerID)
 	if err != nil {
@@ -78,6 +85,32 @@ func resolveExpensePaymentContextUpdate(ctx context.Context, db expenseStore, ac
 		return false, nil, false, nil, err
 	}
 	return containerSet, containerID, instrumentSet, instrumentID, nil
+}
+
+func validateExpenseRequiredPlaceOnUpdate(ctx context.Context, db expenseStore, accountID any, expenseID string, finalExpenseType string, containerSet bool, containerID *string) error {
+	if finalExpenseType != "one-time" {
+		return nil
+	}
+	if containerSet {
+		if containerID == nil {
+			return fmt.Errorf("source_container_id is required for one-time expenses")
+		}
+		return nil
+	}
+
+	var exists bool
+	if err := db.QueryRow(ctx, `SELECT EXISTS(
+		SELECT 1
+		FROM expenses e
+		JOIN payment_containers pc ON pc.id = e.source_container_id
+		WHERE e.id = $1 AND e.account_id = $2 AND e.deleted_at IS NULL AND pc.account_id = $2 AND pc.is_active = true
+	)`, expenseID, accountID).Scan(&exists); err != nil {
+		return fmt.Errorf("failed to validate source_container_id")
+	}
+	if !exists {
+		return fmt.Errorf("source_container_id is required for one-time expenses")
+	}
+	return nil
 }
 
 func validateExpensePaymentContextUpdateFinalPair(ctx context.Context, db expenseStore, accountID any, expenseID string, containerSet bool, containerID *string, instrumentSet bool, instrumentID *string) error {

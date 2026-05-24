@@ -1,15 +1,17 @@
 package accounts
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/LorenzoCampos/avaltra/internal/database"
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // CreateAccountRequest representa el JSON para crear una cuenta
@@ -28,12 +30,14 @@ type MemberInput struct {
 
 // AccountResponse representa la cuenta creada
 type AccountResponse struct {
-	ID        string           `json:"id"`
-	Name      string           `json:"name"`
-	Type      string           `json:"type"`
-	Currency  string           `json:"currency"`
-	Members   []MemberResponse `json:"members,omitempty"`
-	CreatedAt string           `json:"created_at"`
+	ID                        string           `json:"id"`
+	Name                      string           `json:"name"`
+	Type                      string           `json:"type"`
+	Currency                  string           `json:"currency"`
+	DefaultExpenseContainerID *string          `json:"default_expense_container_id"`
+	DefaultIncomeContainerID  *string          `json:"default_income_container_id"`
+	Members                   []MemberResponse `json:"members,omitempty"`
+	CreatedAt                 string           `json:"created_at"`
 }
 
 // MemberResponse representa un miembro en la response
@@ -45,12 +49,19 @@ type MemberResponse struct {
 
 // Handler encapsula las dependencias
 type Handler struct {
-	db *database.DB
+	db accountStore
+}
+
+type accountStore interface {
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	Begin(ctx context.Context) (pgx.Tx, error)
 }
 
 // NewHandler crea una instancia del handler
 func NewHandler(db *database.DB) *Handler {
-	return &Handler{db: db}
+	return &Handler{db: db.Pool}
 }
 
 // CreateAccount maneja POST /api/accounts
@@ -109,7 +120,7 @@ func (h *Handler) CreateAccount(c *gin.Context) {
 	// 1. Insertar la cuenta
 	// 2. Insertar miembros (si es familiar)
 	// 3. Insertar meta de Ahorro General
-	tx, err := h.db.Pool.Begin(ctx)
+	tx, err := h.db.Begin(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Error iniciando transacción",

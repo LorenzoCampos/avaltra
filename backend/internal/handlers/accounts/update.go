@@ -1,19 +1,54 @@
 package accounts
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/LorenzoCampos/avaltra/internal/transactions"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 // UpdateAccountRequest representa la estructura de datos para actualizar una cuenta
 type UpdateAccountRequest struct {
-	Name     *string `json:"name,omitempty" binding:"omitempty,min=1,max=100"`
-	Currency *string `json:"currency,omitempty" binding:"omitempty,oneof=ARS USD EUR"`
+	Name                      *string                          `json:"name,omitempty" binding:"omitempty,min=1,max=100"`
+	Currency                  *string                          `json:"currency,omitempty" binding:"omitempty,oneof=ARS USD EUR"`
+	DefaultExpenseContainerID transactions.NullableStringField `json:"default_expense_container_id"`
+	DefaultIncomeContainerID  transactions.NullableStringField `json:"default_income_container_id"`
 	// NOTA: ARS, USD y EUR están soportados en el ENUM de la base de datos (migración 017)
+}
+
+func resolveAccountDefaultContainerUpdate(name string, field transactions.NullableStringField) (bool, *string, error) {
+	if !field.Set {
+		return false, nil, nil
+	}
+	if !field.Valid {
+		return true, nil, nil
+	}
+	if _, err := uuid.Parse(field.Value); err != nil {
+		return false, nil, fmt.Errorf("%s must be a valid UUID", name)
+	}
+	return true, &field.Value, nil
+}
+
+func (h *Handler) validateAccountDefaultContainer(ctx context.Context, accountID, fieldName string, containerID *string) error {
+	if containerID == nil {
+		return nil
+	}
+
+	var exists bool
+	err := h.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM payment_containers WHERE id = $1 AND account_id = $2 AND is_active = true)`, *containerID, accountID).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("failed to validate %s", fieldName)
+	}
+	if !exists {
+		return fmt.Errorf("%s is invalid for this account", fieldName)
+	}
+	return nil
 }
 
 // UpdateAccount maneja PUT /api/accounts/:id
@@ -49,9 +84,9 @@ func (h *Handler) UpdateAccount(c *gin.Context) {
 	}
 
 	// Validar que al menos un campo esté presente
-	if req.Name == nil && req.Currency == nil {
+	if req.Name == nil && req.Currency == nil && !req.DefaultExpenseContainerID.Set && !req.DefaultIncomeContainerID.Set {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Debe proporcionar al menos un campo para actualizar (name o currency)",
+			"error": "Debe proporcionar al menos un campo para actualizar (name, currency o default containers)",
 		})
 		return
 	}
@@ -61,7 +96,7 @@ func (h *Handler) UpdateAccount(c *gin.Context) {
 	// Verificar que la cuenta existe y pertenece al usuario
 	var exists bool
 	checkQuery := `SELECT EXISTS(SELECT 1 FROM accounts WHERE id = $1 AND user_id = $2)`
-	err := h.db.Pool.QueryRow(ctx, checkQuery, accountID, userID).Scan(&exists)
+	err := h.db.QueryRow(ctx, checkQuery, accountID, userID).Scan(&exists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Error verificando cuenta",
@@ -77,6 +112,25 @@ func (h *Handler) UpdateAccount(c *gin.Context) {
 		return
 	}
 
+	defaultExpenseSet, defaultExpenseContainerID, err := resolveAccountDefaultContainerUpdate("default_expense_container_id", req.DefaultExpenseContainerID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	defaultIncomeSet, defaultIncomeContainerID, err := resolveAccountDefaultContainerUpdate("default_income_container_id", req.DefaultIncomeContainerID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.validateAccountDefaultContainer(c.Request.Context(), accountID, "default_expense_container_id", defaultExpenseContainerID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.validateAccountDefaultContainer(c.Request.Context(), accountID, "default_income_container_id", defaultIncomeContainerID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	// Construir la query de actualización dinámicamente
 	// Solo actualizamos los campos que vienen en el request
 	query := `UPDATE accounts SET `
@@ -84,14 +138,24 @@ func (h *Handler) UpdateAccount(c *gin.Context) {
 	argPos := 1
 
 	if req.Name != nil {
-		query += `name = $` + string(rune(argPos+'0')) + `, `
+		query += fmt.Sprintf(`name = $%d, `, argPos)
 		args = append(args, *req.Name)
 		argPos++
 	}
 
 	if req.Currency != nil {
-		query += `currency = $` + string(rune(argPos+'0')) + `, `
+		query += fmt.Sprintf(`currency = $%d, `, argPos)
 		args = append(args, *req.Currency)
+		argPos++
+	}
+	if defaultExpenseSet {
+		query += fmt.Sprintf(`default_expense_container_id = $%d, `, argPos)
+		args = append(args, defaultExpenseContainerID)
+		argPos++
+	}
+	if defaultIncomeSet {
+		query += fmt.Sprintf(`default_income_container_id = $%d, `, argPos)
+		args = append(args, defaultIncomeContainerID)
 		argPos++
 	}
 
@@ -99,11 +163,11 @@ func (h *Handler) UpdateAccount(c *gin.Context) {
 	query = query[:len(query)-2]
 
 	// Agregar el WHERE y updated_at
-	query += `, updated_at = NOW() WHERE id = $` + string(rune(argPos+'0')) + ` AND user_id = $` + string(rune(argPos+1+'0'))
+	query += fmt.Sprintf(`, updated_at = NOW() WHERE id = $%d AND user_id = $%d`, argPos, argPos+1)
 	args = append(args, accountID, userID)
 
 	// Ejecutar la actualización
-	cmdTag, err := h.db.Pool.Exec(ctx, query, args...)
+	cmdTag, err := h.db.Exec(ctx, query, args...)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Error actualizando cuenta",
@@ -126,6 +190,8 @@ func (h *Handler) UpdateAccount(c *gin.Context) {
 			name,
 			type,
 			currency,
+			default_expense_container_id,
+			default_income_container_id,
 			created_at::TEXT,
 			updated_at::TEXT
 		FROM accounts
@@ -133,19 +199,23 @@ func (h *Handler) UpdateAccount(c *gin.Context) {
 	`
 
 	var account struct {
-		ID        string `json:"id"`
-		Name      string `json:"name"`
-		Type      string `json:"type"`
-		Currency  string `json:"currency"`
-		CreatedAt string `json:"createdAt"`
-		UpdatedAt string `json:"updatedAt"`
+		ID                        string  `json:"id"`
+		Name                      string  `json:"name"`
+		Type                      string  `json:"type"`
+		Currency                  string  `json:"currency"`
+		DefaultExpenseContainerID *string `json:"default_expense_container_id"`
+		DefaultIncomeContainerID  *string `json:"default_income_container_id"`
+		CreatedAt                 string  `json:"createdAt"`
+		UpdatedAt                 string  `json:"updatedAt"`
 	}
 
-	err = h.db.Pool.QueryRow(ctx, getQuery, accountID).Scan(
+	err = h.db.QueryRow(ctx, getQuery, accountID).Scan(
 		&account.ID,
 		&account.Name,
 		&account.Type,
 		&account.Currency,
+		&account.DefaultExpenseContainerID,
+		&account.DefaultIncomeContainerID,
 		&account.CreatedAt,
 		&account.UpdatedAt,
 	)

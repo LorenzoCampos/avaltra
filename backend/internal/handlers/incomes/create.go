@@ -108,7 +108,14 @@ func createIncomeHandler(db incomeStore) gin.HandlerFunc {
 			return
 		}
 
-		if err := validateIncomePaymentContext(c.Request.Context(), db, accountID, incomePaymentContextRequest{ContainerID: req.DestinationContainerID, InstrumentID: req.DestinationInstrumentID}); err != nil {
+		paymentContext := incomePaymentContextRequest{ContainerID: req.DestinationContainerID, InstrumentID: req.DestinationInstrumentID}
+		if incomeType == "one-time" {
+			if err := requireIncomePaymentContainer(paymentContext); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+		}
+		if err := validateIncomePaymentContext(c.Request.Context(), db, accountID, paymentContext); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

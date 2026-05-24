@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 // UpdateMemberRequest representa la request para actualizar un miembro
@@ -39,7 +39,7 @@ func (h *Handler) UpdateMember(c *gin.Context) {
 	// Obtener IDs desde la URL
 	accountID := c.Param("id")
 	memberID := c.Param("member_id")
-	
+
 	if accountID == "" || memberID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "ID de cuenta y miembro requeridos",
@@ -94,7 +94,7 @@ func (h *Handler) UpdateMember(c *gin.Context) {
 			WHERE id = $1 AND user_id = $2
 		)
 	`
-	err := h.db.Pool.QueryRow(ctx, checkAccountQuery, accountID, userID).Scan(&accountExists)
+	err := h.db.QueryRow(ctx, checkAccountQuery, accountID, userID).Scan(&accountExists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Error verificando cuenta",
@@ -119,7 +119,7 @@ func (h *Handler) UpdateMember(c *gin.Context) {
 			WHERE id = $1 AND account_id = $2
 		)
 	`
-	err = h.db.Pool.QueryRow(ctx, checkMemberQuery, memberID, accountID).Scan(&memberExists)
+	err = h.db.QueryRow(ctx, checkMemberQuery, memberID, accountID).Scan(&memberExists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Error verificando miembro",
@@ -148,7 +148,7 @@ func (h *Handler) UpdateMember(c *gin.Context) {
 				  AND id != $3
 			)
 		`
-		err = h.db.Pool.QueryRow(ctx, checkDuplicateQuery, accountID, *req.Name, memberID).Scan(&duplicateExists)
+		err = h.db.QueryRow(ctx, checkDuplicateQuery, accountID, *req.Name, memberID).Scan(&duplicateExists)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "Error verificando duplicados",
@@ -204,7 +204,7 @@ func (h *Handler) UpdateMember(c *gin.Context) {
 
 	// Ejecutar UPDATE
 	var member UpdateMemberResponse
-	err = h.db.Pool.QueryRow(ctx, query, args...).Scan(
+	err = h.db.QueryRow(ctx, query, args...).Scan(
 		&member.ID,
 		&member.Name,
 		&member.Email,

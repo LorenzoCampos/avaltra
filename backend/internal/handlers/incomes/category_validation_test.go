@@ -24,6 +24,9 @@ func TestCreateIncomeRejectsCategoryFromAnotherAccount(t *testing.T) {
 	defer mock.Close()
 
 	categoryID := testIncomeCategoryID
+	mock.ExpectQuery(`SELECT EXISTS\(SELECT 1 FROM payment_containers`).
+		WithArgs(testIncomeContainerID, testIncomeAccountID).
+		WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(true))
 	mock.ExpectQuery(`SELECT EXISTS\(`).
 		WithArgs(&categoryID, testIncomeAccountID).
 		WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(false))
@@ -31,7 +34,7 @@ func TestCreateIncomeRejectsCategoryFromAnotherAccount(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	router := incomeTestRouter(createIncomeHandler(mock))
 
-	req := httptest.NewRequest(http.MethodPost, "/incomes", bytes.NewBufferString(`{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20","category_id":"`+categoryID+`"}`))
+	req := httptest.NewRequest(http.MethodPost, "/incomes", bytes.NewBufferString(`{"description":"Sueldo","amount":200000,"currency":"ARS","date":"2026-01-20","category_id":"`+categoryID+`","destination_container_id":"`+testIncomeContainerID+`"}`))
 	req.Header.Set("Content-Type", "application/json")
 
 	router.ServeHTTP(recorder, req)
@@ -97,6 +100,9 @@ func TestUpdateIncomeAcceptsEURCurrency(t *testing.T) {
 	mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 		WithArgs(testIncomeAccountID).
 		WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
+	mock.ExpectQuery(`SELECT EXISTS\(`).
+		WithArgs(testIncomeID, testIncomeAccountID).
+		WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(true))
 	mock.ExpectQuery(`UPDATE incomes SET`).
 		WithArgs(nilString, nilString, nilString, nilFloat, pgxmock.AnyArg(), nilString, nilString, nilString, testIncomeID, testIncomeAccountID, pgxmock.AnyArg(), pgxmock.AnyArg(), false, nilString, false, nilString, false, nilString).
 		WillReturnRows(mock.NewRows([]string{"id", "account_id", "family_member_id", "category_id", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "income_type", "date", "end_date", "payment_method", "destination_container_id", "destination_instrument_id", "created_at"}).AddRow(testIncomeID, testIncomeAccountID, nil, nil, "Sueldo", 200000.0, "EUR", 1.2, 240000.0, "one-time", &transactionDate, nil, nil, nil, nil, createdAt))

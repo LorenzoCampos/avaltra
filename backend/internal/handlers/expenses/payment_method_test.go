@@ -36,7 +36,7 @@ func TestCreateExpensePaymentMethodScenarios(t *testing.T) {
 	}{
 		{
 			name:              "valid value is stored and returned",
-			body:              `{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","payment_method":"cash"}`,
+			body:              `{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","payment_method":"cash","source_container_id":"` + testExpenseContainerID + `"}`,
 			expectStatus:      http.StatusCreated,
 			expectedMethod:    "cash",
 			expectDB:          true,
@@ -44,7 +44,7 @@ func TestCreateExpensePaymentMethodScenarios(t *testing.T) {
 		},
 		{
 			name:              "omitted field stores null",
-			body:              `{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16"}`,
+			body:              `{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","source_container_id":"` + testExpenseContainerID + `"}`,
 			expectStatus:      http.StatusCreated,
 			expectedMethod:    nil,
 			expectDB:          true,
@@ -52,7 +52,7 @@ func TestCreateExpensePaymentMethodScenarios(t *testing.T) {
 		},
 		{
 			name:              "explicit null stores null",
-			body:              `{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","payment_method":null}`,
+			body:              `{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16","payment_method":null,"source_container_id":"` + testExpenseContainerID + `"}`,
 			expectStatus:      http.StatusCreated,
 			expectedMethod:    nil,
 			expectDB:          true,
@@ -78,6 +78,9 @@ func TestCreateExpensePaymentMethodScenarios(t *testing.T) {
 			var nilString *string
 
 			if tt.expectDB {
+				mock.ExpectQuery(`SELECT EXISTS\(SELECT 1 FROM payment_containers`).
+					WithArgs(testExpenseContainerID, testExpenseAccountID).
+					WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(true))
 				mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 					WithArgs(testExpenseAccountID).
 					WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
@@ -88,7 +91,7 @@ func TestCreateExpensePaymentMethodScenarios(t *testing.T) {
 			expense_type, date, end_date, payment_method, source_container_id, source_instrument_id
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at`)).
-					WithArgs(testExpenseAccountID, nilString, nilString, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", "2026-01-16", nilString, tt.expectedInsertArg, nilString, nilString).
+					WithArgs(testExpenseAccountID, nilString, nilString, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", "2026-01-16", nilString, tt.expectedInsertArg, stringPtr(testExpenseContainerID), nilString).
 					WillReturnRows(mock.NewRows([]string{"id", "created_at"}).AddRow(testExpenseID, createdAt))
 			}
 
@@ -221,6 +224,29 @@ func TestCreateExpensePaymentContextScenarios(t *testing.T) {
 	}
 }
 
+func TestCreateExpenseRequiresSourceContainerForOneTime(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	recorder := httptest.NewRecorder()
+	router := expenseTestRouter(createExpenseHandler(mock))
+	req := httptest.NewRequest(http.MethodPost, "/expenses", bytes.NewBufferString(`{"description":"Supermercado","amount":25000,"currency":"ARS","date":"2026-01-16"}`))
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body = %s", recorder.Code, http.StatusBadRequest, recorder.Body.String())
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
+	}
+}
+
 func TestUpdateExpensePaymentMethodScenarios(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -283,6 +309,9 @@ func TestUpdateExpensePaymentMethodScenarios(t *testing.T) {
 				WillReturnRows(mock.NewRows([]string{"expense_type", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "date", "deleted_at"}).AddRow("one-time", 25000.0, "ARS", 1.0, 25000.0, "2026-01-16", nil))
 
 			if tt.expectStatus == http.StatusOK {
+				mock.ExpectQuery(`SELECT EXISTS\(`).
+					WithArgs(testExpenseID, testExpenseAccountID).
+					WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(true))
 				mock.ExpectQuery(`UPDATE expenses SET`).
 					WithArgs(nilString, nilString, nilString, nilFloat, nilString, nilString, nilString, nilString, testExpenseID, testExpenseAccountID, nilFloat, nilFloat, tt.expectedSetArg, tt.expectedValueArg, false, nilString, false, nilString).
 					WillReturnRows(mock.NewRows([]string{"id", "account_id", "family_member_id", "category_id", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "expense_type", "date", "end_date", "payment_method", "source_container_id", "source_instrument_id", "created_at"}).AddRow(testExpenseID, testExpenseAccountID, nil, nil, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", &transactionDate, nil, paymentMethodRowValue(tt.expectedMethod), nil, nil, createdAt))
@@ -326,6 +355,8 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 	tests := []struct {
 		name                  string
 		body                  string
+		expectStatus          int
+		expectedExpenseType   any
 		expectedContainerSet  bool
 		expectedContainer     any
 		expectedInstrumentSet bool
@@ -336,6 +367,8 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 		{
 			name:                  "valid refs replace current refs",
 			body:                  `{"source_container_id":"` + testExpenseContainerID + `","source_instrument_id":"` + testExpenseInstrumentID + `"}`,
+			expectStatus:          http.StatusOK,
+			expectedExpenseType:   (*string)(nil),
 			expectedContainerSet:  true,
 			expectedContainer:     stringPtr(testExpenseContainerID),
 			expectedInstrumentSet: true,
@@ -344,8 +377,10 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 			returnedInstrument:    testExpenseInstrumentID,
 		},
 		{
-			name:                  "explicit null clears refs",
-			body:                  `{"source_container_id":null,"source_instrument_id":null}`,
+			name:                  "explicit null clears refs when changing to recurring",
+			body:                  `{"expense_type":"recurring","source_container_id":null,"source_instrument_id":null}`,
+			expectStatus:          http.StatusOK,
+			expectedExpenseType:   stringPtr("recurring"),
 			expectedContainerSet:  true,
 			expectedContainer:     (*string)(nil),
 			expectedInstrumentSet: true,
@@ -356,6 +391,8 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 		{
 			name:                  "place-only save clears legacy instrument ref",
 			body:                  `{"source_container_id":"` + testExpenseAltContainerID + `"}`,
+			expectStatus:          http.StatusOK,
+			expectedExpenseType:   (*string)(nil),
 			expectedContainerSet:  true,
 			expectedContainer:     stringPtr(testExpenseAltContainerID),
 			expectedInstrumentSet: true,
@@ -394,7 +431,7 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 			}
 
 			mock.ExpectQuery(`UPDATE expenses SET`).
-				WithArgs(nilString, nilString, nilString, nilFloat, nilString, nilString, nilString, nilString, testExpenseID, testExpenseAccountID, nilFloat, nilFloat, false, nilString, tt.expectedContainerSet, tt.expectedContainer, tt.expectedInstrumentSet, tt.expectedInstrument).
+				WithArgs(nilString, nilString, nilString, nilFloat, nilString, tt.expectedExpenseType, nilString, nilString, testExpenseID, testExpenseAccountID, nilFloat, nilFloat, false, nilString, tt.expectedContainerSet, tt.expectedContainer, tt.expectedInstrumentSet, tt.expectedInstrument).
 				WillReturnRows(mock.NewRows([]string{"id", "account_id", "family_member_id", "category_id", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "expense_type", "date", "end_date", "payment_method", "source_container_id", "source_instrument_id", "created_at"}).AddRow(testExpenseID, testExpenseAccountID, nil, nil, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", &transactionDate, nil, nil, paymentMethodRowValue(tt.returnedContainer), paymentMethodRowValue(tt.returnedInstrument), createdAt))
 
 			recorder := httptest.NewRecorder()
@@ -403,8 +440,8 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 			router.ServeHTTP(recorder, req)
 
-			if recorder.Code != http.StatusOK {
-				t.Fatalf("status = %d, want %d, body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+			if recorder.Code != tt.expectStatus {
+				t.Fatalf("status = %d, want %d, body = %s", recorder.Code, tt.expectStatus, recorder.Body.String())
 			}
 			var response map[string]any
 			if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
@@ -415,6 +452,58 @@ func TestUpdateExpensePaymentContextScenarios(t *testing.T) {
 			}
 			if got := response["source_instrument_id"]; got != tt.returnedInstrument {
 				t.Fatalf("source_instrument_id = %#v, want %#v", got, tt.returnedInstrument)
+			}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Fatalf("mock expectations: %v", err)
+			}
+		})
+	}
+}
+
+func TestUpdateExpenseRequiresActiveSourceContainerForOneTime(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name          string
+		body          string
+		expectDBCheck bool
+	}{
+		{
+			name: "explicit null source container is rejected",
+			body: `{"source_container_id":null,"source_instrument_id":null}`,
+		},
+		{
+			name:          "omitted source container is rejected when existing place is missing or inactive",
+			body:          `{}`,
+			expectDBCheck: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatalf("pgxmock.NewPool() error = %v", err)
+			}
+			defer mock.Close()
+
+			mock.ExpectQuery(`SELECT expense_type, amount, currency, exchange_rate, amount_in_primary_currency, date::TEXT, deleted_at\s+FROM expenses WHERE id = \$1 AND account_id = \$2`).
+				WithArgs(testExpenseID, testExpenseAccountID).
+				WillReturnRows(mock.NewRows([]string{"expense_type", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "date", "deleted_at"}).AddRow("one-time", 25000.0, "ARS", 1.0, 25000.0, "2026-01-16", nil))
+			if tt.expectDBCheck {
+				mock.ExpectQuery(`SELECT EXISTS\(`).
+					WithArgs(testExpenseID, testExpenseAccountID).
+					WillReturnRows(mock.NewRows([]string{"exists"}).AddRow(false))
+			}
+
+			recorder := httptest.NewRecorder()
+			router := expenseTestRouter(updateExpenseHandler(mock))
+			req := httptest.NewRequest(http.MethodPut, "/expenses/"+testExpenseID, bytes.NewBufferString(tt.body))
+			req.Header.Set("Content-Type", "application/json")
+			router.ServeHTTP(recorder, req)
+
+			if recorder.Code != http.StatusBadRequest {
+				t.Fatalf("status = %d, want %d, body = %s", recorder.Code, http.StatusBadRequest, recorder.Body.String())
 			}
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Fatalf("mock expectations: %v", err)

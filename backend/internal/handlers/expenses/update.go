@@ -269,6 +269,10 @@ func updateExpenseHandler(db expenseStore) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		if err := validateExpenseRequiredPlaceOnUpdate(c.Request.Context(), db, accountID, expenseID, finalExpenseType, sourceContainerSet, sourceContainerID); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
 		updateQuery := `
 		UPDATE expenses SET

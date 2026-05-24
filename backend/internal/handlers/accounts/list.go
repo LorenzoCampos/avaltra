@@ -3,18 +3,20 @@ package accounts
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
+	"github.com/gin-gonic/gin"
 )
 
 // AccountListItem representa una cuenta en la lista
 type AccountListItem struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Currency    string `json:"currency"`
-	MemberCount *int   `json:"memberCount,omitempty"` // Solo para cuentas family
-	CreatedAt   string `json:"createdAt"`
+	ID                        string  `json:"id"`
+	Name                      string  `json:"name"`
+	Type                      string  `json:"type"`
+	Currency                  string  `json:"currency"`
+	DefaultExpenseContainerID *string `json:"default_expense_container_id"`
+	DefaultIncomeContainerID  *string `json:"default_income_container_id"`
+	MemberCount               *int    `json:"memberCount,omitempty"` // Solo para cuentas family
+	CreatedAt                 string  `json:"createdAt"`
 }
 
 // ListAccounts maneja GET /api/accounts
@@ -39,16 +41,18 @@ func (h *Handler) ListAccounts(c *gin.Context) {
 			a.name,
 			a.type,
 			a.currency,
+			a.default_expense_container_id,
+			a.default_income_container_id,
 			a.created_at::TEXT,
 			COUNT(fm.id) FILTER (WHERE a.type = 'family') as member_count
 		FROM accounts a
 		LEFT JOIN family_members fm ON a.id = fm.account_id AND fm.is_active = true
 		WHERE a.user_id = $1
-		GROUP BY a.id, a.name, a.type, a.currency, a.created_at
+		GROUP BY a.id, a.name, a.type, a.currency, a.default_expense_container_id, a.default_income_container_id, a.created_at
 		ORDER BY a.created_at DESC
 	`
 
-	rows, err := h.db.Pool.Query(ctx, query, userID)
+	rows, err := h.db.Query(ctx, query, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Error obteniendo cuentas",
@@ -69,6 +73,8 @@ func (h *Handler) ListAccounts(c *gin.Context) {
 			&account.Name,
 			&account.Type,
 			&account.Currency,
+			&account.DefaultExpenseContainerID,
+			&account.DefaultIncomeContainerID,
 			&account.CreatedAt,
 			&memberCount,
 		)

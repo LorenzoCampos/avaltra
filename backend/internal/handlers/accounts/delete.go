@@ -39,7 +39,7 @@ func (h *Handler) DeleteAccount(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// Iniciar transacción para eliminar la cuenta y sus family_members
-	tx, err := h.db.Pool.Begin(ctx)
+	tx, err := h.db.Begin(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Error iniciando transacción",

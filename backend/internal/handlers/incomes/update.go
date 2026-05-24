@@ -260,6 +260,10 @@ func updateIncomeHandler(db incomeStore) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		if err := validateIncomeRequiredPlaceOnUpdate(c.Request.Context(), db, accountID, incomeID, finalIncomeType, destinationContainerSet, destinationContainerID); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
 		updateQuery := `
 			UPDATE incomes SET

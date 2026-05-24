@@ -3,10 +3,10 @@ package accounts
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 // DeactivateMember maneja PATCH /api/accounts/:id/members/:member_id/deactivate
@@ -54,7 +54,7 @@ func toggleMemberStatus(h *Handler, c *gin.Context, newStatus bool) {
 			WHERE id = $1 AND user_id = $2
 		)
 	`
-	err := h.db.Pool.QueryRow(ctx, checkAccountQuery, accountID, userID).Scan(&accountExists)
+	err := h.db.QueryRow(ctx, checkAccountQuery, accountID, userID).Scan(&accountExists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Error verificando cuenta",
@@ -77,7 +77,7 @@ func toggleMemberStatus(h *Handler, c *gin.Context, newStatus bool) {
 		FROM family_members 
 		WHERE id = $1 AND account_id = $2
 	`
-	err = h.db.Pool.QueryRow(ctx, checkMemberQuery, memberID, accountID).Scan(&currentStatus)
+	err = h.db.QueryRow(ctx, checkMemberQuery, memberID, accountID).Scan(&currentStatus)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{
@@ -108,10 +108,10 @@ func toggleMemberStatus(h *Handler, c *gin.Context, newStatus bool) {
 	if newStatus {
 		var memberName string
 		var duplicateExists bool
-		
+
 		// Obtener el nombre del miembro a reactivar
 		getNameQuery := `SELECT name FROM family_members WHERE id = $1`
-		err = h.db.Pool.QueryRow(ctx, getNameQuery, memberID).Scan(&memberName)
+		err = h.db.QueryRow(ctx, getNameQuery, memberID).Scan(&memberName)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "Error obteniendo nombre del miembro",
@@ -131,7 +131,7 @@ func toggleMemberStatus(h *Handler, c *gin.Context, newStatus bool) {
 				  AND id != $3
 			)
 		`
-		err = h.db.Pool.QueryRow(ctx, checkDuplicateQuery, accountID, memberName, memberID).Scan(&duplicateExists)
+		err = h.db.QueryRow(ctx, checkDuplicateQuery, accountID, memberName, memberID).Scan(&duplicateExists)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "Error verificando duplicados",
@@ -163,7 +163,7 @@ func toggleMemberStatus(h *Handler, c *gin.Context, newStatus bool) {
 		IsActive bool   `json:"isActive"`
 	}
 
-	err = h.db.Pool.QueryRow(ctx, updateQuery, newStatus, memberID, accountID).Scan(
+	err = h.db.QueryRow(ctx, updateQuery, newStatus, memberID, accountID).Scan(
 		&member.ID,
 		&member.Name,
 		&member.Email,

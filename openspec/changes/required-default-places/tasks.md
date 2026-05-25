@@ -8,12 +8,12 @@
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
 | Suggested split | PR1 backend defaults+validation/tests → PR2 frontend account/forms required place → PR3 quick-add+import guard+smoke |
-| Delivery strategy | ask-on-risk |
-| Chain strategy | pending |
+| Delivery strategy | force-chained |
+| Chain strategy | stacked-to-main |
 
-Decision needed before apply: Yes
+Decision needed before apply: No
 Chained PRs recommended: Yes
-Chain strategy: pending
+Chain strategy: stacked-to-main
 400-line budget risk: High
 
 ### Suggested Work Units
@@ -35,7 +35,7 @@ Chain strategy: pending
 - [x] 2.1 RED: Add failing handler tests for manual one-time expense/income create/update rejecting missing/inactive/wrong-account place in `backend/internal/handlers/{expenses,incomes}/*_test.go`.
 - [x] 2.2 GREEN: Implement required active place validation in `backend/internal/handlers/expenses/{create,update,payment_context.go}`.
 - [x] 2.3 GREEN: Implement required active place validation in `backend/internal/handlers/incomes/{create,update,payment_context.go}`.
-- [ ] 2.4 Guard `backend/internal/handlers/imports/commit.go` behavior with regression tests proving unresolved/ambiguous import rows may keep null place.
+- [x] 2.4 Guard `backend/internal/handlers/imports/commit.go` behavior with regression tests proving unresolved/ambiguous import rows may keep null place.
 
 ## Phase 3: Frontend Defaults + Required Selection
 
@@ -46,10 +46,10 @@ Chain strategy: pending
 
 ## Phase 4: Quick-add Alignment + Verification
 
-- [ ] 4.1 RED/GREEN: Update `frontend/src/components/QuickAddExpenseModal.tsx` tests and implementation so quick-add requires active place and preselects active account default.
-- [ ] 4.2 Run integration verification: backend handler tests + frontend schema/component tests for spec scenarios (active default prefill, inactive warning, required-place rejection).
-- [ ] 4.3 Manual smoke: validate expense/income forms and quick-add cannot bypass required-place intent; confirm importer commit path still accepts unresolved null-place rows.
+- [x] 4.1 RED/GREEN: Update `frontend/src/components/QuickAddExpenseModal.tsx` tests and implementation so quick-add requires active place and preselects active account default.
+- [x] 4.2 Run integration verification: backend handler tests + frontend schema/component tests for spec scenarios (active default prefill, inactive warning, required-place rejection).
+- [x] 4.3 Manual smoke: validate expense/income forms and quick-add cannot bypass required-place intent; confirm importer commit path still accepts unresolved null-place rows.
 
 ## Phase 5: Scope Guardrails
 
-- [ ] 5.1 Confirm no implementation tasks are added for out-of-scope items: recurring templates, savings-goal places, transfers, credit/debt, physical instrument removal.
+- [x] 5.1 Confirm no implementation tasks are added for out-of-scope items: recurring templates, savings-goal places, transfers, credit/debt, physical instrument removal.

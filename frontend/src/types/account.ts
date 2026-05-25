@@ -23,6 +23,8 @@ export interface Account {
   name: string;
   type: AccountType;
   currency: Currency;
+  default_expense_container_id?: string | null;
+  default_income_container_id?: string | null;
   user_id: string;
   created_at: string;
   updated_at: string;
@@ -53,4 +55,6 @@ export interface UpdateAccountRequest {
   id: string;
   name?: string;
   currency?: Currency;
+  default_expense_container_id?: string | null;
+  default_income_container_id?: string | null;
 }

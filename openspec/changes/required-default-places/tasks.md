@@ -39,10 +39,10 @@ Chain strategy: pending
 
 ## Phase 3: Frontend Defaults + Required Selection
 
-- [ ] 3.1 Update `frontend/src/types/account.ts` and `frontend/src/hooks/useAccounts.ts` for nullable account default expense/income place fields in read/update payloads.
-- [ ] 3.2 Update `frontend/src/features/accounts/AccountForm.tsx` to manage default expense/income places, ignore inactive defaults for prefill, and show replacement warning.
-- [ ] 3.3 RED: Add/adjust schema tests for required manual place fields in `frontend/src/schemas/{expense,income}.schema.ts`.
-- [ ] 3.4 GREEN: Update `frontend/src/features/{expenses,incomes}/*Form.tsx` and `formSubmissions.ts` to prefill active defaults, block submit without active place, and show no-active-place warning/CTA.
+- [x] 3.1 Update `frontend/src/types/account.ts` and `frontend/src/hooks/useAccounts.ts` for nullable account default expense/income place fields in read/update payloads.
+- [x] 3.2 Update `frontend/src/features/accounts/AccountForm.tsx` to manage default expense/income places, ignore inactive defaults for prefill, and show replacement warning.
+- [x] 3.3 RED: Add/adjust schema tests for required manual place fields in `frontend/src/schemas/{expense,income}.schema.ts`.
+- [x] 3.4 GREEN: Update `frontend/src/features/{expenses,incomes}/*Form.tsx` and `formSubmissions.ts` to prefill active defaults, block submit without active place, and show no-active-place warning/CTA.
 
 ## Phase 4: Quick-add Alignment + Verification
 

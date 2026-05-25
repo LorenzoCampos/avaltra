@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { api } from '@/api/axios';
+import { useAccountStore } from '@/stores/account.store';
 import type {
   CreatePaymentContainerRequest,
   PaymentContainer,
@@ -16,17 +17,37 @@ const getMutationErrorMessage = (error: unknown, fallback: string) =>
 
 type PaymentContainersOptions = {
   includeInactive?: boolean;
+  accountId?: string;
+  enabled?: boolean;
 };
 
+export const getPaymentContainersQueryKey = (
+  options: PaymentContainersOptions,
+  activeAccountId?: string | null,
+) => [
+  'payment-containers',
+  options.includeInactive ?? false,
+  options.accountId ?? activeAccountId ?? null,
+] as const;
+
+export const getPaymentContainersRequestConfig = (options: PaymentContainersOptions) => ({
+  params: options.includeInactive ? { include_inactive: 'true' } : undefined,
+  headers: options.accountId ? { 'X-Account-ID': options.accountId } : undefined,
+});
+
 export function usePaymentContainers(options: PaymentContainersOptions = {}) {
+  const activeAccountId = useAccountStore((state) => state.activeAccountId);
+
   return useQuery({
-    queryKey: ['payment-containers', options.includeInactive ?? false],
+    queryKey: getPaymentContainersQueryKey(options, activeAccountId),
     queryFn: async () => {
-      const response = await api.get<PaymentContainersResponse>('/payment-containers', {
-        params: options.includeInactive ? { include_inactive: 'true' } : undefined,
-      });
+      const response = await api.get<PaymentContainersResponse>(
+        '/payment-containers',
+        getPaymentContainersRequestConfig(options),
+      );
       return response.data;
     },
+    enabled: options.enabled ?? true,
     staleTime: 1000 * 60 * 5,
   });
 }

@@ -43,7 +43,7 @@ export const ExpenseForm = () => {
   const { data: expenseData, isLoading: isLoadingExpense, error: loadExpenseError } = useExpense(expenseId);
   const { data: categories, isLoading: isLoadingCategories } = useExpenseCategories();
   const { data: familyMembers, isLoading: isLoadingFamilyMembers } = useFamilyMembers();
-  const { data: paymentContainers, isLoading: isLoadingPaymentContainers } = usePaymentContainers();
+  const { data: paymentContainers, isLoading: isLoadingPaymentContainers } = usePaymentContainers({ includeInactive: true });
 
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const [pendingFeedback, setPendingFeedback] = useState<ActionFeedbackState['actionFeedback']>();
@@ -77,8 +77,18 @@ export const ExpenseForm = () => {
   });
 
   const selectedCurrency = watch('currency');
+  const selectedSourceContainerId = watch('source_container_id');
   const showMultiCurrencyFields = activeAccount && selectedCurrency !== activeAccount.currency;
-  const activePaymentContainers = paymentContainers?.payment_containers ?? [];
+  const allPaymentContainers = paymentContainers?.payment_containers ?? [];
+  const activePaymentContainers = allPaymentContainers.filter((container) => container.is_active);
+  const defaultExpenseContainer = defaultAccount?.default_expense_container_id
+    ? allPaymentContainers.find((container) => container.id === defaultAccount.default_expense_container_id)
+    : null;
+  const activeDefaultExpenseContainer = defaultExpenseContainer?.is_active ? defaultExpenseContainer : null;
+  const showInactiveDefaultWarning = Boolean(
+    defaultAccount?.default_expense_container_id && (!defaultExpenseContainer || !defaultExpenseContainer.is_active),
+  );
+  const hasActivePaymentContainers = activePaymentContainers.length > 0;
 
   // ============================================================================
   // AUTO-COMPLETAR CURRENCY basado en default account (solo para nuevos gastos)
@@ -88,6 +98,12 @@ export const ExpenseForm = () => {
       setValue('currency', defaultAccount.currency);
     }
   }, [defaultAccount, isEditing, setValue]);
+
+  useEffect(() => {
+    if (!isEditing && activeDefaultExpenseContainer && !selectedSourceContainerId) {
+      setValue('source_container_id', activeDefaultExpenseContainer.id, { shouldValidate: true });
+    }
+  }, [activeDefaultExpenseContainer, isEditing, selectedSourceContainerId, setValue]);
 
   // Load expense data if editing
   useEffect(() => {
@@ -367,8 +383,24 @@ export const ExpenseForm = () => {
                 options={paymentContainerOptions}
                 error={errors.source_container_id?.message}
                 {...register('source_container_id')}
+                helperText={activeDefaultExpenseContainer ? t('form.paymentContext.sourceContainer.defaultHelp') : undefined}
               />
             </div>
+
+            {!hasActivePaymentContainers && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                <p>{t('form.paymentContext.noActivePlaces')}</p>
+                <Button type="button" variant="secondary" size="sm" className="mt-2" onClick={() => navigate('/payment-containers')}>
+                  {t('form.paymentContext.createPlaceCta')}
+                </Button>
+              </div>
+            )}
+
+            {showInactiveDefaultWarning && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                {t('form.paymentContext.inactiveDefaultWarning')}
+              </div>
+            )}
 
             {activeAccount?.type === 'family' && (
               <div>
@@ -392,7 +424,7 @@ export const ExpenseForm = () => {
               type="submit"
               fullWidth
               isLoading={isCreatingExpense || isUpdatingExpense}
-              disabled={redirectCountdown !== null}
+              disabled={redirectCountdown !== null || !hasActivePaymentContainers}
             >
               {isEditing ? t('form.submitEdit') : t('form.submitCreate')}
             </Button>

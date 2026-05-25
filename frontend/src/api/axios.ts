@@ -33,7 +33,7 @@ api.interceptors.request.use(
     const isAuthEndpoint = config.url?.startsWith('/auth');
     if (!isAuthEndpoint) {
       const accountId = localStorage.getItem('active_account_id');
-      if (accountId) {
+      if (accountId && !config.headers['X-Account-ID']) {
         config.headers['X-Account-ID'] = accountId;
       }
     }
@@ -75,7 +75,7 @@ api.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${access_token}`;
           }
           return api(originalRequest);
-        } catch (refreshError) {
+        } catch {
           // Si refresh falla, logout completo
           useAuthStore.getState().logout();
           window.location.href = '/login';

@@ -9,6 +9,7 @@ const expenseBase = {
   amount: 100,
   currency: 'ARS' as const,
   date: '2026-05-01',
+  source_container_id: '11111111-1111-4111-8111-111111111111',
 };
 
 const incomeBase = {
@@ -16,6 +17,7 @@ const incomeBase = {
   amount: 1000,
   currency: 'ARS' as const,
   date: '2026-05-01',
+  destination_container_id: '11111111-1111-4111-8111-111111111111',
 };
 
 describe('Payment Method Semantics / Distinguish concepts', () => {

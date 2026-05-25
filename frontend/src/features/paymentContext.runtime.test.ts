@@ -27,6 +27,7 @@ const expenseBase = {
   amount: 100,
   currency: 'ARS' as const,
   date: '2026-05-01',
+  source_container_id: '22222222-2222-4222-8222-222222222222',
 };
 
 const incomeBase = {
@@ -34,6 +35,7 @@ const incomeBase = {
   amount: 1000,
   currency: 'ARS' as const,
   date: '2026-05-01',
+  destination_container_id: '22222222-2222-4222-8222-222222222222',
 };
 
 const t = (key: string) => ({
@@ -42,9 +44,11 @@ const t = (key: string) => ({
 }[key] ?? key);
 
 describe('transaction payment context form behavior', () => {
-  it('keeps normalized selectors optional in expense and income schemas', () => {
-    expect(expenseSchema.parse({ ...expenseBase, source_container_id: '', source_instrument_id: '' })).toMatchObject(expenseBase);
-    expect(incomeSchema.parse({ ...incomeBase, destination_container_id: '', destination_instrument_id: '' })).toMatchObject(incomeBase);
+  it('requires normalized place selectors in expense and income schemas', () => {
+    expect(() => expenseSchema.parse({ ...expenseBase, source_container_id: '', source_instrument_id: '' })).toThrow();
+    expect(() => incomeSchema.parse({ ...incomeBase, destination_container_id: '', destination_instrument_id: '' })).toThrow();
+    expect(expenseSchema.parse({ ...expenseBase, source_instrument_id: '' })).toMatchObject(expenseBase);
+    expect(incomeSchema.parse({ ...incomeBase, destination_instrument_id: '' })).toMatchObject(incomeBase);
   });
 
   it('submits expense and income payloads with place IDs only', () => {
@@ -69,18 +73,18 @@ describe('transaction payment context form behavior', () => {
     expect(incomePayload).not.toHaveProperty('payment_method');
   });
 
-  it('clears existing normalized selectors on edit when users submit blank selections', () => {
+  it('does not clear required manual places during submit mapping', () => {
     expect(
-      buildExpenseSubmitPayload({ ...expenseBase }, true, {
+      buildExpenseSubmitPayload({ ...expenseBase, source_container_id: undefined }, true, {
         containerId: '22222222-2222-4222-8222-222222222222',
       }),
-    ).toEqual(expect.objectContaining({ source_container_id: null }));
+    ).not.toEqual(expect.objectContaining({ source_container_id: null }));
 
     expect(
-      buildIncomeSubmitPayload({ ...incomeBase }, true, {
+      buildIncomeSubmitPayload({ ...incomeBase, destination_container_id: undefined }, true, {
         containerId: '22222222-2222-4222-8222-222222222222',
       }),
-    ).toEqual(expect.objectContaining({ destination_container_id: null }));
+    ).not.toEqual(expect.objectContaining({ destination_container_id: null }));
   });
 
   it('builds recurring expense and income context payloads without primary instrument IDs', () => {

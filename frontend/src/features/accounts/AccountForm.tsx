@@ -13,19 +13,15 @@ import { FormSkeleton } from '@/components/ui/Skeleton';
 import { InfoTooltip } from '@/components/InfoTooltip';
 
 import { useAccounts } from '@/hooks/useAccounts';
+import { usePaymentContainers } from '@/hooks/usePaymentContainers';
 import type { ActionFeedbackState } from '@/hooks/useActionFeedback';
 import type { FamilyMember } from '@/types/account';
 import { accountSchema } from '@/schemas/account.schema';
-import type { Currency } from '@/schemas/account.schema';
+import type { AccountFormData } from '@/features/accounts/accountFormMapping';
+import { buildAccountUpdatePayload } from '@/features/accounts/accountFormMapping';
 
 interface AccountFormProps {
   onSubmitSuccess?: () => void;
-}
-
-interface FormData {
-  name: string;
-  type: 'personal' | 'family';
-  currency: Currency;
 }
 
 export const AccountForm = ({ onSubmitSuccess }: AccountFormProps) => {
@@ -44,15 +40,24 @@ export const AccountForm = ({ onSubmitSuccess }: AccountFormProps) => {
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const [pendingFeedback, setPendingFeedback] = useState<ActionFeedbackState['actionFeedback']>();
+  const [loadedDefaultExpenseContainerId, setLoadedDefaultExpenseContainerId] = useState<string | null>(null);
+  const [loadedDefaultIncomeContainerId, setLoadedDefaultIncomeContainerId] = useState<string | null>(null);
 
   const isEditing = !!accountId;
+  const { data: paymentContainersData, isLoading: isLoadingPaymentContainers } = usePaymentContainers({
+    includeInactive: true,
+    accountId: isEditing ? accountId : undefined,
+    enabled: !isEditing || Boolean(accountId),
+  });
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
       name: '',
       type: 'personal',
       currency: 'ARS',
+      default_expense_container_id: '',
+      default_income_container_id: '',
     },
     mode: 'onChange',
   });
@@ -73,6 +78,10 @@ export const AccountForm = ({ onSubmitSuccess }: AccountFormProps) => {
           setValue('name', account.name);
           setValue('type', account.type);
           setValue('currency', account.currency);
+          setValue('default_expense_container_id', account.default_expense_container_id ?? '');
+          setValue('default_income_container_id', account.default_income_container_id ?? '');
+          setLoadedDefaultExpenseContainerId(account.default_expense_container_id ?? null);
+          setLoadedDefaultIncomeContainerId(account.default_income_container_id ?? null);
           if (account.members && account.members.length > 0) {
             setFamilyMembers(account.members);
           }
@@ -114,16 +123,12 @@ export const AccountForm = ({ onSubmitSuccess }: AccountFormProps) => {
     return () => window.clearInterval(countdownInterval);
   }, [redirectCountdown, onSubmitSuccess, navigate, pendingFeedback]);
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: AccountFormData) => {
     try {
       let savedAccount;
 
       if (isEditing && accountId) {
-        savedAccount = await updateAccountAsync({
-          id: accountId,
-          name: data.name,
-          currency: data.currency,
-        });
+        savedAccount = await updateAccountAsync(buildAccountUpdatePayload(accountId, data));
       } else if (data.type === 'family') {
         const validMembers = familyMembers.filter(m => m.name.trim() !== '');
         if (validMembers.length === 0) {
@@ -173,7 +178,26 @@ export const AccountForm = ({ onSubmitSuccess }: AccountFormProps) => {
     setFamilyMembers(updated);
   };
 
-  if (isLoadingAccount) {
+  const paymentContainers = paymentContainersData?.payment_containers ?? [];
+  const activePaymentContainers = paymentContainers.filter((container) => container.is_active);
+  const defaultPlaceOptions = [
+    { label: t('form.defaultPlaces.none'), value: '' },
+    ...activePaymentContainers.map((container) => ({ label: container.name, value: container.id })),
+  ];
+  const loadedExpenseDefault = loadedDefaultExpenseContainerId
+    ? paymentContainers.find((container) => container.id === loadedDefaultExpenseContainerId)
+    : null;
+  const loadedIncomeDefault = loadedDefaultIncomeContainerId
+    ? paymentContainers.find((container) => container.id === loadedDefaultIncomeContainerId)
+    : null;
+  const showExpenseDefaultWarning = Boolean(
+    loadedDefaultExpenseContainerId && (!loadedExpenseDefault || !loadedExpenseDefault.is_active),
+  );
+  const showIncomeDefaultWarning = Boolean(
+    loadedDefaultIncomeContainerId && (!loadedIncomeDefault || !loadedIncomeDefault.is_active),
+  );
+
+  if (isLoadingAccount || (isEditing && isLoadingPaymentContainers)) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="mb-4">
@@ -318,6 +342,45 @@ export const AccountForm = ({ onSubmitSuccess }: AccountFormProps) => {
                 <p className="text-xs text-gray-500">
                   {t('form.familyMembersHelp')}
                 </p>
+              </div>
+            )}
+
+            {isEditing && (
+              <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    {t('form.defaultPlaces.title')}
+                  </h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t('form.defaultPlaces.description')}
+                  </p>
+                </div>
+
+                {activePaymentContainers.length === 0 && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                    {t('form.defaultPlaces.noActivePlaces')}
+                  </div>
+                )}
+
+                {(showExpenseDefaultWarning || showIncomeDefaultWarning) && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                    {t('form.defaultPlaces.inactiveWarning')}
+                  </div>
+                )}
+
+                <Select
+                  label={t('form.defaultPlaces.expenseLabel')}
+                  options={defaultPlaceOptions}
+                  helperText={t('form.defaultPlaces.expenseHelp')}
+                  {...register('default_expense_container_id')}
+                />
+
+                <Select
+                  label={t('form.defaultPlaces.incomeLabel')}
+                  options={defaultPlaceOptions}
+                  helperText={t('form.defaultPlaces.incomeHelp')}
+                  {...register('default_income_container_id')}
+                />
               </div>
             )}
 

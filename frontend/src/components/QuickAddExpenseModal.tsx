@@ -1,58 +1,28 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import {
+  buildQuickAddExpensePayload,
+  createQuickAddSchema,
+  resolveQuickAddSourceContainerSelection,
+  resolveQuickAddDefaultExpenseContainer,
+  shouldShowQuickAddNoActivePlacesWarning,
+  type QuickAddFormData,
+  type QuickAddFormInput,
+} from '@/components/quickAddExpense';
 import { useExpenseCategories, useFamilyMembers } from '@/hooks/useExpenses';
+import { usePaymentContainers } from '@/hooks/usePaymentContainers';
 import { useAccountStore } from '@/stores/account.store';
 import { useUser } from '@/hooks/useUser';
 import { useAccounts } from '@/hooks/useAccounts';
 import type { Currency } from '@/schemas/account.schema';
-import { PAYMENT_METHODS, normalizePaymentMethodForCreate, type PaymentMethod } from '@/types/paymentMethod';
+import type { PaymentMethod } from '@/types/paymentMethod';
 import { getPaymentMethodOptions } from '@/lib/paymentMethods';
-
-const optionalPaymentMethodSchema = z.preprocess(
-  (value) => (value === '' ? undefined : value),
-  z.enum(PAYMENT_METHODS).nullable().optional(),
-);
-
-const createQuickAddSchema = (hasFamilyMembers: boolean) => quickAddSchemaBase.superRefine((data, ctx) => {
-  if (hasFamilyMembers && !data.family_member_id) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['family_member_id'],
-      message: 'Family member is required for family accounts',
-    });
-  }
-});
-
-// Schema simplificado para quick add (sin validación de family_member)
-// La validación se hará dinámicamente en el componente
-const quickAddSchemaBase = z.object({
-  amount: z.number().positive('Amount must be positive'),
-  description: z.string().min(1, 'Description is required'),
-  category_id: z.string().nullable().optional(),
-  family_member_id: z.string().nullable().optional(),
-  payment_method: optionalPaymentMethodSchema,
-});
-
-type QuickAddFormInput = z.input<typeof quickAddSchemaBase>;
-type QuickAddFormData = z.output<typeof quickAddSchemaBase>;
-
-export const buildQuickAddExpensePayload = (
-  data: QuickAddFormData,
-  defaultCurrency: Currency,
-  defaultDate: string,
-) => ({
-  ...data,
-  currency: defaultCurrency,
-  date: defaultDate,
-  payment_method: normalizePaymentMethodForCreate(data.payment_method),
-});
 
 interface QuickAddExpenseModalProps {
   isOpen: boolean;
@@ -65,6 +35,7 @@ interface QuickAddExpenseModalProps {
     category_id?: string | null;
     family_member_id?: string | null;
     payment_method?: PaymentMethod | null;
+    source_container_id: string;
   }) => void;
   isSubmitting: boolean;
 }
@@ -76,6 +47,7 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
   const { accounts } = useAccounts();
   const { data: categories, isLoading: isLoadingCategories } = useExpenseCategories();
   const { data: familyMembers, isLoading: isLoadingFamilyMembers } = useFamilyMembers();
+  const { data: paymentContainers, isLoading: isLoadingPaymentContainers } = usePaymentContainers({ includeInactive: true });
 
   // Defaults inteligentes (misma lógica que ExpenseForm)
   const defaultAccount = activeAccount 
@@ -86,11 +58,22 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
   const lastCategoryId = localStorage.getItem('lastExpenseCategoryId') || null;
 
   const hasFamilyMembers = !!familyMembers?.length;
+  const allPaymentContainers = paymentContainers?.payment_containers ?? [];
+  const activePaymentContainers = allPaymentContainers.filter((container) => container.is_active);
+  const activeDefaultExpenseContainer = resolveQuickAddDefaultExpenseContainer(defaultAccount, allPaymentContainers);
+  const showInactiveDefaultWarning = Boolean(
+    defaultAccount?.default_expense_container_id && !activeDefaultExpenseContainer,
+  );
+  const hasActivePaymentContainers = activePaymentContainers.length > 0;
+  const showNoActivePaymentContainersWarning = shouldShowQuickAddNoActivePlacesWarning(
+    isLoadingPaymentContainers,
+    activePaymentContainers,
+  );
 
   // Usar schema con validación de family_member si es cuenta familiar
   const schema = createQuickAddSchema(hasFamilyMembers);
 
-  const { register, handleSubmit, formState: { errors }, reset, setFocus } = useForm<QuickAddFormInput, unknown, QuickAddFormData>({
+  const { register, handleSubmit, formState: { errors }, reset, setFocus, setValue, getValues } = useForm<QuickAddFormInput, unknown, QuickAddFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       amount: 0,
@@ -98,6 +81,7 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
       category_id: lastCategoryId,
       family_member_id: null,
       payment_method: null,
+      source_container_id: undefined,
     },
   });
 
@@ -107,6 +91,24 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
       setTimeout(() => setFocus('amount'), 100);
     }
   }, [isOpen, setFocus]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const currentSourceContainerId = getValues('source_container_id') as string | null | undefined;
+    const nextSourceContainerId = resolveQuickAddSourceContainerSelection({
+      currentSourceContainerId,
+      defaultSourceContainerId: activeDefaultExpenseContainer?.id,
+      activePaymentContainers,
+      isLoadingPaymentContainers,
+    });
+
+    if (nextSourceContainerId !== currentSourceContainerId) {
+      setValue('source_container_id', nextSourceContainerId, { shouldValidate: true });
+    }
+  }, [activeDefaultExpenseContainer, activePaymentContainers, getValues, isLoadingPaymentContainers, isOpen, setValue]);
 
   const handleFormSubmit = (data: QuickAddFormData) => {
     // Guardar última categoría usada
@@ -131,6 +133,10 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
   const paymentMethodOptions = [
     { label: t('form.paymentMethod.empty'), value: '' },
     ...getPaymentMethodOptions(t),
+  ];
+  const paymentContainerOptions = [
+    { label: t('form.paymentContext.sourceContainer.empty'), value: '' },
+    ...activePaymentContainers.map((container) => ({ label: container.name, value: container.id })),
   ];
 
   return (
@@ -219,6 +225,34 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
               <Select {...register('payment_method')} options={paymentMethodOptions} />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('form.paymentContext.sourceContainer.label')} <span className="text-red-500">*</span>
+              </label>
+              <Select
+                {...register('source_container_id')}
+                options={paymentContainerOptions}
+                disabled={isLoadingPaymentContainers}
+                error={errors.source_container_id?.message}
+                helperText={activeDefaultExpenseContainer ? t('form.paymentContext.sourceContainer.defaultHelp') : undefined}
+              />
+            </div>
+
+            {showNoActivePaymentContainersWarning && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                <p>{t('form.paymentContext.noActivePlaces')}</p>
+                <Button type="button" variant="secondary" size="sm" className="mt-2" onClick={() => window.location.href = '/payment-containers'}>
+                  {t('form.paymentContext.createPlaceCta')}
+                </Button>
+              </div>
+            )}
+
+            {showInactiveDefaultWarning && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                {t('form.paymentContext.inactiveDefaultWarning')}
+              </div>
+            )}
+
             {/* Family Member (obligatorio si la cuenta tiene members) */}
             {hasFamilyMembers && (
               <div>
@@ -241,7 +275,7 @@ export const QuickAddExpenseModal = ({ isOpen, onClose, onSubmit, isSubmitting }
               <Button
                 type="submit"
                 fullWidth
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingPaymentContainers || !hasActivePaymentContainers}
                 className="text-lg py-3"
               >
                 {isSubmitting ? t('quickAdd.submitting') : t('quickAdd.submit')}

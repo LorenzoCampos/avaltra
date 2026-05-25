@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildQuickAddExpensePayload } from '@/components/QuickAddExpenseModal';
+import { buildQuickAddExpensePayload } from '@/components/quickAddExpense';
 import { buildExpenseSubmitPayload } from '@/features/expenses/formSubmissions';
 import { buildIncomeSubmitPayload } from '@/features/incomes/formSubmissions';
 
@@ -38,7 +38,7 @@ describe('Expense Visibility', () => {
   it('keeps quick add optional while preserving normalized values when selected', () => {
     expect(
       buildQuickAddExpensePayload(
-        { amount: 50, description: 'Taxi', category_id: null, family_member_id: null, payment_method: '' as never },
+        { amount: 50, description: 'Taxi', category_id: null, family_member_id: null, payment_method: '' as never, source_container_id: expenseBase.source_container_id },
         'ARS',
         '2026-05-01',
       ).payment_method,
@@ -52,6 +52,7 @@ describe('Expense Visibility', () => {
           category_id: null,
           family_member_id: null,
           payment_method: 'debit_card',
+          source_container_id: expenseBase.source_container_id,
         },
         'ARS',
         '2026-05-01',

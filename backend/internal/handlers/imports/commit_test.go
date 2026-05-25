@@ -135,6 +135,60 @@ func TestCommitExcelTemplatePersistsApprovedRowsInOneTransaction(t *testing.T) {
 	}
 }
 
+func TestCommitExcelTemplateAllowsAmbiguousPaymentContextWithoutGuessingPlace(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	workbook := newTemplateWorkbook(t, templateWorkbookOptions{
+		januarySheetName: "Enero ",
+		rows: []templateRow{
+			{sheet: "Enero ", row: 8, dateValue: 5, description: "Supermercado", amount: 1500, txType: "Egreso", paymentMethod: "Efectivo", category: "Comida"},
+		},
+	})
+
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	mock.ExpectQuery(`FROM expense_categories`).
+		WithArgs(testImportAccountID).
+		WillReturnRows(mock.NewRows([]string{"id", "name"}).AddRow("expense-cat", "Comida"))
+	mock.ExpectQuery(`FROM income_categories`).
+		WithArgs(testImportAccountID).
+		WillReturnRows(mock.NewRows([]string{"id", "name"}))
+	mock.ExpectQuery(`FROM payment_containers`).
+		WithArgs(testImportAccountID).
+		WillReturnRows(mock.NewRows([]string{"id", "name"}).AddRow("cash-container-1", "Efectivo").AddRow("cash-container-2", "Efectivo"))
+	mock.ExpectBegin()
+	mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
+		WithArgs(testImportAccountID).
+		WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
+	mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO expenses (
+			account_id, category_id, description, amount, currency, exchange_rate, amount_in_primary_currency, expense_type, date, payment_method, source_container_id, source_instrument_id, import_fingerprint
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		ON CONFLICT (import_fingerprint) WHERE import_fingerprint IS NOT NULL DO NOTHING
+		RETURNING id`)).
+		WithArgs(testImportAccountID, stringPtr("expense-cat"), "Supermercado", 1500.0, "ARS", 1.0, 1500.0, "one-time", "2026-01-05", stringPtr("cash"), nilStringPtr(), nilStringPtr(), pgxmock.AnyArg()).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow("expense-created"))
+	mock.ExpectCommit()
+
+	recorder := httptest.NewRecorder()
+	router := importTestRouter(commitHandler(mock))
+
+	decisions := `{"approved_row_ids":["enero:8"],"category_map":{}}`
+	req := newMultipartImportRequest(t, "/imports/excel-template/commit", workbook, map[string]string{"currency": "ARS", "decisions": decisions})
+	router.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
+	}
+}
+
 func TestCommitExcelTemplateAcceptsTypedCategoryMapKeysForSharedLabels(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

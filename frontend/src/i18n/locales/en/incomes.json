@@ -31,9 +31,13 @@
     "paymentContext": {
       "destinationContainer": {
         "label": "Destination place",
-        "empty": "No destination place",
-        "help": "Optional place where the money is deposited."
+        "empty": "Choose a destination place",
+        "help": "Required place where the money is deposited.",
+        "defaultHelp": "Your account default income place was preselected."
       },
+      "noActivePlaces": "You need an active place before saving a manual income.",
+      "createPlaceCta": "Manage places",
+      "inactiveDefaultWarning": "Your saved default income place is inactive or no longer available. Choose an active place or update the account default.",
       "instrument": {
         "label": "Payment instrument",
         "empty": "No payment instrument",

@@ -31,9 +31,13 @@
     "paymentContext": {
       "destinationContainer": {
         "label": "Lugar de destino",
-        "empty": "Sin lugar de destino",
-        "help": "Lugar opcional donde se deposita la plata."
+        "empty": "Elegí un lugar de destino",
+        "help": "Lugar obligatorio donde se deposita la plata.",
+        "defaultHelp": "Se preseleccionó el lugar predeterminado para ingresos de tu cuenta."
       },
+      "noActivePlaces": "Necesitás un lugar activo antes de guardar un ingreso manual.",
+      "createPlaceCta": "Administrar lugares",
+      "inactiveDefaultWarning": "El lugar predeterminado para ingresos está inactivo o ya no está disponible. Elegí un lugar activo o actualizá el predeterminado de la cuenta.",
       "instrument": {
         "label": "Instrumento de cobro",
         "empty": "Sin instrumento de cobro",

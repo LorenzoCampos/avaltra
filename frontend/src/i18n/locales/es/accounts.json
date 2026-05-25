@@ -54,7 +54,18 @@
     "successRedirectCountdown": "Redirigiendo al dashboard en {{count}} segundo{{plural}}...",
     "errorSave": "Error al guardar la cuenta",
     "errorLoad": "Error al cargar los detalles de la cuenta",
-    "errorLoadDescription": "Por favor, intentá de nuevo"
+    "errorLoadDescription": "Por favor, intentá de nuevo",
+    "defaultPlaces": {
+      "title": "Lugares predeterminados",
+      "description": "Elegí los lugares que se van a preseleccionar para nuevos gastos e ingresos manuales de esta cuenta.",
+      "none": "Sin lugar predeterminado",
+      "expenseLabel": "Lugar predeterminado para gastos",
+      "expenseHelp": "Los nuevos gastos van a empezar con este lugar de origen seleccionado.",
+      "incomeLabel": "Lugar predeterminado para ingresos",
+      "incomeHelp": "Los nuevos ingresos van a empezar con este lugar de destino seleccionado.",
+      "noActivePlaces": "Creá o reactivá un lugar antes de elegir predeterminados para la cuenta.",
+      "inactiveWarning": "Uno de los predeterminados guardados está inactivo o ya no está disponible. Elegí un reemplazo activo antes de guardar."
+    }
   },
   "types": {
     "personal": "Personal",

@@ -54,7 +54,18 @@
     "successRedirectCountdown": "Redirecting to dashboard in {{count}} second{{plural}}...",
     "errorSave": "Failed to save account",
     "errorLoad": "Failed to load account details",
-    "errorLoadDescription": "Please try again"
+    "errorLoadDescription": "Please try again",
+    "defaultPlaces": {
+      "title": "Default places",
+      "description": "Choose the places preselected for new manual expenses and incomes in this account.",
+      "none": "No default place",
+      "expenseLabel": "Default expense place",
+      "expenseHelp": "New expenses will start with this source place selected.",
+      "incomeLabel": "Default income place",
+      "incomeHelp": "New incomes will start with this destination place selected.",
+      "noActivePlaces": "Create or reactivate a place before choosing account defaults.",
+      "inactiveWarning": "One saved default is inactive or no longer available. Pick an active replacement before saving."
+    }
   },
   "types": {
     "personal": "Personal",

@@ -31,9 +31,13 @@
     "paymentContext": {
       "sourceContainer": {
         "label": "Lugar de origen",
-        "empty": "Sin lugar de origen",
-        "help": "Lugar opcional desde donde sale la plata."
+        "empty": "Elegí un lugar de origen",
+        "help": "Lugar obligatorio desde donde sale la plata.",
+        "defaultHelp": "Se preseleccionó el lugar predeterminado para gastos de tu cuenta."
       },
+      "noActivePlaces": "Necesitás un lugar activo antes de guardar un gasto manual.",
+      "createPlaceCta": "Administrar lugares",
+      "inactiveDefaultWarning": "El lugar predeterminado para gastos está inactivo o ya no está disponible. Elegí un lugar activo o actualizá el predeterminado de la cuenta.",
       "instrument": {
         "label": "Instrumento de pago",
         "empty": "Sin instrumento de pago",

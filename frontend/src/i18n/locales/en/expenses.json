@@ -31,9 +31,13 @@
     "paymentContext": {
       "sourceContainer": {
         "label": "Source place",
-        "empty": "No source place",
-        "help": "Optional place where the money comes from."
+        "empty": "Choose a source place",
+        "help": "Required place where the money comes from.",
+        "defaultHelp": "Your account default expense place was preselected."
       },
+      "noActivePlaces": "You need an active place before saving a manual expense.",
+      "createPlaceCta": "Manage places",
+      "inactiveDefaultWarning": "Your saved default expense place is inactive or no longer available. Choose an active place or update the account default.",
       "instrument": {
         "label": "Payment instrument",
         "empty": "No payment instrument",

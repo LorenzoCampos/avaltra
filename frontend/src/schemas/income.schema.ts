@@ -12,6 +12,10 @@ const optionalUuidSchema = z.preprocess(
   normalizeOptionalUuid,
   z.string().uuid('Invalid payment context ID').nullable().optional(),
 );
+const requiredUuidSchema = z.preprocess(
+  normalizeOptionalUuid,
+  z.string({ error: 'Destination place is required' }).uuid('Invalid payment context ID'),
+);
 
 export const incomeSchema = z.object({
   description: z.string().min(1, { message: "Description is required" }).max(200, { message: "Description must be less than 200 characters" }),
@@ -21,7 +25,7 @@ export const incomeSchema = z.object({
   category_id: z.string().uuid("Invalid category ID").nullable().optional(), // Nullable for 'Other' or no category
   family_member_id: z.string().uuid("Invalid family member ID").nullable().optional(), // Nullable for no specific member
   payment_method: optionalPaymentMethodSchema,
-  destination_container_id: optionalUuidSchema,
+  destination_container_id: requiredUuidSchema,
   destination_instrument_id: optionalUuidSchema,
   exchange_rate: z.number().min(0.01, { message: "Exchange rate must be greater than 0" }).optional(),
   amount_in_primary_currency: z.number().min(0.01, { message: "Amount in primary currency must be greater than 0" }).optional(),

@@ -8,6 +8,7 @@ const baseExpense = {
   amount: 100,
   currency: 'ARS' as const,
   date: '2026-01-16',
+  source_container_id: '11111111-1111-4111-8111-111111111111',
 };
 
 const baseIncome = {
@@ -15,6 +16,7 @@ const baseIncome = {
   amount: 100,
   currency: 'ARS' as const,
   date: '2026-01-16',
+  destination_container_id: '11111111-1111-4111-8111-111111111111',
 };
 
 const validId = '11111111-1111-4111-8111-111111111111';

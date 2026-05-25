@@ -3,11 +3,14 @@ import type { CreateIncomeRequest } from '@/types/income';
 
 export const buildIncomeSubmitPayload = (
   data: CreateIncomeRequest,
-  _isEditing: boolean,
+  isEditing: boolean,
   existingContext?: { containerId?: string | null },
 ): CreateIncomeRequest => {
+  void isEditing;
+  void existingContext;
+
   const placeOnlyData = { ...data };
   delete placeOnlyData.payment_method;
 
-  return withIncomePaymentContext(placeOnlyData, existingContext);
+  return withIncomePaymentContext(placeOnlyData);
 };

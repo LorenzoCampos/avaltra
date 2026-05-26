@@ -4,7 +4,7 @@
 
 - Slice A is complete for packaging: A1 backend pagination contract tests, A2 frontend hooks/types, and A3/A4 expense/income pagination controls are implemented.
 - Coverage is honest and bounded: backend coverage is handler contract-level; frontend coverage is hook/helper-level for params, metadata, query keys, and pagination state. There is no mounted component test for the `ExpenseList`/`IncomeList` pagination controls.
-- Slice B recurring date hydration remains pending.
+- Slice B is complete: recurring expense/income GET handlers return date fields as `YYYY-MM-DD`, and recurring edit forms defensively normalize timestamp-like date values before hydrating date inputs.
 - Slice C Activity navigation safety remains pending.
 - Package boundary: include this SDD change only; exclude `branding/` and spreadsheet artifacts.
 
@@ -43,9 +43,22 @@
 - `npm run typecheck` passed.
 - `npx eslint src/features/expenses/ExpenseList.tsx src/features/incomes/IncomeList.tsx src/hooks/useTransactionLists.test.ts src/lib/listPagination.ts src/components/ListPaginationControls.tsx` passed.
 
+## 2026-05-26 - Slice B Recurring Date Hydration
+
+- Added recurring expense and recurring income GET handler tests that assert `start_date` and `end_date` serialize as HTML date-input compatible `YYYY-MM-DD` values.
+- Added narrow store interfaces for recurring GET handlers so pgxmock can cover response serialization without changing public route wiring.
+- Updated recurring expense/income GET handlers to format scanned `time.Time` date values as `2006-01-02`, while preserving fallback behavior for existing string-like values.
+- Added shared frontend `toDateInputValue` normalizer and wired both recurring edit forms to normalize hydrated `start_date`/`end_date` values before `setValue`.
+
+## Verification
+
+- `go test ./internal/handlers/recurring_expenses ./internal/handlers/recurring_incomes` passed.
+- `npm test -- dateInput.test.ts` passed.
+- `npm run typecheck` passed.
+- `npx eslint src/lib/dateInput.ts src/lib/dateInput.test.ts src/features/recurring-expenses/RecurringExpenseForm.tsx src/features/recurring-incomes/RecurringIncomeForm.tsx` completed with existing React Hook Form `watch()`/missing `t` dependency warnings and 0 errors.
+
 ## Remaining
 
 - Full server-side parity for existing search/amount/multi-select filters remains out of scope for A3/A4; current filters are explicitly page-local in the UI.
-- Slice B: recurring expense/income date hydration is still pending.
 - Slice C: Activity detail navigation safety is still pending.
 - No mounted component test exists for the expense/income list pagination controls; current frontend coverage is helper/contract-level.

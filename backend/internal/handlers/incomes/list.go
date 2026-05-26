@@ -6,9 +6,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/LorenzoCampos/avaltra/internal/transactions"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type PaymentContext struct {
+	ContainerID         *string `json:"container_id"`
+	ContainerName       *string `json:"container_name"`
+	ContainerType       *string `json:"container_type"`
+	InstrumentID        *string `json:"instrument_id"`
+	InstrumentName      *string `json:"instrument_name"`
+	InstrumentType      *string `json:"instrument_type"`
+	LegacyPaymentMethod *string `json:"legacy_payment_method"`
+	DisplayLabel        *string `json:"display_label"`
+}
 
 type ListIncomesQuery struct {
 	DateFrom       string `form:"date_from"`        // YYYY-MM-DD
@@ -23,22 +35,23 @@ type ListIncomesQuery struct {
 }
 
 type IncomeListItem struct {
-	ID                      string  `json:"id"`
-	FamilyMemberID          *string `json:"family_member_id,omitempty"`
-	CategoryID              *string `json:"category_id,omitempty"`
-	CategoryName            *string `json:"category_name,omitempty"`
-	Description             string  `json:"description"`
-	Amount                  float64 `json:"amount"`
-	Currency                string  `json:"currency"`
-	ExchangeRate            float64 `json:"exchange_rate"`
-	AmountInPrimaryCurrency float64 `json:"amount_in_primary_currency"`
-	IncomeType              string  `json:"income_type"`
-	Date                    string  `json:"date"`
-	EndDate                 *string `json:"end_date,omitempty"`
-	PaymentMethod           *string `json:"payment_method"`
-	DestinationContainerID  *string `json:"destination_container_id"`
-	DestinationInstrumentID *string `json:"destination_instrument_id"`
-	CreatedAt               string  `json:"created_at"`
+	ID                      string          `json:"id"`
+	FamilyMemberID          *string         `json:"family_member_id,omitempty"`
+	CategoryID              *string         `json:"category_id,omitempty"`
+	CategoryName            *string         `json:"category_name,omitempty"`
+	Description             string          `json:"description"`
+	Amount                  float64         `json:"amount"`
+	Currency                string          `json:"currency"`
+	ExchangeRate            float64         `json:"exchange_rate"`
+	AmountInPrimaryCurrency float64         `json:"amount_in_primary_currency"`
+	IncomeType              string          `json:"income_type"`
+	Date                    string          `json:"date"`
+	EndDate                 *string         `json:"end_date,omitempty"`
+	PaymentMethod           *string         `json:"payment_method"`
+	DestinationContainerID  *string         `json:"destination_container_id"`
+	DestinationInstrumentID *string         `json:"destination_instrument_id"`
+	PaymentContext          *PaymentContext `json:"payment_context"`
+	CreatedAt               string          `json:"created_at"`
 }
 
 type ListIncomesResponse struct {
@@ -173,13 +186,17 @@ func listIncomesHandler(db incomeStore) gin.HandlerFunc {
 		totalPages := (totalCount + query.Limit - 1) / query.Limit
 		offset := (query.Page - 1) * query.Limit
 
-		// Build main query with JOIN to get category name
+		// Build main query with JOINs to get category and normalized payment context.
 		mainQuery := `
 			SELECT i.id, i.family_member_id, i.category_id, ic.name as category_name,
 			       i.description, i.amount, i.currency, i.exchange_rate, i.amount_in_primary_currency,
-			       i.income_type, i.date, i.end_date, i.payment_method, i.destination_container_id, i.destination_instrument_id, i.created_at
+			       i.income_type, i.date, i.end_date, i.payment_method, i.destination_container_id, i.destination_instrument_id,
+			       pc.name as container_name, pc.kind as container_type, pi.name as instrument_name, pi.kind as instrument_type,
+			       i.created_at
 			FROM incomes i
 			LEFT JOIN income_categories ic ON i.category_id = ic.id
+			LEFT JOIN payment_containers pc ON i.destination_container_id = pc.id AND pc.account_id = i.account_id
+			LEFT JOIN payment_instruments pi ON i.destination_instrument_id = pi.id AND pi.account_id = i.account_id
 			WHERE ` + whereClause + `
 			ORDER BY i.` + query.SortBy + ` ` + strings.ToUpper(query.Order) + `
 			LIMIT $` + strconv.Itoa(argIndex) + ` OFFSET $` + strconv.Itoa(argIndex+1)
@@ -199,6 +216,7 @@ func listIncomesHandler(db incomeStore) gin.HandlerFunc {
 		for rows.Next() {
 			var income IncomeListItem
 			var familyMemberID, categoryID, categoryName, paymentMethod, destinationContainerID, destinationInstrumentID *string
+			var containerName, containerType, instrumentName, instrumentType *string
 			var date, endDate *time.Time
 			var createdAt time.Time
 
@@ -218,6 +236,10 @@ func listIncomesHandler(db incomeStore) gin.HandlerFunc {
 				&paymentMethod,
 				&destinationContainerID,
 				&destinationInstrumentID,
+				&containerName,
+				&containerType,
+				&instrumentName,
+				&instrumentType,
 				&createdAt,
 			)
 			if err != nil {
@@ -231,6 +253,7 @@ func listIncomesHandler(db incomeStore) gin.HandlerFunc {
 			income.PaymentMethod = paymentMethod
 			income.DestinationContainerID = destinationContainerID
 			income.DestinationInstrumentID = destinationInstrumentID
+			income.PaymentContext = buildPaymentContext(destinationContainerID, containerName, containerType, destinationInstrumentID, instrumentName, instrumentType, paymentMethod)
 
 			if date != nil {
 				dateStr := date.Format("2006-01-02")
@@ -263,5 +286,32 @@ func listIncomesHandler(db incomeStore) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, response)
+	}
+}
+
+func buildPaymentContext(containerID, containerName, containerType, instrumentID, instrumentName, instrumentType, legacyPaymentMethod *string) *PaymentContext {
+	if containerID == nil && containerName == nil && instrumentID == nil && instrumentName == nil && legacyPaymentMethod == nil {
+		return nil
+	}
+	displayLabel := legacyPaymentMethod
+	if legacyPaymentMethod != nil {
+		label := transactions.PaymentMethodLabel(*legacyPaymentMethod)
+		displayLabel = &label
+	}
+	if instrumentName != nil {
+		displayLabel = instrumentName
+	}
+	if containerName != nil {
+		displayLabel = containerName
+	}
+	return &PaymentContext{
+		ContainerID:         containerID,
+		ContainerName:       containerName,
+		ContainerType:       containerType,
+		InstrumentID:        instrumentID,
+		InstrumentName:      instrumentName,
+		InstrumentType:      instrumentType,
+		LegacyPaymentMethod: legacyPaymentMethod,
+		DisplayLabel:        displayLabel,
 	}
 }

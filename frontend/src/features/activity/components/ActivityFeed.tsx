@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useActivity,
@@ -17,6 +18,7 @@ import { getPaymentContextLabel } from '@/lib/paymentContext';
 import { getApiErrorMessage } from '@/lib/apiError';
 import { Loader2 } from 'lucide-react';
 import type { Currency } from '@/types/api';
+import { getActivityTransactionRoute, shouldHandleActivityNavigationKey } from '../lib/activityNavigation';
 
 export function ActivityFeed() {
   const { t } = useTranslation('activity');
@@ -196,19 +198,37 @@ function ActivityCard({
   formatMoney: (amount: number, currency: Currency) => string;
 }) {
   const { t } = useTranslation('activity');
+  const navigate = useNavigate();
   const icon = getActivityIcon(activity.type);
   const color = getActivityColor(activity.type);
   const label = getActivityLabel(activity.type);
   const isNegative = activity.type === 'expense' || activity.type === 'savings_deposit';
+  const transactionRoute = getActivityTransactionRoute(activity);
   const paymentContextLabel = getPaymentContextLabel(
     t,
     activity.payment_context,
     activity.payment_method,
     activity.type === 'income' ? 'incomes' : 'expenses',
   );
+  const navigateToTransaction = () => {
+    if (transactionRoute) {
+      navigate(transactionRoute);
+    }
+  };
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750">
+    <div
+      className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
+      onClick={transactionRoute ? navigateToTransaction : undefined}
+      onKeyDown={transactionRoute ? (event) => {
+        if (shouldHandleActivityNavigationKey(event.key)) {
+          event.preventDefault();
+          navigateToTransaction();
+        }
+      } : undefined}
+      role={transactionRoute ? 'button' : undefined}
+      tabIndex={transactionRoute ? 0 : undefined}
+    >
       {/* Left side: icon + info */}
       <div className="flex items-start gap-3">
         <div className="text-2xl">{icon}</div>

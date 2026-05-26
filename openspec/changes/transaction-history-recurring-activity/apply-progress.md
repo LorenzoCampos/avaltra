@@ -5,7 +5,7 @@
 - Slice A is complete for packaging: A1 backend pagination contract tests, A2 frontend hooks/types, and A3/A4 expense/income pagination controls are implemented.
 - Coverage is honest and bounded: backend coverage is handler contract-level; frontend coverage is hook/helper-level for params, metadata, query keys, and pagination state. There is no mounted component test for the `ExpenseList`/`IncomeList` pagination controls.
 - Slice B is complete: recurring expense/income GET handlers return date fields as `YYYY-MM-DD`, and recurring edit forms defensively normalize timestamp-like date values before hydrating date inputs.
-- Slice C Activity navigation safety remains pending.
+- Slice C is complete: Activity expense/income rows navigate to existing edit routes, while savings/non-transaction rows remain non-navigable.
 - Package boundary: include this SDD change only; exclude `branding/` and spreadsheet artifacts.
 
 ## 2026-05-26 - A1 Backend Pagination Contracts
@@ -57,8 +57,26 @@
 - `npm run typecheck` passed.
 - `npx eslint src/lib/dateInput.ts src/lib/dateInput.test.ts src/features/recurring-expenses/RecurringExpenseForm.tsx src/features/recurring-incomes/RecurringIncomeForm.tsx` completed with existing React Hook Form `watch()`/missing `t` dependency warnings and 0 errors.
 
+## 2026-05-26 - Slice C Activity Navigation Safety
+
+- Added focused Vitest coverage for Activity transaction route resolution and keyboard activation keys.
+- Added guarded route mapping for Activity rows: `expense -> /expenses/edit/:id`, `income -> /incomes/edit/:id`.
+- Kept savings deposit/withdrawal and id-less activity items non-navigable by omitting click handlers, keyboard handlers, button role, and tab stop when no transaction route exists.
+
+### TDD Cycle Evidence
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| 4.1 | `frontend/src/features/activity/components/ActivityFeed.test.ts` | Unit | N/A — no existing ActivityFeed tests | ✅ Failing tests written first; helpers were undefined | ✅ `npm test -- src/features/activity/components/ActivityFeed.test.ts` passed after implementation | ✅ Expense, income, savings, id-less, Enter/Space, and Escape cases | ✅ Extracted navigation helpers to `frontend/src/features/activity/lib/activityNavigation.ts`; tests still passed |
+| 4.2 | `frontend/src/features/activity/components/ActivityFeed.test.ts` | Unit | N/A — covered by 4.1 cycle for same files | ✅ Route/guard expectations written before production code | ✅ Activity rows use the tested helper before navigating | ✅ Unsupported route path stays `null`; keyboard guard only handles activation keys | ✅ Moved non-component exports out of `ActivityFeed.tsx` to satisfy Fast Refresh lint |
+
+### Verification
+
+- `npm test -- src/features/activity/components/ActivityFeed.test.ts` passed.
+- `npm run typecheck` passed.
+- `npx eslint src/features/activity/components/ActivityFeed.tsx src/features/activity/components/ActivityFeed.test.ts src/features/activity/lib/activityNavigation.ts` passed.
+
 ## Remaining
 
 - Full server-side parity for existing search/amount/multi-select filters remains out of scope for A3/A4; current filters are explicitly page-local in the UI.
-- Slice C: Activity detail navigation safety is still pending.
 - No mounted component test exists for the expense/income list pagination controls; current frontend coverage is helper/contract-level.

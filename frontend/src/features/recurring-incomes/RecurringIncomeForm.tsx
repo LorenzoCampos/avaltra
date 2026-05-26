@@ -20,6 +20,7 @@ import {
 import { useIncomeCategories, useFamilyMembers } from '@/hooks/useIncomes';
 import { usePaymentContainers } from '@/hooks/usePaymentContainers';
 import { withRecurringIncomePaymentContext } from '@/lib/paymentContext';
+import { toDateInputValue } from '@/lib/dateInput';
 import { useAccountStore } from '@/stores/account.store';
 import type { RecurrenceFrequency } from '@/types/recurringIncome';
 
@@ -119,8 +120,8 @@ export const RecurringIncomeForm = () => {
       setValue('recurrence_interval', incomeData.recurrence_interval);
       setValue('recurrence_day_of_month', incomeData.recurrence_day_of_month);
       setValue('recurrence_day_of_week', incomeData.recurrence_day_of_week);
-      setValue('start_date', incomeData.start_date);
-      setValue('end_date', incomeData.end_date);
+      setValue('start_date', toDateInputValue(incomeData.start_date) ?? '');
+      setValue('end_date', toDateInputValue(incomeData.end_date));
       setValue('total_occurrences', incomeData.total_occurrences);
       setValue('destination_container_id', incomeData.destination_container_id ?? null);
       setValue('is_active', incomeData.is_active);

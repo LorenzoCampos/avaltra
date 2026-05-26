@@ -3,6 +3,7 @@ package recurring_incomes
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -39,6 +40,10 @@ type RecurringIncomeDetail struct {
 
 // GetRecurringIncome maneja GET /api/recurring-expenses/:id
 func GetRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
+	return getRecurringIncomeHandler(pool)
+}
+
+func getRecurringIncomeHandler(pool recurringIncomeStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		recurringID := c.Param("id")
 
@@ -141,11 +146,11 @@ func GetRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 
 		// Convertir dates a string
 		if startDate != nil {
-			detail.StartDate = fmt.Sprint(startDate)
+			detail.StartDate = recurringIncomeDateString(startDate)
 		}
 
 		if endDate != nil {
-			endDateStr := fmt.Sprint(endDate)
+			endDateStr := recurringIncomeDateString(endDate)
 			detail.EndDate = &endDateStr
 		}
 
@@ -169,5 +174,24 @@ func GetRecurringIncome(pool *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, detail)
+	}
+}
+
+func recurringIncomeDateString(value interface{}) string {
+	switch date := value.(type) {
+	case time.Time:
+		return date.Format("2006-01-02")
+	case *time.Time:
+		if date == nil {
+			return ""
+		}
+		return date.Format("2006-01-02")
+	case string:
+		if len(date) >= len("2006-01-02") && date[4] == '-' && date[7] == '-' {
+			return date[:len("2006-01-02")]
+		}
+		return date
+	default:
+		return fmt.Sprint(value)
 	}
 }

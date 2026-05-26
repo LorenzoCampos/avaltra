@@ -41,11 +41,11 @@ Package boundary: include the transaction-history recurring/activity change only
 
 ## Phase 3: Slice B - Recurring Date Hydration
 
-Slice B remains pending.
+Slice B is complete for backend recurring GET date serialization and frontend defensive date-input normalization.
 
-- [ ] 3.1 RED: Add backend tests for recurring expense/income get handlers asserting `start_date`/`end_date` serialization as `YYYY-MM-DD`.
-- [ ] 3.2 GREEN: Implement date formatting in `backend/internal/handlers/recurring_expenses/get.go` and `backend/internal/handlers/recurring_incomes/get.go`.
-- [ ] 3.3 RED/GREEN: Add and use a defensive date-input normalizer in `frontend/src/features/recurring-expenses/RecurringExpenseForm.tsx` and `frontend/src/features/recurring-incomes/RecurringIncomeForm.tsx`.
+- [x] 3.1 RED: Add backend tests for recurring expense/income get handlers asserting `start_date`/`end_date` serialization as `YYYY-MM-DD`.
+- [x] 3.2 GREEN: Implement date formatting in `backend/internal/handlers/recurring_expenses/get.go` and `backend/internal/handlers/recurring_incomes/get.go`.
+- [x] 3.3 RED/GREEN: Add and use a defensive date-input normalizer in `frontend/src/features/recurring-expenses/RecurringExpenseForm.tsx` and `frontend/src/features/recurring-incomes/RecurringIncomeForm.tsx`.
 
 ## Phase 4: Slice C - Activity Navigation Safety
 

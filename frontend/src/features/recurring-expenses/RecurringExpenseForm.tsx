@@ -20,6 +20,7 @@ import {
 import { useExpenseCategories, useFamilyMembers } from '@/hooks/useExpenses';
 import { usePaymentContainers } from '@/hooks/usePaymentContainers';
 import { withRecurringExpensePaymentContext } from '@/lib/paymentContext';
+import { toDateInputValue } from '@/lib/dateInput';
 import { useAccountStore } from '@/stores/account.store';
 import type { RecurrenceFrequency } from '@/types/recurringExpense';
 
@@ -119,8 +120,8 @@ export const RecurringExpenseForm = () => {
       setValue('recurrence_interval', expenseData.recurrence_interval);
       setValue('recurrence_day_of_month', expenseData.recurrence_day_of_month);
       setValue('recurrence_day_of_week', expenseData.recurrence_day_of_week);
-      setValue('start_date', expenseData.start_date);
-      setValue('end_date', expenseData.end_date);
+      setValue('start_date', toDateInputValue(expenseData.start_date) ?? '');
+      setValue('end_date', toDateInputValue(expenseData.end_date));
       setValue('total_occurrences', expenseData.total_occurrences);
       setValue('source_container_id', expenseData.source_container_id ?? null);
       setValue('is_active', expenseData.is_active);

@@ -11,6 +11,36 @@ const invalidateIncomeQueries = (queryClient: ReturnType<typeof useQueryClient>,
   queryClient.invalidateQueries({ queryKey: ['activity', activeAccountId] });
 };
 
+const getMutationErrorDescription = (err: unknown) => {
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const response = (err as { response?: { data?: { error?: unknown } } }).response;
+    if (typeof response?.data?.error === 'string') return response.data.error;
+  }
+
+  return 'Please try again';
+};
+
+const DEFAULT_INCOME_LIST_PARAMS = {
+  page: 1,
+  limit: 20,
+  sort_by: 'date',
+  order: 'desc',
+  income_type: 'one-time',
+} as const satisfies IncomeListParams;
+
+export const getIncomeListParams = (params?: IncomeListParams): IncomeListParams => ({
+  ...DEFAULT_INCOME_LIST_PARAMS,
+  ...params,
+});
+
+export const getIncomeListQueryKey = (activeAccountId: string | null, params?: IncomeListParams) => [
+  'incomes',
+  activeAccountId,
+  getIncomeListParams(params),
+] as const;
+
+export const getIncomeListCount = (data?: IncomeListResponse): number => data?.total_count ?? data?.count ?? 0;
+
 /**
  * Hook for Incomes with Optimistic Updates
  * 
@@ -23,15 +53,17 @@ const invalidateIncomeQueries = (queryClient: ReturnType<typeof useQueryClient>,
 export const useIncomes = (params?: IncomeListParams) => {
   const queryClient = useQueryClient();
   const { activeAccountId } = useAccountStore();
+  const listParams = getIncomeListParams(params);
+  const incomesQueryKey = getIncomeListQueryKey(activeAccountId, params);
 
   // GET /incomes - List incomes
   const { data, isLoading, error } = useQuery({
-    queryKey: ['incomes', activeAccountId, params],
+    queryKey: incomesQueryKey,
     queryFn: async () => {
       if (!activeAccountId) throw new Error('No active account');
       const response = await api.get<IncomeListResponse>('/incomes', {
         headers: { 'X-Account-ID': activeAccountId },
-        params,
+        params: listParams,
       });
       return response.data;
     },
@@ -50,7 +82,7 @@ export const useIncomes = (params?: IncomeListParams) => {
     onMutate: async (newIncomeData) => {
       await queryClient.cancelQueries({ queryKey: ['incomes', activeAccountId] });
       
-      const previousIncomes = queryClient.getQueryData<IncomeListResponse>(['incomes', activeAccountId]);
+      const previousIncomes = queryClient.getQueryData<IncomeListResponse>(incomesQueryKey);
       
       // Optimistically add the new income
       if (previousIncomes) {
@@ -72,10 +104,11 @@ export const useIncomes = (params?: IncomeListParams) => {
             created_at: new Date().toISOString(),
           };
 
-        queryClient.setQueryData<IncomeListResponse>(['incomes', activeAccountId], {
+        queryClient.setQueryData<IncomeListResponse>(incomesQueryKey, {
           ...previousIncomes,
           incomes: [optimisticIncome, ...previousIncomes.incomes],
-          count: previousIncomes.count + 1,
+          total_count: previousIncomes.total_count + 1,
+          count: previousIncomes.count === undefined ? undefined : previousIncomes.count + 1,
         });
       }
       
@@ -84,10 +117,10 @@ export const useIncomes = (params?: IncomeListParams) => {
     onError: (err, _newIncome, context) => {
       // Rollback on error
       if (context?.previousIncomes) {
-        queryClient.setQueryData(['incomes', activeAccountId], context.previousIncomes);
+        queryClient.setQueryData(incomesQueryKey, context.previousIncomes);
       }
       toast.error('Failed to create income', {
-        description: (err as any).response?.data?.error || 'Please try again',
+        description: getMutationErrorDescription(err),
       });
     },
     onSettled: () => {
@@ -108,10 +141,10 @@ export const useIncomes = (params?: IncomeListParams) => {
     onMutate: async (updatedIncome) => {
       await queryClient.cancelQueries({ queryKey: ['incomes', activeAccountId] });
       
-      const previousIncomes = queryClient.getQueryData<IncomeListResponse>(['incomes', activeAccountId]);
+      const previousIncomes = queryClient.getQueryData<IncomeListResponse>(incomesQueryKey);
       
       if (previousIncomes) {
-        queryClient.setQueryData<IncomeListResponse>(['incomes', activeAccountId], {
+        queryClient.setQueryData<IncomeListResponse>(incomesQueryKey, {
           ...previousIncomes,
           incomes: previousIncomes.incomes.map(inc =>
             inc.id === updatedIncome.id
@@ -125,10 +158,10 @@ export const useIncomes = (params?: IncomeListParams) => {
     },
     onError: (err, _updatedIncome, context) => {
       if (context?.previousIncomes) {
-        queryClient.setQueryData(['incomes', activeAccountId], context.previousIncomes);
+        queryClient.setQueryData(incomesQueryKey, context.previousIncomes);
       }
       toast.error('Failed to update income', {
-        description: (err as any).response?.data?.error || 'Please try again',
+        description: getMutationErrorDescription(err),
       });
     },
     onSettled: (_, __, variables) => {
@@ -149,14 +182,15 @@ export const useIncomes = (params?: IncomeListParams) => {
     onMutate: async (incomeId) => {
       await queryClient.cancelQueries({ queryKey: ['incomes', activeAccountId] });
       
-      const previousIncomes = queryClient.getQueryData<IncomeListResponse>(['incomes', activeAccountId]);
+      const previousIncomes = queryClient.getQueryData<IncomeListResponse>(incomesQueryKey);
       
       // Optimistically remove
       if (previousIncomes) {
-        queryClient.setQueryData<IncomeListResponse>(['incomes', activeAccountId], {
+        queryClient.setQueryData<IncomeListResponse>(incomesQueryKey, {
           ...previousIncomes,
           incomes: previousIncomes.incomes.filter(inc => inc.id !== incomeId),
-          count: previousIncomes.count - 1,
+          total_count: Math.max(0, previousIncomes.total_count - 1),
+          count: previousIncomes.count === undefined ? undefined : Math.max(0, previousIncomes.count - 1),
         });
       }
       
@@ -165,10 +199,10 @@ export const useIncomes = (params?: IncomeListParams) => {
     onError: (err, _incomeId, context) => {
       // Rollback
       if (context?.previousIncomes) {
-        queryClient.setQueryData(['incomes', activeAccountId], context.previousIncomes);
+        queryClient.setQueryData(incomesQueryKey, context.previousIncomes);
       }
       toast.error('Failed to delete income', {
-        description: (err as any).response?.data?.error || 'Please try again',
+        description: getMutationErrorDescription(err),
       });
     },
     onSettled: () => {
@@ -187,13 +221,14 @@ export const useIncomes = (params?: IncomeListParams) => {
     onMutate: async (income) => {
       await queryClient.cancelQueries({ queryKey: ['incomes', activeAccountId] });
 
-      const previousIncomes = queryClient.getQueryData<IncomeListResponse>(['incomes', activeAccountId]);
+      const previousIncomes = queryClient.getQueryData<IncomeListResponse>(incomesQueryKey);
 
       if (previousIncomes && !previousIncomes.incomes.some((item) => item.id === income.id)) {
-        queryClient.setQueryData<IncomeListResponse>(['incomes', activeAccountId], {
+        queryClient.setQueryData<IncomeListResponse>(incomesQueryKey, {
           ...previousIncomes,
           incomes: [income, ...previousIncomes.incomes],
-          count: previousIncomes.count + 1,
+          total_count: previousIncomes.total_count + 1,
+          count: previousIncomes.count === undefined ? undefined : previousIncomes.count + 1,
         });
       }
 
@@ -201,7 +236,7 @@ export const useIncomes = (params?: IncomeListParams) => {
     },
     onError: (_err, _income, context) => {
       if (context?.previousIncomes) {
-        queryClient.setQueryData(['incomes', activeAccountId], context.previousIncomes);
+        queryClient.setQueryData(incomesQueryKey, context.previousIncomes);
       }
     },
     onSettled: (_, __, income) => {
@@ -213,7 +248,21 @@ export const useIncomes = (params?: IncomeListParams) => {
   return {
     // Data
     incomes: data?.incomes || [],
-    count: data?.count || 0,
+    count: getIncomeListCount(data),
+    totalCount: getIncomeListCount(data),
+    pagination: data
+      ? {
+          total_count: getIncomeListCount(data),
+          page: data.page,
+          limit: data.limit,
+          total_pages: data.total_pages,
+        }
+      : {
+          total_count: 0,
+          page: listParams.page ?? DEFAULT_INCOME_LIST_PARAMS.page,
+          limit: listParams.limit ?? DEFAULT_INCOME_LIST_PARAMS.limit,
+          total_pages: 0,
+        },
     summary: data?.summary,
     
     // Loading states

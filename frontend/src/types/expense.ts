@@ -70,11 +70,33 @@ export interface UpdateExpenseRequest {
   amount_in_primary_currency?: number;
 }
 
+export type ExpenseListSortBy = 'date' | 'amount' | 'created_at';
+export type ExpenseListOrder = 'asc' | 'desc';
+
+// GET /expenses - Query params
+export interface ExpenseListParams {
+  page?: number;
+  limit?: number;
+  date_from?: string; // YYYY-MM-DD
+  date_to?: string; // YYYY-MM-DD
+  category_id?: string;
+  family_member_id?: string;
+  sort_by?: ExpenseListSortBy;
+  order?: ExpenseListOrder;
+  expense_type?: Expense['expense_type'];
+}
+
 // Response for GET /expenses (list)
 export interface ExpensesListResponse {
   expenses: Expense[];
-  count: number;
-  summary: {
+  total_count: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  /** Deprecated legacy field from the pre-pagination response. */
+  count?: number;
+  /** Deprecated legacy field from the pre-pagination response. */
+  summary?: {
     total: number;
     byType: {
       'one-time': number;

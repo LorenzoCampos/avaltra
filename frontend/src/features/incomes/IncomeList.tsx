@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Copy } from 'lucide-react';
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { TableSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ListPaginationControls } from '@/components/ListPaginationControls';
 import { MoneyAmountDisplay } from '@/components/MoneyAmountDisplay';
 import { useActionFeedback } from '@/hooks/useActionFeedback';
 import { useMoneyFormatter } from '@/hooks/useMoneyFormatter';
@@ -19,12 +21,16 @@ import { getPaymentContextLabel } from '@/lib/paymentContext';
 import type { Currency } from '@/types/api';
 import type { Income } from '@/types/income';
 import { getApiErrorMessage } from '@/lib/apiError';
+import { getListPaginationState } from '@/lib/listPagination';
+
+const PAGE_SIZE = 20;
 
 export const IncomeList = () => {
   const { t } = useTranslation('incomes');
   const navigate = useNavigate();
   const { activeAccount } = useAccountStore();
-  const { incomes, isLoadingIncomes, incomesError, deleteIncomeAsync, restoreIncomeAsync, isDeletingIncome, isRestoringIncome } = useIncomes();
+  const [page, setPage] = useState(1);
+  const { incomes, pagination: incomesPagination, isLoadingIncomes, incomesError, deleteIncomeAsync, restoreIncomeAsync, isDeletingIncome, isRestoringIncome } = useIncomes({ page, limit: PAGE_SIZE });
   const { data: familyMembers } = useFamilyMembers();
   const { data: categories } = useIncomeCategories();
   const { handleDelete: handleDeleteWithAnimation, isDeleting } = useDeleteAnimation();
@@ -32,6 +38,17 @@ export const IncomeList = () => {
   const { formatMoney } = useMoneyFormatter();
 
   const isFamilyAccount = activeAccount?.type === 'family';
+  const pagination = getListPaginationState(incomesPagination);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeAccount?.id]);
+
+  useEffect(() => {
+    if (pagination.total_pages > 0 && page > pagination.total_pages) {
+      setPage(pagination.total_pages);
+    }
+  }, [page, pagination.total_pages]);
 
   // Filters
   const {
@@ -176,7 +193,7 @@ export const IncomeList = () => {
         />
       )}
 
-      {incomes.length === 0 ? (
+      {pagination.total_count === 0 ? (
         <Card>
           <CardContent>
             <EmptyState
@@ -199,7 +216,7 @@ export const IncomeList = () => {
                 {activeFiltersCount > 0 ? (
                   <span>{t('list.filteredIncomes', { filtered: filteredIncomes.length, total: incomes.length })}</span>
                 ) : (
-                  <span>{t('list.allIncomes')} ({incomes.length})</span>
+                  <span>{t('list.allIncomes')} ({pagination.total_count})</span>
                 )}
               </CardTitle>
             </CardHeader>
@@ -322,7 +339,7 @@ export const IncomeList = () => {
                 {activeFiltersCount > 0 ? (
                   <span>{t('list.filteredShort', { filtered: filteredIncomes.length, total: incomes.length })}</span>
                 ) : (
-                  <span>{t('list.allIncomes')} ({incomes.length})</span>
+                  <span>{t('list.allIncomes')} ({pagination.total_count})</span>
                 )}
               </h2>
             </div>
@@ -413,6 +430,26 @@ export const IncomeList = () => {
               ))
             )}
           </div>
+          <ListPaginationControls
+            pagination={pagination}
+            labels={{
+              showing: t('list.pagination.showing', {
+                from: pagination.from,
+                to: pagination.to,
+                total: pagination.total_count,
+              }),
+              page: t('list.pagination.page', {
+                page: pagination.page,
+                totalPages: pagination.total_pages,
+              }),
+              previous: t('list.pagination.previous'),
+              next: t('list.pagination.next'),
+              localFilterNotice: t('list.pagination.localFilterNotice'),
+            }}
+            showLocalFilterNotice={activeFiltersCount > 0 && pagination.total_pages > 1}
+            onPrevious={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+            onNext={() => setPage((currentPage) => Math.min(pagination.total_pages, currentPage + 1))}
+          />
         </>
       )}
     </div>

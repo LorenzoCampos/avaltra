@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '@/api/axios';
 import { useAccountStore } from '@/stores/account.store';
-import type { Expense, CreateExpenseRequest, UpdateExpenseRequest, ExpensesListResponse } from '@/types/expense';
+import type { Expense, CreateExpenseRequest, UpdateExpenseRequest, ExpensesListResponse, ExpenseListParams } from '@/types/expense';
 import type { FamilyMember } from '@/types/account';
 import type { ExpenseCategory } from '@/types/category';
 
@@ -12,21 +12,53 @@ const invalidateExpenseQueries = (queryClient: ReturnType<typeof useQueryClient>
   queryClient.invalidateQueries({ queryKey: ['activity', activeAccountId] });
 };
 
-export const useExpenses = () => {
+const getMutationErrorDescription = (err: unknown) => {
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const response = (err as { response?: { data?: { error?: unknown } } }).response;
+    if (typeof response?.data?.error === 'string') return response.data.error;
+  }
+
+  return 'Please try again';
+};
+
+const DEFAULT_EXPENSE_LIST_PARAMS = {
+  page: 1,
+  limit: 20,
+  sort_by: 'date',
+  order: 'desc',
+  expense_type: 'one-time',
+} as const satisfies ExpenseListParams;
+
+export const getExpenseListParams = (params?: ExpenseListParams): ExpenseListParams => ({
+  ...DEFAULT_EXPENSE_LIST_PARAMS,
+  ...params,
+});
+
+export const getExpenseListQueryKey = (activeAccountId: string | null, params?: ExpenseListParams) => [
+  'expenses',
+  activeAccountId,
+  getExpenseListParams(params),
+] as const;
+
+export const getExpenseListCount = (data?: ExpensesListResponse): number => data?.total_count ?? data?.count ?? 0;
+
+export const useExpenses = (params?: ExpenseListParams) => {
   const queryClient = useQueryClient();
   const { activeAccountId } = useAccountStore();
+  const listParams = getExpenseListParams(params);
+  const expensesQueryKey = getExpenseListQueryKey(activeAccountId, params);
 
   const { 
     data: expensesData, 
     isLoading: isLoadingExpenses, 
     error: expensesError 
   } = useQuery<ExpensesListResponse>({ 
-    queryKey: ['expenses', activeAccountId],
+    queryKey: expensesQueryKey,
     queryFn: async () => {
       if (!activeAccountId) throw new Error('No active account selected');
       const response = await api.get<ExpensesListResponse>('/expenses', {
         headers: { 'X-Account-ID': activeAccountId },
-        params: { type: 'one-time' }
+        params: listParams,
       });
       return response.data;
     },
@@ -36,6 +68,20 @@ export const useExpenses = () => {
 
   const expenses = expensesData?.expenses || [];
   const expensesSummary = expensesData?.summary;
+  const expensesTotalCount = getExpenseListCount(expensesData);
+  const expensesPagination = expensesData
+    ? {
+        total_count: expensesTotalCount,
+        page: expensesData.page,
+        limit: expensesData.limit,
+        total_pages: expensesData.total_pages,
+      }
+    : {
+        total_count: 0,
+        page: listParams.page ?? DEFAULT_EXPENSE_LIST_PARAMS.page,
+        limit: listParams.limit ?? DEFAULT_EXPENSE_LIST_PARAMS.limit,
+        total_pages: 0,
+      };
 
   // CREATE with Optimistic Update
   const createExpenseMutation = useMutation({
@@ -51,7 +97,7 @@ export const useExpenses = () => {
       await queryClient.cancelQueries({ queryKey: ['expenses', activeAccountId] });
       
       // Snapshot current state
-      const previousExpenses = queryClient.getQueryData<ExpensesListResponse>(['expenses', activeAccountId]);
+      const previousExpenses = queryClient.getQueryData<ExpensesListResponse>(expensesQueryKey);
       
       // Optimistically update
       if (previousExpenses) {
@@ -74,10 +120,11 @@ export const useExpenses = () => {
             updated_at: new Date().toISOString(),
           };
 
-        queryClient.setQueryData<ExpensesListResponse>(['expenses', activeAccountId], {
+        queryClient.setQueryData<ExpensesListResponse>(expensesQueryKey, {
           ...previousExpenses,
           expenses: [optimisticExpense, ...previousExpenses.expenses],
-          count: previousExpenses.count + 1,
+          total_count: previousExpenses.total_count + 1,
+          count: previousExpenses.count === undefined ? undefined : previousExpenses.count + 1,
         });
       }
       
@@ -86,10 +133,10 @@ export const useExpenses = () => {
     onError: (err, _newExpense, context) => {
       // Rollback on error
       if (context?.previousExpenses) {
-        queryClient.setQueryData(['expenses', activeAccountId], context.previousExpenses);
+        queryClient.setQueryData(expensesQueryKey, context.previousExpenses);
       }
       toast.error('Failed to create expense', {
-        description: (err as any).response?.data?.error || 'Please try again',
+        description: getMutationErrorDescription(err),
       });
     },
     onSettled: () => {
@@ -110,10 +157,10 @@ export const useExpenses = () => {
     onMutate: async (updatedExpense) => {
       await queryClient.cancelQueries({ queryKey: ['expenses', activeAccountId] });
       
-      const previousExpenses = queryClient.getQueryData<ExpensesListResponse>(['expenses', activeAccountId]);
+      const previousExpenses = queryClient.getQueryData<ExpensesListResponse>(expensesQueryKey);
       
       if (previousExpenses) {
-        queryClient.setQueryData<ExpensesListResponse>(['expenses', activeAccountId], {
+        queryClient.setQueryData<ExpensesListResponse>(expensesQueryKey, {
           ...previousExpenses,
           expenses: previousExpenses.expenses.map(exp =>
             exp.id === updatedExpense.id
@@ -127,10 +174,10 @@ export const useExpenses = () => {
     },
     onError: (err, _updatedExpense, context) => {
       if (context?.previousExpenses) {
-        queryClient.setQueryData(['expenses', activeAccountId], context.previousExpenses);
+        queryClient.setQueryData(expensesQueryKey, context.previousExpenses);
       }
       toast.error('Failed to update expense', {
-        description: (err as any).response?.data?.error || 'Please try again',
+        description: getMutationErrorDescription(err),
       });
     },
     onSettled: (_, __, variables) => {
@@ -151,14 +198,15 @@ export const useExpenses = () => {
     onMutate: async (expenseId) => {
       await queryClient.cancelQueries({ queryKey: ['expenses', activeAccountId] });
       
-      const previousExpenses = queryClient.getQueryData<ExpensesListResponse>(['expenses', activeAccountId]);
+      const previousExpenses = queryClient.getQueryData<ExpensesListResponse>(expensesQueryKey);
       
       // Optimistically remove
       if (previousExpenses) {
-        queryClient.setQueryData<ExpensesListResponse>(['expenses', activeAccountId], {
+        queryClient.setQueryData<ExpensesListResponse>(expensesQueryKey, {
           ...previousExpenses,
           expenses: previousExpenses.expenses.filter(exp => exp.id !== expenseId),
-          count: previousExpenses.count - 1,
+          total_count: Math.max(0, previousExpenses.total_count - 1),
+          count: previousExpenses.count === undefined ? undefined : Math.max(0, previousExpenses.count - 1),
         });
       }
       
@@ -167,10 +215,10 @@ export const useExpenses = () => {
     onError: (err, _expenseId, context) => {
       // Rollback
       if (context?.previousExpenses) {
-        queryClient.setQueryData(['expenses', activeAccountId], context.previousExpenses);
+        queryClient.setQueryData(expensesQueryKey, context.previousExpenses);
       }
       toast.error('Failed to delete expense', {
-        description: (err as any).response?.data?.error || 'Please try again',
+        description: getMutationErrorDescription(err),
       });
     },
     onSettled: () => {
@@ -189,13 +237,14 @@ export const useExpenses = () => {
     onMutate: async (expense) => {
       await queryClient.cancelQueries({ queryKey: ['expenses', activeAccountId] });
 
-      const previousExpenses = queryClient.getQueryData<ExpensesListResponse>(['expenses', activeAccountId]);
+      const previousExpenses = queryClient.getQueryData<ExpensesListResponse>(expensesQueryKey);
 
       if (previousExpenses && !previousExpenses.expenses.some((item) => item.id === expense.id)) {
-        queryClient.setQueryData<ExpensesListResponse>(['expenses', activeAccountId], {
+        queryClient.setQueryData<ExpensesListResponse>(expensesQueryKey, {
           ...previousExpenses,
           expenses: [expense, ...previousExpenses.expenses],
-          count: previousExpenses.count + 1,
+          total_count: previousExpenses.total_count + 1,
+          count: previousExpenses.count === undefined ? undefined : previousExpenses.count + 1,
         });
       }
 
@@ -203,7 +252,7 @@ export const useExpenses = () => {
     },
     onError: (_err, _expense, context) => {
       if (context?.previousExpenses) {
-        queryClient.setQueryData(['expenses', activeAccountId], context.previousExpenses);
+        queryClient.setQueryData(expensesQueryKey, context.previousExpenses);
       }
     },
     onSettled: (_, __, expense) => {
@@ -229,6 +278,8 @@ export const useExpenses = () => {
   return {
     expenses,
     expensesSummary,
+    expensesTotalCount,
+    expensesPagination,
     isLoadingExpenses,
     expensesError,
     createExpense: createExpenseMutation.mutate,

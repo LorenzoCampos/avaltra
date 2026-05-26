@@ -49,10 +49,10 @@ Slice B is complete for backend recurring GET date serialization and frontend de
 
 ## Phase 4: Slice C - Activity Navigation Safety
 
-Slice C remains pending.
+Slice C is complete for guarded Activity expense/income navigation.
 
-- [ ] 4.1 RED: Add activity feed tests for click/keyboard navigation behavior by activity type in `frontend/src/features/activity/components/ActivityFeed.tsx`.
-- [ ] 4.2 GREEN: Implement guarded route mapping: `expense -> /expenses/edit/:id`, `income -> /incomes/edit/:id`; no navigation for non-transaction items.
+- [x] 4.1 RED: Add activity feed tests for click/keyboard navigation behavior by activity type in `frontend/src/features/activity/components/ActivityFeed.tsx`.
+- [x] 4.2 GREEN: Implement guarded route mapping: `expense -> /expenses/edit/:id`, `income -> /incomes/edit/:id`; no navigation for non-transaction items.
 
 ## Phase 5: Verification and Rollback Boundaries
 

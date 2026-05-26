@@ -645,12 +645,13 @@ func TestListExpensesIncludesPaymentMethod(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
-		name           string
-		paymentMethod  any
-		expectedMethod any
+		name                 string
+		paymentMethod        any
+		expectedMethod       any
+		expectedDisplayLabel any
 	}{
-		{name: "returns value when present", paymentMethod: stringPtr("bank_transfer"), expectedMethod: "bank_transfer"},
-		{name: "returns null when absent", paymentMethod: nil, expectedMethod: nil},
+		{name: "returns value when present", paymentMethod: stringPtr("bank_transfer"), expectedMethod: "bank_transfer", expectedDisplayLabel: "Bank transfer"},
+		{name: "returns null when absent", paymentMethod: nil, expectedMethod: nil, expectedDisplayLabel: nil},
 	}
 
 	for _, tt := range tests {
@@ -670,7 +671,7 @@ func TestListExpensesIncludesPaymentMethod(t *testing.T) {
 
 			mock.ExpectQuery(`SELECT e.id, e.family_member_id, e.category_id, ec.name as category_name,`).
 				WithArgs(testExpenseAccountID, 20, 0).
-				WillReturnRows(mock.NewRows([]string{"id", "family_member_id", "category_id", "category_name", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "expense_type", "date", "end_date", "payment_method", "source_container_id", "source_instrument_id", "created_at"}).AddRow(testExpenseID, nil, nil, nil, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", &transactionDate, nil, tt.paymentMethod, nil, nil, createdAt))
+				WillReturnRows(mock.NewRows([]string{"id", "family_member_id", "category_id", "category_name", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "expense_type", "date", "end_date", "payment_method", "source_container_id", "source_instrument_id", "container_name", "container_type", "instrument_name", "instrument_type", "created_at"}).AddRow(testExpenseID, nil, nil, nil, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", &transactionDate, nil, tt.paymentMethod, nil, nil, nil, nil, nil, nil, createdAt))
 
 			recorder := httptest.NewRecorder()
 			router := expenseTestRouter(listExpensesHandler(mock))
@@ -694,11 +695,79 @@ func TestListExpensesIncludesPaymentMethod(t *testing.T) {
 			if got := response.Expenses[0]["payment_method"]; got != tt.expectedMethod {
 				t.Fatalf("payment_method = %#v, want %#v", got, tt.expectedMethod)
 			}
+			if tt.expectedDisplayLabel == nil {
+				if got := response.Expenses[0]["payment_context"]; got != nil {
+					t.Fatalf("payment_context = %#v, want nil", got)
+				}
+			} else {
+				contextValue, ok := response.Expenses[0]["payment_context"].(map[string]any)
+				if !ok {
+					t.Fatalf("payment_context = %#v, want object", response.Expenses[0]["payment_context"])
+				}
+				if got := contextValue["display_label"]; got != tt.expectedDisplayLabel {
+					t.Fatalf("payment_context.display_label = %#v, want %#v", got, tt.expectedDisplayLabel)
+				}
+			}
 
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Fatalf("mock expectations: %v", err)
 			}
 		})
+	}
+}
+
+func TestListExpensesPaymentContextUsesEffectivePlaceBeforeLegacyMethod(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	transactionDate := time.Date(2026, time.January, 16, 0, 0, 0, 0, time.UTC)
+	createdAt := time.Date(2026, time.January, 16, 10, 0, 0, 0, time.UTC)
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM expenses e WHERE`).
+		WithArgs(testExpenseAccountID).
+		WillReturnRows(mock.NewRows([]string{"count"}).AddRow(1))
+
+	mock.ExpectQuery(`SELECT e.id, e.family_member_id, e.category_id, ec.name as category_name,`).
+		WithArgs(testExpenseAccountID, 20, 0).
+		WillReturnRows(mock.NewRows([]string{"id", "family_member_id", "category_id", "category_name", "description", "amount", "currency", "exchange_rate", "amount_in_primary_currency", "expense_type", "date", "end_date", "payment_method", "source_container_id", "source_instrument_id", "container_name", "container_type", "instrument_name", "instrument_type", "created_at"}).
+			AddRow(testExpenseID, nil, nil, nil, "Supermercado", 25000.0, "ARS", 1.0, 25000.0, "one-time", &transactionDate, nil, stringPtr("cash"), stringPtr(testExpenseContainerID), stringPtr(testExpenseInstrumentID), stringPtr("Cuenta sueldo"), stringPtr("bank"), stringPtr("Visa debito"), stringPtr("debit_card"), createdAt))
+
+	recorder := httptest.NewRecorder()
+	router := expenseTestRouter(listExpensesHandler(mock))
+	req := httptest.NewRequest(http.MethodGet, "/expenses", nil)
+	router.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+
+	var response struct {
+		Expenses []map[string]any `json:"expenses"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+	contextValue, ok := response.Expenses[0]["payment_context"].(map[string]any)
+	if !ok {
+		t.Fatalf("payment_context = %#v, want object", response.Expenses[0]["payment_context"])
+	}
+	if got := contextValue["container_name"]; got != "Cuenta sueldo" {
+		t.Fatalf("payment_context.container_name = %#v, want Cuenta sueldo", got)
+	}
+	if got := contextValue["display_label"]; got != "Cuenta sueldo" {
+		t.Fatalf("payment_context.display_label = %#v, want Cuenta sueldo", got)
+	}
+	if got := contextValue["legacy_payment_method"]; got != "cash" {
+		t.Fatalf("payment_context.legacy_payment_method = %#v, want cash", got)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
 	}
 }
 

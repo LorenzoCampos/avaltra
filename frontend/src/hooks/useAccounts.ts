@@ -13,6 +13,26 @@ type DeleteAccountErrorResponse = {
   suggestion?: string;
 };
 
+type ApiErrorResponse = {
+  response?: {
+    data?: {
+      error?: string;
+    };
+  };
+};
+
+export const getAccountToActivateFromFreshData = (
+  accounts: Account[],
+  activeAccountId: string | null,
+  defaultAccountId?: string | null,
+) => {
+  if (accounts.length === 0) return null;
+  if (activeAccountId) {
+    return accounts.find((account) => account.id === activeAccountId) ?? null;
+  }
+  return (defaultAccountId ? accounts.find((account) => account.id === defaultAccountId) : null) ?? accounts[0];
+};
+
 const CONFLICT_TRANSLATION_KEYS: Record<string, string> = {
   gastos: 'delete.conflicts.expenses',
   expenses: 'delete.conflicts.expenses',
@@ -62,9 +82,13 @@ const getDeleteAccountErrorMessage = (error: unknown) => {
   };
 };
 
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+  return (error as ApiErrorResponse).response?.data?.error || fallback;
+};
+
 export const useAccounts = () => {
   const queryClient = useQueryClient();
-  const { setActiveAccount, activeAccountId } = useAccountStore();
+  const { setActiveAccount, activeAccountId, activeAccount } = useAccountStore();
   const user = useAuthStore((state) => state.user);
 
   const { data, isLoading, error } = useQuery<{ accounts: Account[], count: number }>({ 
@@ -88,42 +112,39 @@ export const useAccounts = () => {
       userDefaultAccountId: user?.default_account_id
     });
 
-    // Solo ejecutar si hay cuentas cargadas y NO hay cuenta activa
     if (!data || data.accounts.length === 0) {
       console.log('[useAccounts] Skipping: No data or no accounts');
       return;
     }
 
-    if (activeAccountId) {
-      console.log('[useAccounts] Skipping: Account already active');
+    const accountToActivate = getAccountToActivateFromFreshData(data.accounts, activeAccountId, user?.default_account_id);
+    if (!accountToActivate) {
+      console.log('[useAccounts] Skipping: Active account not found in fresh data');
       return;
     }
 
-    // Buscar default account del usuario
-    const defaultAccount = user?.default_account_id 
-      ? data.accounts.find(acc => acc.id === user.default_account_id)
-      : null;
+    if (activeAccount === accountToActivate) {
+      console.log('[useAccounts] Skipping: Active account already fresh');
+      return;
+    }
     
-    // Prioridad: Default Account → Primera cuenta
-    const accountToActivate = defaultAccount || data.accounts[0];
-    
-    console.log('[useAccounts] Auto-selecting account:', {
+    console.log('[useAccounts] Syncing active account:', {
       defaultAccountId: user?.default_account_id,
-      foundDefaultAccount: !!defaultAccount,
+      hadActiveAccountId: !!activeAccountId,
       selectedAccount: accountToActivate.name,
       accountId: accountToActivate.id
     });
     
     setActiveAccount(accountToActivate.id, accountToActivate);
-  }, [data, activeAccountId, user?.default_account_id, setActiveAccount]);
+  }, [data, activeAccountId, activeAccount, user?.default_account_id, setActiveAccount]);
 
   const accounts = data?.accounts || [];
 
   // CREATE with Optimistic Update
   const createAccountMutation = useMutation({
     mutationFn: async (newAccount: CreateAccountRequest) => {
-      const response = await api.post<Account>('/accounts', newAccount);
-      return response.data;
+      const response = await api.post<{ message: string, account: Account }>('/accounts', newAccount);
+      return response.data.account;
     },
     onMutate: async (newAccount) => {
       await queryClient.cancelQueries({ queryKey: ['accounts'] });
@@ -154,7 +175,7 @@ export const useAccounts = () => {
         queryClient.setQueryData(['accounts'], context.previousAccounts);
       }
       toast.error('Failed to create account', {
-        description: (err as any).response?.data?.error || 'Please try again',
+        description: getApiErrorMessage(err, 'Please try again'),
       });
     },
     onSuccess: (newAccount) => {
@@ -195,7 +216,7 @@ export const useAccounts = () => {
         queryClient.setQueryData(['accounts'], context.previousAccounts);
       }
       toast.error('Failed to update account', {
-        description: (err as any).response?.data?.error || 'Please try again',
+        description: getApiErrorMessage(err, 'Please try again'),
       });
     },
     onSuccess: (updatedAccount) => {

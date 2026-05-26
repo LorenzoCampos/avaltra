@@ -141,6 +141,13 @@
       "edit": "Edit",
       "duplicate": "Duplicate",
       "delete": "Delete"
+    },
+    "pagination": {
+      "showing": "Showing {{from}}-{{to}} of {{total}} expenses",
+      "page": "Page {{page}} of {{totalPages}}",
+      "previous": "Previous",
+      "next": "Next",
+      "localFilterNotice": "Filters apply to the current loaded page only. Use page navigation to check older history."
     }
   },
   "tooltips": {

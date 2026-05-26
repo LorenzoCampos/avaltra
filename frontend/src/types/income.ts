@@ -58,20 +58,33 @@ export interface UpdateIncomeRequest {
   amount_in_primary_currency?: number;
 }
 
+export type IncomeListSortBy = 'date' | 'amount' | 'created_at';
+export type IncomeListOrder = 'asc' | 'desc';
+
 // GET /incomes - Query params
 export interface IncomeListParams {
-  month?: string; // YYYY-MM
-  type?: TransactionType | 'all';
+  page?: number;
+  limit?: number;
+  date_from?: string; // YYYY-MM-DD
+  date_to?: string; // YYYY-MM-DD
   category_id?: string;
   family_member_id?: string;
-  currency?: Currency | 'all';
+  sort_by?: IncomeListSortBy;
+  order?: IncomeListOrder;
+  income_type?: TransactionType;
 }
 
 // GET /incomes - Response
 export interface IncomeListResponse {
   incomes: Income[];
-  count: number;
-  summary: {
+  total_count: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+  /** Deprecated legacy field from the pre-pagination response. */
+  count?: number;
+  /** Deprecated legacy field from the pre-pagination response. */
+  summary?: {
     total: number;
     byType: {
       'one-time': number;

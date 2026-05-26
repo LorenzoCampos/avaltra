@@ -127,6 +127,13 @@
       "edit": "Editar",
       "duplicate": "Duplicar",
       "delete": "Eliminar"
+    },
+    "pagination": {
+      "showing": "Mostrando {{from}}-{{to}} de {{total}} ingresos",
+      "page": "Página {{page}} de {{totalPages}}",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "localFilterNotice": "Los filtros se aplican sólo a la página cargada. Usá la navegación para revisar historial anterior."
     }
   },
   "tooltips": {

@@ -60,11 +60,16 @@ func TestGetSummaryKeepsMonthlyFieldsAndAddsCurrentAvailableBalance(t *testing.T
 	gin.SetMode(gin.TestMode)
 
 	originalUpcomingRecurringLoader := loadUpcomingRecurringExpenses
+	originalNextMonthRecurringExpenseTotalLoader := loadNextMonthRecurringExpenseTotal
 	loadUpcomingRecurringExpenses = func(_ dashboardQuerier, _ context.Context, _ interface{}, _ time.Time) (UpcomingRecurringSummary, error) {
 		return UpcomingRecurringSummary{}, nil
 	}
+	loadNextMonthRecurringExpenseTotal = func(_ dashboardQuerier, _ context.Context, _ interface{}, _ time.Time) (float64, error) {
+		return 250, nil
+	}
 	defer func() {
 		loadUpcomingRecurringExpenses = originalUpcomingRecurringLoader
+		loadNextMonthRecurringExpenseTotal = originalNextMonthRecurringExpenseTotalLoader
 	}()
 
 	mock, err := pgxmock.NewPool()
@@ -119,10 +124,169 @@ func TestGetSummaryKeepsMonthlyFieldsAndAddsCurrentAvailableBalance(t *testing.T
 	if aprilResponse.TotalExpenses != 400 || mayResponse.TotalExpenses != 150 {
 		t.Fatalf("monthly expenses = (%v, %v), want (400, 150)", aprilResponse.TotalExpenses, mayResponse.TotalExpenses)
 	}
+	if aprilResponse.NextMonthRecurringExpenseTotal != 250 || mayResponse.NextMonthRecurringExpenseTotal != 250 {
+		t.Fatalf("next month recurring totals = (%v, %v), want (250, 250)", aprilResponse.NextMonthRecurringExpenseTotal, mayResponse.NextMonthRecurringExpenseTotal)
+	}
 
 	assertBalanceFieldsPresent(t, aprilBody)
 	assertBalanceFieldsPresent(t, mayBody)
+	assertNextMonthRecurringExpenseTotalPresent(t, aprilBody)
+	assertNextMonthRecurringExpenseTotalPresent(t, mayBody)
 
+}
+
+func TestNextCalendarMonthWindow(t *testing.T) {
+	tests := []struct {
+		name      string
+		today     time.Time
+		wantStart string
+		wantEnd   string
+	}{
+		{name: "january to february", today: date(2026, time.January, 15), wantStart: "2026-02-01", wantEnd: "2026-03-01"},
+		{name: "december to january", today: date(2026, time.December, 31), wantStart: "2027-01-01", wantEnd: "2027-02-01"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotStart, gotEnd := nextCalendarMonthWindow(tt.today)
+			if gotStart.Format("2006-01-02") != tt.wantStart || gotEnd.Format("2006-01-02") != tt.wantEnd {
+				t.Fatalf("nextCalendarMonthWindow() = (%s, %s), want (%s, %s)", gotStart.Format("2006-01-02"), gotEnd.Format("2006-01-02"), tt.wantStart, tt.wantEnd)
+			}
+		})
+	}
+}
+
+func TestProjectedRecurringExpenseAmountUsesRecurringRulesAndNormalizedFallback(t *testing.T) {
+	day31 := 31
+	start, endExclusive := nextCalendarMonthWindow(date(2026, time.January, 15))
+
+	tests := []struct {
+		name     string
+		template recurringExpenseTemplateRow
+		want     float64
+	}{
+		{
+			name: "uses normalized amount when monthly day 31 clamps into february",
+			template: recurringExpenseTemplateRow{
+				Amount:                  100,
+				AmountInPrimaryCurrency: 125,
+				RecurrenceFrequency:     "monthly",
+				RecurrenceInterval:      1,
+				RecurrenceDayOfMonth:    &day31,
+				StartDate:               date(2026, time.January, 31),
+				IsActive:                true,
+			},
+			want: 125,
+		},
+		{
+			name: "uses query-provided fallback amount when normalized amount is missing",
+			template: recurringExpenseTemplateRow{
+				Amount:                  75,
+				AmountInPrimaryCurrency: 75,
+				RecurrenceFrequency:     "monthly",
+				RecurrenceInterval:      1,
+				RecurrenceDayOfMonth:    &day31,
+				StartDate:               date(2026, time.January, 31),
+				IsActive:                true,
+			},
+			want: 75,
+		},
+		{
+			name: "excludes templates with no next month occurrence",
+			template: recurringExpenseTemplateRow{
+				Amount:               200,
+				RecurrenceFrequency:  "yearly",
+				RecurrenceInterval:   1,
+				RecurrenceDayOfMonth: &day31,
+				StartDate:            date(2026, time.January, 31),
+				IsActive:             true,
+			},
+			want: 0,
+		},
+		{
+			name: "excludes inactive templates from projected amount",
+			template: recurringExpenseTemplateRow{
+				Amount:                  125,
+				AmountInPrimaryCurrency: 125,
+				RecurrenceFrequency:     "monthly",
+				RecurrenceInterval:      1,
+				RecurrenceDayOfMonth:    &day31,
+				StartDate:               date(2026, time.January, 31),
+				IsActive:                false,
+			},
+			want: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := projectedRecurringExpenseAmount(tt.template, start, endExclusive)
+			if got != tt.want {
+				t.Fatalf("projectedRecurringExpenseAmount() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetNextMonthRecurringExpenseTotalReturnsZeroWhenNoTemplates(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	rows := mock.NewRows([]string{
+		"id", "description", "amount", "currency", "amount_in_primary_currency", "recurrence_frequency", "recurrence_interval",
+		"recurrence_day_of_month", "recurrence_day_of_week", "start_date", "end_date", "total_occurrences", "current_occurrence", "is_active",
+	})
+
+	mock.ExpectQuery(`COALESCE\(amount_in_primary_currency, amount\)[\s\S]*FROM recurring_expenses[\s\S]*WHERE account_id = \$1[\s\S]*AND is_active = true`).
+		WithArgs(dashboardTestAccountID).
+		WillReturnRows(rows)
+
+	got, err := getNextMonthRecurringExpenseTotal(mock, context.Background(), dashboardTestAccountID, date(2026, time.January, 10))
+	if err != nil {
+		t.Fatalf("getNextMonthRecurringExpenseTotal() error = %v", err)
+	}
+	if got != 0 {
+		t.Fatalf("getNextMonthRecurringExpenseTotal() = %v, want 0", got)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
+	}
+}
+
+func TestGetNextMonthRecurringExpenseTotalScopesToActiveAccountAndSumsQualifyingOccurrences(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	day15 := 15
+	day31 := 31
+	normalizedRent := 300.0
+	rows := mock.NewRows([]string{
+		"id", "description", "amount", "currency", "amount_in_primary_currency", "recurrence_frequency", "recurrence_interval",
+		"recurrence_day_of_month", "recurrence_day_of_week", "start_date", "end_date", "total_occurrences", "current_occurrence", "is_active",
+	}).
+		AddRow("rent", "Rent", 100.0, "USD", normalizedRent, "monthly", 1, &day15, nil, date(2026, time.January, 15), nil, nil, 0, true).
+		AddRow("subscription", "Subscription", 50.0, "ARS", 50.0, "monthly", 1, &day31, nil, date(2026, time.January, 31), nil, nil, 0, true)
+
+	mock.ExpectQuery(`COALESCE\(amount_in_primary_currency, amount\)[\s\S]*FROM recurring_expenses[\s\S]*WHERE account_id = \$1[\s\S]*AND is_active = true`).
+		WithArgs(dashboardTestAccountID).
+		WillReturnRows(rows)
+
+	got, err := getNextMonthRecurringExpenseTotal(mock, context.Background(), dashboardTestAccountID, date(2026, time.January, 10))
+	if err != nil {
+		t.Fatalf("getNextMonthRecurringExpenseTotal() error = %v", err)
+	}
+	if got != 350 {
+		t.Fatalf("getNextMonthRecurringExpenseTotal() = %v, want 350", got)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
+	}
 }
 
 func TestBuildMoneyByContainerBreakdownIncludesUnassignedBucket(t *testing.T) {
@@ -256,6 +420,23 @@ func assertBalanceFieldsPresent(t *testing.T, body []byte) {
 	}
 }
 
+func assertNextMonthRecurringExpenseTotalPresent(t *testing.T, body []byte) {
+	t.Helper()
+
+	var payload map[string]any
+	if err := json.Unmarshal(body, &payload); err != nil {
+		t.Fatalf("json.Unmarshal(map) error = %v", err)
+	}
+
+	value, ok := payload["next_month_recurring_expense_total"]
+	if !ok {
+		t.Fatalf("next_month_recurring_expense_total missing from response: %s", string(body))
+	}
+	if _, ok := value.(float64); !ok {
+		t.Fatalf("next_month_recurring_expense_total = %T, want numeric", value)
+	}
+}
+
 func dashboardTestRouter(handler gin.HandlerFunc) *gin.Engine {
 	router := gin.New()
 	router.Use(func(c *gin.Context) {
@@ -268,4 +449,8 @@ func dashboardTestRouter(handler gin.HandlerFunc) *gin.Engine {
 
 func stringPtr(value string) *string {
 	return &value
+}
+
+func date(year int, month time.Month, day int) time.Time {
+	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
 }

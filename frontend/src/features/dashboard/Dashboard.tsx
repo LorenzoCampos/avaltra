@@ -129,6 +129,7 @@ export const Dashboard = () => {
     primary_currency,
     expenses_by_category,
     money_by_container,
+    next_month_recurring_expense_total = 0,
     top_expenses,
     recent_transactions,
   } = dashboard || {};
@@ -203,6 +204,25 @@ export const Dashboard = () => {
 
       <FeatureErrorBoundary featureName="Monthly Insights">
         <InsightsCard />
+      </FeatureErrorBoundary>
+
+      <FeatureErrorBoundary featureName="Recurring Forecast">
+        <Card className="animate-slide-up animation-delay-300">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {t('recurringForecast.title')}
+              <InfoTooltip content={t('recurringForecast.tooltip')} />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              {formatMoney(next_month_recurring_expense_total, primaryCurrency)}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {t('recurringForecast.subtitle')}
+            </p>
+          </CardContent>
+        </Card>
       </FeatureErrorBoundary>
 
       {moneyByContainerItems.length > 0 && (

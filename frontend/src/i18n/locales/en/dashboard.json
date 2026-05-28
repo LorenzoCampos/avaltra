@@ -59,6 +59,11 @@
     "noUpcoming": "No recurring expenses in the next 7 days",
     "noInsights": "Add some transactions to see your insights"
   },
+  "recurringForecast": {
+    "title": "Next month's recurring expenses",
+    "subtitle": "Projected from recurring expenses for the next calendar month",
+    "tooltip": "Backend-calculated total for active recurring expenses expected next calendar month, shown in your account currency."
+  },
   "moneyByContainer": {
     "title": "current balance by location",
     "unassigned": "Unassigned"

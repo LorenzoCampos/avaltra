@@ -59,6 +59,11 @@
     "noUpcoming": "No hay gastos recurrentes en los próximos 7 días",
     "noInsights": "Agregá algunas transacciones para ver tus insights"
   },
+  "recurringForecast": {
+    "title": "Gastos recurrentes del mes próximo",
+    "subtitle": "Proyectado desde gastos recurrentes para el próximo mes calendario",
+    "tooltip": "Total calculado por el backend para gastos recurrentes activos esperados el próximo mes calendario, mostrado en la moneda de tu cuenta."
+  },
   "moneyByContainer": {
     "title": "Saldo actual por lugar",
     "unassigned": "Sin asignar"

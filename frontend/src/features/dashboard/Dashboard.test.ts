@@ -1,21 +1,101 @@
+// @vitest-environment happy-dom
+
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { act, createElement, type ReactNode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import dashboardEn from '@/i18n/locales/en/dashboard.json';
 import tourEn from '@/i18n/locales/en/tour.json';
 import dashboardEs from '@/i18n/locales/es/dashboard.json';
 import tourEs from '@/i18n/locales/es/tour.json';
+import { Dashboard } from './Dashboard';
 import { getDashboardErrorMessage } from './dashboardErrorMessage';
 import { getDashboardCardAmounts } from './dashboardSummaryCards';
 import { getDashboardCurrency } from './dashboardCurrency';
 import { getDashboardMoneyByContainerItems } from './dashboardMoneyByContainer';
 
+const mocks = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  useDashboard: vi.fn(),
+  forecastTitle: "Next month's recurring expenses",
+  forecastSubtitle: 'Projected total for the next calendar month',
+  forecastTooltip: 'Backend-provided recurring expense forecast',
+}));
+
+vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate }));
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, values?: Record<string, unknown>) => {
+      if (key === 'welcome') return `Welcome, ${values?.name ?? ''}`;
+      if (key === 'overview') return `Overview for ${values?.period}`;
+      if (key === 'recurringForecast.title') return mocks.forecastTitle;
+      if (key === 'recurringForecast.subtitle') return mocks.forecastSubtitle;
+      if (key === 'recurringForecast.tooltip') return mocks.forecastTooltip;
+      return key;
+    },
+  }),
+}));
+vi.mock('@/hooks/useDashboard', () => ({ useDashboard: mocks.useDashboard }));
+vi.mock('@/hooks/useAccounts', () => ({ useAccounts: () => undefined }));
+vi.mock('@/stores/account.store', () => ({
+  useAccountStore: () => ({
+    activeAccountId: 'account-1',
+    activeAccount: { id: 'account-1', name: 'Main', currency: 'ARS', type: 'personal' },
+  }),
+}));
+vi.mock('@/stores/auth.store', () => ({ useAuthStore: () => ({ user: { name: 'User' } }) }));
+vi.mock('@/hooks/useMoneyFormatter', () => ({ useMoneyFormatter: () => ({ formatMoney: (amount: number, currency: string) => `${currency} ${amount}` }) }));
+vi.mock('@/components/InfoTooltip', () => ({ InfoTooltip: ({ content }: { content: string }) => content }));
+vi.mock('@/components/ErrorBoundary', () => ({ FeatureErrorBoundary: ({ children }: { children: ReactNode }) => children }));
+vi.mock('./InsightsCard', () => ({ InsightsCard: () => null }));
+vi.mock('@/components/QuickAddExpenseFAB', () => ({ QuickAddExpenseFAB: () => null }));
+
 const apiDocPath = path.resolve(__dirname, '../../../../API.md');
 const featuresDocPath = path.resolve(__dirname, '../../../../FEATURES.md');
+const dashboardSourcePath = path.resolve(__dirname, './Dashboard.tsx');
 const apiDoc = readFileSync(apiDocPath, 'utf8');
 const featuresDoc = readFileSync(featuresDocPath, 'utf8');
+const dashboardSource = readFileSync(dashboardSourcePath, 'utf8');
+
+const renderDashboard = () => {
+  mocks.useDashboard.mockReturnValue({
+    dashboard: {
+      period: '2026-05',
+      primary_currency: 'ARS',
+      available_balance: 0,
+      current_available_balance: 0,
+      total_expenses: 0,
+      total_income: 0,
+      total_assigned_to_goals: 0,
+      next_month_recurring_expense_total: 1234.56,
+      expenses_by_category: [],
+      top_expenses: [],
+      recent_transactions: [],
+      upcoming_recurring: { count: 0, items: [] },
+      money_by_container: [],
+    },
+    isLoading: false,
+    error: null,
+  });
+
+  const container = document.createElement('div');
+  const root = createRoot(container);
+  document.body.appendChild(container);
+  act(() => root.render(createElement(Dashboard)));
+  return { container, root };
+};
+
+beforeEach(() => {
+  mocks.navigate.mockReset();
+  mocks.useDashboard.mockReset();
+});
+
+afterEach(() => {
+  document.body.innerHTML = '';
+});
 
 describe('dashboard summary card semantics', () => {
 	it('uses current_available_balance for the main balance card and keeps monthly flows unchanged', () => {
@@ -129,6 +209,33 @@ describe('dashboard money by container breakdown', () => {
 	it('returns an empty list when the backend omits the optional field', () => {
 		expect(getDashboardMoneyByContainerItems(undefined, 'Unassigned')).toEqual([]);
 	});
+});
+
+describe('dashboard next-month recurring forecast', () => {
+	it('has localized copy for the backend-provided forecast insight', () => {
+		expect(dashboardEn.recurringForecast.title).toContain("Next month's recurring expenses");
+		expect(dashboardEn.recurringForecast.subtitle).toContain('next calendar month');
+		expect(dashboardEs.recurringForecast.title).toContain('Gastos recurrentes');
+		expect(dashboardEs.recurringForecast.subtitle).toContain('próximo mes calendario');
+	});
+
+  it('renders the backend next_month_recurring_expense_total field without client recurrence aggregation', () => {
+		expect(dashboardSource).toContain('next_month_recurring_expense_total');
+		expect(dashboardSource).toContain("t('recurringForecast.title')");
+		expect(dashboardSource).not.toContain('ShouldOccurOnDate');
+		expect(dashboardSource).not.toContain('recurrence_frequency');
+    expect(dashboardSource).not.toContain('recurrence_interval');
+  });
+
+  it('shows the forecast card using the backend-provided amount', () => {
+    const { container, root } = renderDashboard();
+
+    expect(container.textContent).toContain("Next month's recurring expenses");
+    expect(container.textContent).toContain('ARS 1234.56');
+    expect(container.textContent).toContain('next calendar month');
+
+    act(() => root.unmount());
+  });
 });
 
 describe('dashboard copy clarifies current balance vs monthly flow', () => {

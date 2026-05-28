@@ -75,18 +75,19 @@ type MoneyByContainer struct {
 
 // DashboardSummaryResponse represents the complete dashboard summary
 type DashboardSummaryResponse struct {
-	Period                  string                   `json:"period"` // YYYY-MM format
-	PrimaryCurrency         string                   `json:"primary_currency"`
-	TotalIncome             float64                  `json:"total_income"`
-	TotalExpenses           float64                  `json:"total_expenses"`
-	TotalAssignedToGoals    float64                  `json:"total_assigned_to_goals"` // Informational only
-	AvailableBalance        float64                  `json:"available_balance"`       // Legacy monthly net
-	CurrentAvailableBalance float64                  `json:"current_available_balance"`
-	ExpensesByCategory      []CategoryExpense        `json:"expenses_by_category"`
-	TopExpenses             []TopExpense             `json:"top_expenses"`
-	RecentTransactions      []RecentTransaction      `json:"recent_transactions"`
-	UpcomingRecurring       UpcomingRecurringSummary `json:"upcoming_recurring"`
-	MoneyByContainer        []MoneyByContainer       `json:"money_by_container"`
+	Period                         string                   `json:"period"` // YYYY-MM format
+	PrimaryCurrency                string                   `json:"primary_currency"`
+	TotalIncome                    float64                  `json:"total_income"`
+	TotalExpenses                  float64                  `json:"total_expenses"`
+	TotalAssignedToGoals           float64                  `json:"total_assigned_to_goals"` // Informational only
+	AvailableBalance               float64                  `json:"available_balance"`       // Legacy monthly net
+	CurrentAvailableBalance        float64                  `json:"current_available_balance"`
+	NextMonthRecurringExpenseTotal float64                  `json:"next_month_recurring_expense_total"`
+	ExpensesByCategory             []CategoryExpense        `json:"expenses_by_category"`
+	TopExpenses                    []TopExpense             `json:"top_expenses"`
+	RecentTransactions             []RecentTransaction      `json:"recent_transactions"`
+	UpcomingRecurring              UpcomingRecurringSummary `json:"upcoming_recurring"`
+	MoneyByContainer               []MoneyByContainer       `json:"money_by_container"`
 }
 
 type containerMoneyRow struct {
@@ -97,22 +98,24 @@ type containerMoneyRow struct {
 }
 
 type recurringExpenseTemplateRow struct {
-	ID                   string
-	Description          string
-	Amount               float64
-	Currency             string
-	RecurrenceFrequency  string
-	RecurrenceInterval   int
-	RecurrenceDayOfMonth *int
-	RecurrenceDayOfWeek  *int
-	StartDate            time.Time
-	EndDate              *time.Time
-	TotalOccurrences     *int
-	CurrentOccurrence    int
-	IsActive             bool
+	ID                      string
+	Description             string
+	Amount                  float64
+	Currency                string
+	AmountInPrimaryCurrency float64
+	RecurrenceFrequency     string
+	RecurrenceInterval      int
+	RecurrenceDayOfMonth    *int
+	RecurrenceDayOfWeek     *int
+	StartDate               time.Time
+	EndDate                 *time.Time
+	TotalOccurrences        *int
+	CurrentOccurrence       int
+	IsActive                bool
 }
 
 var loadUpcomingRecurringExpenses = getUpcomingRecurringExpenses
+var loadNextMonthRecurringExpenseTotal = getNextMonthRecurringExpenseTotal
 
 // GetSummary handles GET /api/dashboard/summary
 // Returns a complete summary of the user's financial data for a given month
@@ -463,22 +466,29 @@ func GetSummary(db dashboardQuerier) gin.HandlerFunc {
 			return
 		}
 
+		nextMonthRecurringExpenseTotal, err := loadNextMonthRecurringExpenseTotal(db, ctx, accountID, today)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get next month recurring expense total"})
+			return
+		}
+
 		// ============================================================================
 		// BUILD RESPONSE
 		// ============================================================================
 		response := DashboardSummaryResponse{
-			Period:                  month,
-			PrimaryCurrency:         primaryCurrency,
-			TotalIncome:             totalIncome,
-			TotalExpenses:           totalExpenses,
-			TotalAssignedToGoals:    totalAssignedToGoals,
-			AvailableBalance:        availableBalance,
-			CurrentAvailableBalance: currentAvailableBalance,
-			ExpensesByCategory:      expensesByCategory,
-			TopExpenses:             topExpenses,
-			RecentTransactions:      recentTransactions,
-			UpcomingRecurring:       upcomingRecurring,
-			MoneyByContainer:        moneyByContainer,
+			Period:                         month,
+			PrimaryCurrency:                primaryCurrency,
+			TotalIncome:                    totalIncome,
+			TotalExpenses:                  totalExpenses,
+			TotalAssignedToGoals:           totalAssignedToGoals,
+			AvailableBalance:               availableBalance,
+			CurrentAvailableBalance:        currentAvailableBalance,
+			ExpensesByCategory:             expensesByCategory,
+			TopExpenses:                    topExpenses,
+			RecentTransactions:             recentTransactions,
+			UpcomingRecurring:              upcomingRecurring,
+			NextMonthRecurringExpenseTotal: nextMonthRecurringExpenseTotal,
+			MoneyByContainer:               moneyByContainer,
 		}
 
 		c.JSON(http.StatusOK, response)
@@ -577,6 +587,96 @@ func buildMoneyByContainerBreakdown(rows []containerMoneyRow) []MoneyByContainer
 	})
 
 	return items
+}
+
+func getNextMonthRecurringExpenseTotal(db dashboardQuerier, ctx context.Context, accountID interface{}, today time.Time) (float64, error) {
+	query := `
+		SELECT
+			id,
+			description,
+			amount,
+			currency,
+			COALESCE(amount_in_primary_currency, amount) AS amount_in_primary_currency,
+			recurrence_frequency,
+			recurrence_interval,
+			recurrence_day_of_month,
+			recurrence_day_of_week,
+			start_date,
+			end_date,
+			total_occurrences,
+			current_occurrence,
+			is_active
+		FROM recurring_expenses
+		WHERE account_id = $1
+		  AND is_active = true
+	`
+
+	rows, err := db.Query(ctx, query, accountID)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	start, endExclusive := nextCalendarMonthWindow(today)
+	total := 0.0
+
+	for rows.Next() {
+		var template recurringExpenseTemplateRow
+		err := rows.Scan(
+			&template.ID,
+			&template.Description,
+			&template.Amount,
+			&template.Currency,
+			&template.AmountInPrimaryCurrency,
+			&template.RecurrenceFrequency,
+			&template.RecurrenceInterval,
+			&template.RecurrenceDayOfMonth,
+			&template.RecurrenceDayOfWeek,
+			&template.StartDate,
+			&template.EndDate,
+			&template.TotalOccurrences,
+			&template.CurrentOccurrence,
+			&template.IsActive,
+		)
+		if err != nil {
+			return 0, err
+		}
+
+		total += projectedRecurringExpenseAmount(template, start, endExclusive)
+	}
+
+	if err := rows.Err(); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func nextCalendarMonthWindow(today time.Time) (time.Time, time.Time) {
+	currentMonthStart := time.Date(today.UTC().Year(), today.UTC().Month(), 1, 0, 0, 0, 0, time.UTC)
+	start := currentMonthStart.AddDate(0, 1, 0)
+	return start, start.AddDate(0, 1, 0)
+}
+
+func projectedRecurringExpenseAmount(template recurringExpenseTemplateRow, start time.Time, endExclusive time.Time) float64 {
+	total := 0.0
+	for candidate := start; candidate.Before(endExclusive); candidate = candidate.AddDate(0, 0, 1) {
+		if recurrence.ShouldOccurOnDate(recurrence.Template{
+			IsActive:             template.IsActive,
+			RecurrenceFrequency:  template.RecurrenceFrequency,
+			RecurrenceInterval:   template.RecurrenceInterval,
+			RecurrenceDayOfMonth: template.RecurrenceDayOfMonth,
+			RecurrenceDayOfWeek:  template.RecurrenceDayOfWeek,
+			StartDate:            template.StartDate,
+			EndDate:              template.EndDate,
+			TotalOccurrences:     template.TotalOccurrences,
+			CurrentOccurrence:    template.CurrentOccurrence,
+		}, candidate) {
+			total += template.AmountInPrimaryCurrency
+		}
+	}
+
+	return total
 }
 
 func getUpcomingRecurringExpenses(db dashboardQuerier, ctx context.Context, accountID interface{}, today time.Time) (UpcomingRecurringSummary, error) {

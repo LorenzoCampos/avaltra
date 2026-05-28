@@ -107,6 +107,7 @@ export default defineConfig({
     // https: true, // Comentado - descomenta en producción para PWA
   },
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    setupFiles: ['src/test/setup.ts'],
   },
 })

@@ -47,6 +47,10 @@
   "paymentContext": {
     "label": "Lugar/medio: {{value}}"
   },
+  "actions": {
+    "viewTransaction": "Ver detalle",
+    "viewTransactionFor": "Ver detalle de {{description}}"
+  },
   "empty": "No hay actividad todavía",
   "noResults": "No hay actividades que coincidan con tus filtros",
   "clearFilters": "Limpiar filtros",

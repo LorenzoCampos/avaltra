@@ -16,7 +16,7 @@ import { useAccountStore } from '@/stores/account.store';
 import { FilterBar } from '@/components/FilterBar';
 import { getPaymentContextLabel } from '@/lib/paymentContext';
 import { getApiErrorMessage } from '@/lib/apiError';
-import { Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import type { Currency } from '@/types/api';
 import { getActivityTransactionRoute, shouldHandleActivityNavigationKey } from '../lib/activityNavigation';
 
@@ -210,6 +210,7 @@ function ActivityCard({
     activity.payment_method,
     activity.type === 'income' ? 'incomes' : 'expenses',
   );
+  const isRoutableTransaction = Boolean(transactionRoute);
   const navigateToTransaction = () => {
     if (transactionRoute) {
       navigate(transactionRoute);
@@ -218,16 +219,21 @@ function ActivityCard({
 
   return (
     <div
-      className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
-      onClick={transactionRoute ? navigateToTransaction : undefined}
-      onKeyDown={transactionRoute ? (event) => {
+      className={`flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 transition-colors dark:border-gray-700 dark:bg-gray-800 ${
+        isRoutableTransaction
+          ? 'cursor-pointer hover:border-primary-300 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:hover:border-primary-700 dark:hover:bg-primary-900/20 dark:focus:ring-offset-gray-900'
+          : 'hover:bg-gray-50 dark:hover:bg-gray-750'
+      }`}
+      onClick={isRoutableTransaction ? navigateToTransaction : undefined}
+      onKeyDown={isRoutableTransaction ? (event) => {
         if (shouldHandleActivityNavigationKey(event.key)) {
           event.preventDefault();
           navigateToTransaction();
         }
       } : undefined}
-      role={transactionRoute ? 'button' : undefined}
-      tabIndex={transactionRoute ? 0 : undefined}
+      role={isRoutableTransaction ? 'button' : undefined}
+      tabIndex={isRoutableTransaction ? 0 : undefined}
+      aria-label={isRoutableTransaction ? t('actions.viewTransactionFor', { description: activity.description }) : undefined}
     >
       {/* Left side: icon + info */}
       <div className="flex items-start gap-3">
@@ -247,16 +253,28 @@ function ActivityCard({
         </div>
       </div>
 
-      {/* Right side: amount */}
-      <MoneyAmountDisplay
-        amount={activity.amount}
-        currency={activity.currency as Currency}
-        accountCurrency={accountCurrency}
-        amountInAccountCurrency={activity.amount_in_primary_currency}
-        formatMoney={formatMoney}
-        sign={isNegative ? '-' : undefined}
-        primaryClassName={`text-lg font-semibold ${color}`}
-      />
+      {/* Right side: amount + affordance */}
+      <div className="flex items-center gap-3">
+        <div className="text-right">
+          <MoneyAmountDisplay
+            amount={activity.amount}
+            currency={activity.currency as Currency}
+            accountCurrency={accountCurrency}
+            amountInAccountCurrency={activity.amount_in_primary_currency}
+            formatMoney={formatMoney}
+            sign={isNegative ? '-' : undefined}
+            primaryClassName={`text-lg font-semibold ${color}`}
+          />
+          {isRoutableTransaction && (
+            <p className="mt-1 text-xs font-medium text-primary-600 dark:text-primary-400">
+              {t('actions.viewTransaction')}
+            </p>
+          )}
+        </div>
+        {isRoutableTransaction && (
+          <ChevronRight className="h-4 w-4 shrink-0 text-primary-500" aria-hidden="true" />
+        )}
+      </div>
     </div>
   );
 }

@@ -79,6 +79,8 @@ describe('activity transaction navigation', () => {
     const row = container.querySelector<HTMLElement>('[role="button"]');
 
     expect(row?.textContent).toContain(activity.description);
+    expect(row?.textContent).toContain('actions.viewTransaction');
+    expect(row?.getAttribute('aria-label')).toBe('actions.viewTransactionFor');
     act(() => activation === 'click'
       ? row?.click()
       : row?.dispatchEvent(new KeyboardEvent('keydown', { key: activation, bubbles: true })));
@@ -91,6 +93,7 @@ describe('activity transaction navigation', () => {
     const row = Array.from(container.querySelectorAll<HTMLElement>('div')).find((element) => element.textContent?.includes('Emergency fund'));
 
     expect(container.querySelector('[role="button"]')).toBeNull();
+    expect(container.textContent).not.toContain('actions.viewTransaction');
     act(() => ['click', 'Enter', ' '].forEach((key) => row?.dispatchEvent(
       key === 'click' ? new MouseEvent('click', { bubbles: true }) : new KeyboardEvent('keydown', { key, bubbles: true }),
     )));

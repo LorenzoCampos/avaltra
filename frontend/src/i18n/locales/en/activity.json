@@ -47,6 +47,10 @@
   "paymentContext": {
     "label": "Place/method: {{value}}"
   },
+  "actions": {
+    "viewTransaction": "View details",
+    "viewTransactionFor": "View details for {{description}}"
+  },
   "empty": "No activity yet",
   "noResults": "No activities match your filters",
   "clearFilters": "Clear filters",

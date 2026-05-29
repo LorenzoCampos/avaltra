@@ -16,6 +16,7 @@ import (
 	importsHandler "github.com/LorenzoCampos/avaltra/internal/handlers/imports"
 	incomesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/incomes"
 	paymentContainersHandler "github.com/LorenzoCampos/avaltra/internal/handlers/payment_containers"
+	placeTransfersHandler "github.com/LorenzoCampos/avaltra/internal/handlers/place_transfers"
 	recurringExpensesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/recurring_expenses"
 	recurringIncomesHandler "github.com/LorenzoCampos/avaltra/internal/handlers/recurring_incomes"
 	savingsGoalsHandler "github.com/LorenzoCampos/avaltra/internal/handlers/savings_goals"
@@ -200,6 +201,14 @@ func (s *Server) setupRoutes() {
 			paymentInstrumentsRoutes.POST("", paymentContainersHandler.CreatePaymentInstrument(s.db.Pool))
 			paymentInstrumentsRoutes.PUT("/:id", paymentContainersHandler.UpdatePaymentInstrument(s.db.Pool))
 			paymentInstrumentsRoutes.PATCH("/:id/deactivate", paymentContainersHandler.DeactivatePaymentInstrument(s.db.Pool))
+		}
+
+		placeTransfersRoutes := api.Group("/place-transfers")
+		placeTransfersRoutes.Use(authMiddleware)
+		placeTransfersRoutes.Use(accountMiddleware)
+		{
+			placeTransfersRoutes.GET("", placeTransfersHandler.ListPlaceTransfers(s.db.Pool))
+			placeTransfersRoutes.POST("", placeTransfersHandler.CreatePlaceTransfer(s.db.Pool))
 		}
 
 		// Rutas de categorías de gastos (protegidas - requieren auth + account)

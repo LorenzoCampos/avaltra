@@ -135,6 +135,95 @@ func TestGetSummaryKeepsMonthlyFieldsAndAddsCurrentAvailableBalance(t *testing.T
 
 }
 
+func TestGetSummaryAppliesTransferDeltasOnlyToMoneyByContainer(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	originalUpcomingRecurringLoader := loadUpcomingRecurringExpenses
+	originalNextMonthRecurringExpenseTotalLoader := loadNextMonthRecurringExpenseTotal
+	loadUpcomingRecurringExpenses = func(_ dashboardQuerier, _ context.Context, _ interface{}, _ time.Time) (UpcomingRecurringSummary, error) {
+		return UpcomingRecurringSummary{}, nil
+	}
+	loadNextMonthRecurringExpenseTotal = func(_ dashboardQuerier, _ context.Context, _ interface{}, _ time.Time) (float64, error) {
+		return 0, nil
+	}
+	defer func() {
+		loadUpcomingRecurringExpenses = originalUpcomingRecurringLoader
+		loadNextMonthRecurringExpenseTotal = originalNextMonthRecurringExpenseTotalLoader
+	}()
+
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	expectDashboardSummaryQueriesWithMoneyByContainerRows(
+		mock,
+		"2026-05",
+		1000,
+		400,
+		0,
+		0,
+		1000,
+		400,
+		0,
+		0,
+		mock.NewRows([]string{"container_id", "container_name", "container_type", "total"}).
+			AddRow(stringPtr("source-place"), stringPtr("Source place"), stringPtr("cash"), 500.0).
+			AddRow(stringPtr("destination-place"), stringPtr("Destination place"), stringPtr("bank"), 300.0),
+	)
+
+	body := performDashboardSummaryRequest(t, dashboardTestRouter(GetSummary(mock)), "2026-05")
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
+	}
+
+	var response DashboardSummaryResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+
+	if response.TotalIncome != 1000 || response.TotalExpenses != 400 || response.AvailableBalance != 600 || response.CurrentAvailableBalance != 600 {
+		t.Fatalf("totals = income %v expenses %v available %v current %v, want transfer-neutral 1000/400/600/600",
+			response.TotalIncome, response.TotalExpenses, response.AvailableBalance, response.CurrentAvailableBalance)
+	}
+
+	assertMoneyByContainerTotal(t, response.MoneyByContainer, "source-place", 500)
+	assertMoneyByContainerTotal(t, response.MoneyByContainer, "destination-place", 300)
+}
+
+func TestQueryMoneyByContainerIncludesSignedTransferLegs(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	mock.ExpectQuery(`FROM incomes i[\s\S]*UNION ALL[\s\S]*FROM expenses e[\s\S]*UNION ALL[\s\S]*pt\.source_container_id[\s\S]*-SUM\(pt\.amount\)[\s\S]*FROM place_transfers pt[\s\S]*UNION ALL[\s\S]*pt\.destination_container_id[\s\S]*SUM\(pt\.amount\)[\s\S]*FROM place_transfers pt`).
+		WithArgs(dashboardTestAccountID).
+		WillReturnRows(mock.NewRows([]string{"container_id", "container_name", "container_type", "total"}).
+			AddRow(stringPtr("source-place"), stringPtr("Source place"), stringPtr("cash"), 500.0).
+			AddRow(stringPtr("destination-place"), stringPtr("Destination place"), stringPtr("bank"), 300.0))
+
+	rows, err := queryMoneyByContainer(context.Background(), mock, dashboardTestAccountID)
+	if err != nil {
+		t.Fatalf("queryMoneyByContainer() error = %v", err)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
+	}
+
+	if len(rows) != 2 {
+		t.Fatalf("len(rows) = %d, want 2", len(rows))
+	}
+	if rows[0].ContainerID == nil || *rows[0].ContainerID != "source-place" || rows[0].Total != 500 {
+		t.Fatalf("source row = %+v, want total after transfer out", rows[0])
+	}
+	if rows[1].ContainerID == nil || *rows[1].ContainerID != "destination-place" || rows[1].Total != 300 {
+		t.Fatalf("destination row = %+v, want total after transfer in", rows[1])
+	}
+}
+
 func TestNextCalendarMonthWindow(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -340,6 +429,34 @@ func expectDashboardSummaryQueries(
 	historicalDeposits float64,
 	historicalWithdrawals float64,
 ) {
+	expectDashboardSummaryQueriesWithMoneyByContainerRows(
+		mock,
+		month,
+		monthlyIncome,
+		monthlyExpenses,
+		monthlyDeposits,
+		monthlyWithdrawals,
+		historicalIncome,
+		historicalExpenses,
+		historicalDeposits,
+		historicalWithdrawals,
+		mock.NewRows([]string{"container_id", "container_name", "container_type", "total"}),
+	)
+}
+
+func expectDashboardSummaryQueriesWithMoneyByContainerRows(
+	mock pgxmock.PgxPoolIface,
+	month string,
+	monthlyIncome float64,
+	monthlyExpenses float64,
+	monthlyDeposits float64,
+	monthlyWithdrawals float64,
+	historicalIncome float64,
+	historicalExpenses float64,
+	historicalDeposits float64,
+	historicalWithdrawals float64,
+	moneyByContainerRows *pgxmock.Rows,
+) {
 	mock.ExpectQuery(`SELECT currency FROM accounts WHERE id = \$1`).
 		WithArgs(dashboardTestAccountID).
 		WillReturnRows(mock.NewRows([]string{"currency"}).AddRow("ARS"))
@@ -360,9 +477,9 @@ func expectDashboardSummaryQueries(
 		WithArgs(dashboardTestAccountID).
 		WillReturnRows(mock.NewRows([]string{"sum"}).AddRow(historicalExpenses))
 
-	mock.ExpectQuery(`FROM incomes i[\s\S]*LEFT JOIN payment_containers[\s\S]*UNION ALL[\s\S]*FROM expenses e`).
+	mock.ExpectQuery(`FROM incomes i[\s\S]*LEFT JOIN payment_containers[\s\S]*UNION ALL[\s\S]*FROM expenses e[\s\S]*UNION ALL[\s\S]*FROM place_transfers pt`).
 		WithArgs(dashboardTestAccountID).
-		WillReturnRows(mock.NewRows([]string{"container_id", "container_name", "container_type", "total"}))
+		WillReturnRows(moneyByContainerRows)
 
 	mock.ExpectQuery(`FROM expenses e[\s\S]*GROUP BY`).
 		WithArgs(dashboardTestAccountID, month).
@@ -388,6 +505,21 @@ func expectDashboardSummaryQueries(
 		WithArgs(dashboardTestAccountID).
 		WillReturnRows(mock.NewRows([]string{"sum"}).AddRow(600.0))
 
+}
+
+func assertMoneyByContainerTotal(t *testing.T, items []MoneyByContainer, containerID string, want float64) {
+	t.Helper()
+
+	for _, item := range items {
+		if item.ContainerID != nil && *item.ContainerID == containerID {
+			if item.Total != want {
+				t.Fatalf("money_by_container[%s].total = %v, want %v", containerID, item.Total, want)
+			}
+			return
+		}
+	}
+
+	t.Fatalf("money_by_container missing container %s in %+v", containerID, items)
 }
 
 func performDashboardSummaryRequest(t *testing.T, router *gin.Engine, month string) []byte {

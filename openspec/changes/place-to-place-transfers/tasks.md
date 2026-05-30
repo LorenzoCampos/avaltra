@@ -41,9 +41,11 @@ PR 1 apply note: create/list backend API, validation errors, migration, and rout
 
 ## Phase 3: Dashboard Integration (No P&L impact)
 
-- [ ] 3.1 RED: Extend `backend/internal/handlers/dashboard/summary_test.go` scenarios for source `-A`, destination `+A`, unchanged income/expense/P&L totals.
-- [ ] 3.2 GREEN: Update `backend/internal/handlers/dashboard/summary.go` `queryMoneyByContainer` with transfer source/destination `UNION ALL` signed legs only.
-- [ ] 3.3 REFACTOR: Verify `buildMoneyByContainerBreakdown` compatibility with mixed migrated/unassigned buckets and transfer-balanced totals.
+- [x] 3.1 RED: Extend `backend/internal/handlers/dashboard/summary_test.go` scenarios for source `-A`, destination `+A`, unchanged income/expense/P&L totals.
+- [x] 3.2 GREEN: Update `backend/internal/handlers/dashboard/summary.go` `queryMoneyByContainer` with transfer source/destination `UNION ALL` signed legs only.
+- [x] 3.3 REFACTOR: Verify `buildMoneyByContainerBreakdown` compatibility with mixed migrated/unassigned buckets and transfer-balanced totals.
+
+PR 2 apply note: dashboard `money_by_container` now includes signed transfer source/destination legs only. Income, expense, available balance, and current available balance queries remain unchanged by transfer rows.
 
 ## Phase 4: Frontend Payment Containers Transfer UX (TDD)
 

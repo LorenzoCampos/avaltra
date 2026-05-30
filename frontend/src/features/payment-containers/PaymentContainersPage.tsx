@@ -8,6 +8,7 @@ import {
   usePaymentContainers,
   useUpdatePaymentContainer,
 } from '@/hooks/usePaymentContainers';
+import { useCreatePlaceTransfer, usePlaceTransfers } from '@/hooks/usePlaceTransfers';
 import {
   useCreatePaymentInstrument,
   usePaymentInstruments,
@@ -17,6 +18,8 @@ import type { PaymentContainer } from '@/types/paymentContainer';
 import type { PaymentInstrument } from '@/types/paymentInstrument';
 import { ContainerForm } from './ContainerForm';
 import { InstrumentForm } from './InstrumentForm';
+import { PlaceTransferForm } from './PlaceTransferForm';
+import { PlaceTransferHistory } from './PlaceTransferHistory';
 
 const statusClassName = (isActive: boolean) =>
   isActive
@@ -34,6 +37,8 @@ export function PaymentContainersPage() {
   const updateContainer = useUpdatePaymentContainer();
   const createInstrument = useCreatePaymentInstrument();
   const updateInstrument = useUpdatePaymentInstrument();
+  const transfersQuery = usePlaceTransfers();
+  const createTransfer = useCreatePlaceTransfer();
 
   const containers = useMemo(() => containersQuery.data?.payment_containers ?? [], [containersQuery.data?.payment_containers]);
   const instruments = useMemo(() => instrumentsQuery.data?.payment_instruments ?? [], [instrumentsQuery.data?.payment_instruments]);
@@ -106,6 +111,18 @@ export function PaymentContainersPage() {
             }}
           />
         </details>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1fr)]">
+        <PlaceTransferForm
+          containers={activeContainers}
+          isSubmitting={createTransfer.isPending}
+          onSubmit={(values) => createTransfer.mutate(values)}
+        />
+        <PlaceTransferHistory
+          transfers={transfersQuery.data?.place_transfers ?? []}
+          isLoading={transfersQuery.isLoading}
+        />
       </div>
 
       <section className="space-y-6">

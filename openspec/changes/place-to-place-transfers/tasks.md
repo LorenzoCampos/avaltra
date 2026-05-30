@@ -49,10 +49,12 @@ PR 2 apply note: dashboard `money_by_container` now includes signed transfer sou
 
 ## Phase 4: Frontend Payment Containers Transfer UX (TDD)
 
-- [ ] 4.1 RED: Add frontend tests for hooks/form validation/query invalidation in `frontend/src/hooks/usePlaceTransfers.test.ts` and `frontend/src/features/payment-containers/PlaceTransferForm.test.tsx`.
-- [ ] 4.2 GREEN: Create `frontend/src/types/placeTransfer.ts` and `frontend/src/hooks/usePlaceTransfers.ts` for list/create/update/delete against `/api/place-transfers`.
-- [ ] 4.3 GREEN: Create `frontend/src/features/payment-containers/{PlaceTransferForm,PlaceTransferHistory}.tsx` using active places only; no FX conversion fields.
-- [ ] 4.4 REFACTOR: Modify `frontend/src/features/payment-containers/PaymentContainersPage.tsx` to mount transfer UI/history without redesigning places or removing legacy media.
+- [x] 4.1 RED: Add frontend tests for hooks/form validation/query invalidation in `frontend/src/hooks/usePlaceTransfers.test.ts` and `frontend/src/features/payment-containers/PlaceTransferForm.test.tsx`.
+- [x] 4.2 GREEN: Create `frontend/src/types/placeTransfer.ts` and `frontend/src/hooks/usePlaceTransfers.ts` for list/create/update/delete against `/api/place-transfers`.
+- [x] 4.3 GREEN: Create `frontend/src/features/payment-containers/{PlaceTransferForm,PlaceTransferHistory}.tsx` using active places only; no FX conversion fields.
+- [x] 4.4 REFACTOR: Modify `frontend/src/features/payment-containers/PaymentContainersPage.tsx` to mount transfer UI/history without redesigning places or removing legacy media.
+
+PR 3 apply note: frontend implements the available `GET/POST /api/place-transfers` contract only, matching the approved PR 3 scope and PR 1 backend surface. Update/delete frontend hooks were not added because backend update/delete endpoints remain outside the approved slices.
 
 ## Phase 5: Verification / Scope Guardrails
 

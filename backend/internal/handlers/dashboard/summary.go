@@ -518,6 +518,26 @@ func queryMoneyByContainer(ctx context.Context, db dashboardQuerier, accountID i
 			LEFT JOIN payment_containers pc ON e.source_container_id = pc.id
 			WHERE e.account_id = $1 AND e.deleted_at IS NULL
 			GROUP BY e.source_container_id, pc.name, pc.kind
+			UNION ALL
+			SELECT
+				pt.source_container_id AS container_id,
+				pc.name AS container_name,
+				pc.kind AS container_type,
+				-SUM(pt.amount) AS total
+			FROM place_transfers pt
+			LEFT JOIN payment_containers pc ON pt.source_container_id = pc.id
+			WHERE pt.account_id = $1 AND pt.deleted_at IS NULL
+			GROUP BY pt.source_container_id, pc.name, pc.kind
+			UNION ALL
+			SELECT
+				pt.destination_container_id AS container_id,
+				pc.name AS container_name,
+				pc.kind AS container_type,
+				SUM(pt.amount) AS total
+			FROM place_transfers pt
+			LEFT JOIN payment_containers pc ON pt.destination_container_id = pc.id
+			WHERE pt.account_id = $1 AND pt.deleted_at IS NULL
+			GROUP BY pt.destination_container_id, pc.name, pc.kind
 		) AS movements
 		GROUP BY container_id, container_name, container_type
 		HAVING SUM(total) <> 0

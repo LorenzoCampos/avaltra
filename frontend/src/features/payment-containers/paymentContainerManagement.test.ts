@@ -22,12 +22,18 @@ const hookState = vi.hoisted(() => ({
     isLoading: false,
     error: null as Error | null,
   },
+  transfersQuery: {
+    data: undefined as { place_transfers: []; count: number } | undefined,
+    isLoading: false,
+    error: null as Error | null,
+  },
   createContainer: { mutate: vi.fn(), isPending: false },
   updateContainer: { mutate: vi.fn(), isPending: false },
   deactivateContainer: { mutate: vi.fn(), isPending: false },
   createInstrument: { mutate: vi.fn(), isPending: false },
   updateInstrument: { mutate: vi.fn(), isPending: false },
   deactivateInstrument: { mutate: vi.fn(), isPending: false },
+  createTransfer: { mutate: vi.fn(), isPending: false },
 }));
 
 vi.mock('@/hooks/usePaymentContainers', () => ({
@@ -42,6 +48,11 @@ vi.mock('@/hooks/usePaymentInstruments', () => ({
   useCreatePaymentInstrument: vi.fn(() => hookState.createInstrument),
   useUpdatePaymentInstrument: vi.fn(() => hookState.updateInstrument),
   useDeactivatePaymentInstrument: vi.fn(() => hookState.deactivateInstrument),
+}));
+
+vi.mock('@/hooks/usePlaceTransfers', () => ({
+  usePlaceTransfers: vi.fn(() => hookState.transfersQuery),
+  useCreatePlaceTransfer: vi.fn(() => hookState.createTransfer),
 }));
 
 const readSource = (relativePath: string) => readFile(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
@@ -77,12 +88,14 @@ describe('payment container management behavior', () => {
   beforeEach(() => {
     hookState.containersQuery = { data: { payment_containers: [], count: 0 }, isLoading: false, error: null };
     hookState.instrumentsQuery = { data: { payment_instruments: [], count: 0 }, isLoading: false, error: null };
+    hookState.transfersQuery = { data: { place_transfers: [], count: 0 }, isLoading: false, error: null };
     hookState.createContainer.mutate.mockReset();
     hookState.updateContainer.mutate.mockReset();
     hookState.deactivateContainer.mutate.mockReset();
     hookState.createInstrument.mutate.mockReset();
     hookState.updateInstrument.mutate.mockReset();
     hookState.deactivateInstrument.mutate.mockReset();
+    hookState.createTransfer.mutate.mockReset();
   });
 
   it('renders the loading state while either management query is loading', () => {

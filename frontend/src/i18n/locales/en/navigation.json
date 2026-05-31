@@ -78,6 +78,45 @@
       "backedBy": "associated with {{container}}",
       "unknownContainer": "unknown place"
     },
+    "transfers": {
+      "form": {
+        "title": "Move money between places",
+        "description": "Transfer ARS between active places without creating income or expenses.",
+        "source": "Source place",
+        "destination": "Destination place",
+        "amount": "Amount",
+        "date": "Date",
+        "note": "Note",
+        "needTwoPlaces": "Create or reactivate at least two places to move money.",
+        "submit": "Create transfer"
+      },
+      "history": {
+        "title": "Transfer history",
+        "description": "Recent money movements between places. Canceled transfers stay out of this active history.",
+        "loading": "Loading transfers…",
+        "empty": "No active transfers yet.",
+        "correctionGuidance": "Need to correct a wrong transfer? Cancel it, then create a new transfer with the right details."
+      },
+      "actions": {
+        "cancel": "Cancel transfer"
+      },
+      "status": {
+        "active": "Active"
+      },
+      "toast": {
+        "created": "Transfer created",
+        "createFailed": "Failed to create transfer",
+        "canceled": "Transfer canceled",
+        "cancelFailed": "Failed to cancel transfer"
+      },
+      "validation": {
+        "sourceRequired": "Source place is required",
+        "destinationRequired": "Destination place is required",
+        "samePlace": "Source and destination places must be different",
+        "amountPositive": "Amount must be greater than zero",
+        "dateRequired": "Date is required"
+      }
+    },
     "containerKinds": {
       "bank": "Bank account",
       "wallet": "Wallet",

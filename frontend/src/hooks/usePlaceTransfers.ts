@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import { api } from '@/api/axios';
 import { useAccountStore } from '@/stores/account.store';
-import type { CreatePlaceTransferRequest, PlaceTransfer, PlaceTransfersResponse } from '@/types/placeTransfer';
+import type { CancelPlaceTransferResponse, CreatePlaceTransferRequest, PlaceTransfer, PlaceTransfersResponse } from '@/types/placeTransfer';
 
 type ApiMutationError = { response?: { data?: { error?: string } } };
 type QueryKey = readonly unknown[];
@@ -32,6 +33,11 @@ export async function createPlaceTransfer(data: CreatePlaceTransferRequest) {
   return response.data;
 }
 
+export async function cancelPlaceTransfer(id: string) {
+  const response = await api.patch<CancelPlaceTransferResponse>(`/place-transfers/${id}/cancel`);
+  return response.data;
+}
+
 export function usePlaceTransfers() {
   const activeAccountId = useAccountStore((state) => state.activeAccountId);
 
@@ -45,6 +51,7 @@ export function usePlaceTransfers() {
 
 export function useCreatePlaceTransfer() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('navigation');
 
   return useMutation({
     mutationFn: createPlaceTransfer,
@@ -52,10 +59,28 @@ export function useCreatePlaceTransfer() {
       for (const queryKey of getPlaceTransferInvalidationKeys()) {
         queryClient.invalidateQueries({ queryKey });
       }
-      toast.success('Transfer created');
+      toast.success(t('paymentContainersPage.transfers.toast.created'));
     },
     onError: (error: unknown) => {
-      toast.error(getMutationErrorMessage(error, 'Failed to create transfer'));
+      toast.error(getMutationErrorMessage(error, t('paymentContainersPage.transfers.toast.createFailed')));
+    },
+  });
+}
+
+export function useCancelPlaceTransfer() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation('navigation');
+
+  return useMutation({
+    mutationFn: cancelPlaceTransfer,
+    onSuccess: () => {
+      for (const queryKey of getPlaceTransferInvalidationKeys()) {
+        queryClient.invalidateQueries({ queryKey });
+      }
+      toast.success(t('paymentContainersPage.transfers.toast.canceled'));
+    },
+    onError: (error: unknown) => {
+      toast.error(getMutationErrorMessage(error, t('paymentContainersPage.transfers.toast.cancelFailed')));
     },
   });
 }

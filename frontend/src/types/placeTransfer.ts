@@ -11,6 +11,8 @@ export type PlaceTransfer = {
   note: string | null;
   created_at: string;
   updated_at: string;
+  canceled_at?: string | null;
+  deleted_at?: string | null;
 };
 export type PlaceTransfersResponse = {
   place_transfers: PlaceTransfer[];
@@ -23,4 +25,10 @@ export type CreatePlaceTransferRequest = {
   date: string;
   note?: string;
   currency?: 'ARS';
+};
+
+export type CancelPlaceTransferResponse = {
+  id: string;
+  status: 'canceled';
+  canceled_at: string;
 };

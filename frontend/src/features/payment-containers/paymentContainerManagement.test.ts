@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/i18n';
 import type { PaymentContainer } from '@/types/paymentContainer';
 import type { PaymentInstrument } from '@/types/paymentInstrument';
+import type { PlaceTransfer } from '@/types/placeTransfer';
 import { isCardPaymentInstrumentKind, paymentInstrumentRequiresBackingContainer } from '@/types/paymentInstrument';
 import { getContainerFormSubmission, getInstrumentFormSubmission } from './formSubmissions';
 import { PaymentContainersPage } from './PaymentContainersPage';
@@ -23,7 +24,7 @@ const hookState = vi.hoisted(() => ({
     error: null as Error | null,
   },
   transfersQuery: {
-    data: undefined as { place_transfers: []; count: number } | undefined,
+    data: undefined as { place_transfers: PlaceTransfer[]; count: number } | undefined,
     isLoading: false,
     error: null as Error | null,
   },
@@ -34,6 +35,7 @@ const hookState = vi.hoisted(() => ({
   updateInstrument: { mutate: vi.fn(), isPending: false },
   deactivateInstrument: { mutate: vi.fn(), isPending: false },
   createTransfer: { mutate: vi.fn(), isPending: false },
+  cancelTransfer: { mutate: vi.fn(), isPending: false, variables: null as string | null },
 }));
 
 vi.mock('@/hooks/usePaymentContainers', () => ({
@@ -53,6 +55,7 @@ vi.mock('@/hooks/usePaymentInstruments', () => ({
 vi.mock('@/hooks/usePlaceTransfers', () => ({
   usePlaceTransfers: vi.fn(() => hookState.transfersQuery),
   useCreatePlaceTransfer: vi.fn(() => hookState.createTransfer),
+  useCancelPlaceTransfer: vi.fn(() => hookState.cancelTransfer),
 }));
 
 const readSource = (relativePath: string) => readFile(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
@@ -96,6 +99,8 @@ describe('payment container management behavior', () => {
     hookState.updateInstrument.mutate.mockReset();
     hookState.deactivateInstrument.mutate.mockReset();
     hookState.createTransfer.mutate.mockReset();
+    hookState.cancelTransfer.mutate.mockReset();
+    hookState.cancelTransfer.variables = null;
   });
 
   it('renders the loading state while either management query is loading', () => {
@@ -225,5 +230,36 @@ describe('payment container management behavior', () => {
     expect(page).toContain('usePaymentInstruments');
     expect(page).not.toContain('ExpenseForm');
     expect(page).not.toContain('IncomeForm');
+  });
+
+  it('wires transfer history cancel flow and keeps transfer section copy localized', () => {
+    hookState.transfersQuery = {
+      data: {
+        place_transfers: [{
+          id: 'transfer-1',
+          account_id: 'account-1',
+          source_container_id: 'container-1',
+          source_container_name: 'Main bank account',
+          destination_container_id: 'container-2',
+          destination_container_name: 'Cash box',
+          amount: 500,
+          currency: 'ARS',
+          date: '2026-05-31T00:00:00Z',
+          note: null,
+          created_at: '2026-05-31T00:00:00Z',
+          updated_at: '2026-05-31T00:00:00Z',
+        }],
+        count: 1,
+      },
+      isLoading: false,
+      error: null,
+    };
+
+    const html = renderManagementPage();
+
+    expect(html).toContain('Mover plata entre lugares');
+    expect(html).toContain('Historial de transferencias');
+    expect(html).toContain('Anular transferencia');
+    expect(html).toContain('Anulala y después creá una transferencia nueva');
   });
 });

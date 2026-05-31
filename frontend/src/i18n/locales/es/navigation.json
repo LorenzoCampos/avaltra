@@ -78,6 +78,45 @@
       "backedBy": "asociado a {{container}}",
       "unknownContainer": "lugar desconocido"
     },
+    "transfers": {
+      "form": {
+        "title": "Mover plata entre lugares",
+        "description": "Transferí ARS entre lugares activos sin crear ingresos ni gastos.",
+        "source": "Lugar de origen",
+        "destination": "Lugar de destino",
+        "amount": "Importe",
+        "date": "Fecha",
+        "note": "Nota",
+        "needTwoPlaces": "Creá o reactivá al menos dos lugares para mover plata.",
+        "submit": "Crear transferencia"
+      },
+      "history": {
+        "title": "Historial de transferencias",
+        "description": "Movimientos recientes de plata entre lugares. Las transferencias anuladas no aparecen en este historial activo.",
+        "loading": "Cargando transferencias…",
+        "empty": "Todavía no hay transferencias activas.",
+        "correctionGuidance": "¿Necesitás corregir una transferencia equivocada? Anulala y después creá una transferencia nueva con los datos correctos."
+      },
+      "actions": {
+        "cancel": "Anular transferencia"
+      },
+      "status": {
+        "active": "Activa"
+      },
+      "toast": {
+        "created": "Transferencia creada",
+        "createFailed": "No se pudo crear la transferencia",
+        "canceled": "Transferencia anulada",
+        "cancelFailed": "No se pudo anular la transferencia"
+      },
+      "validation": {
+        "sourceRequired": "El lugar de origen es obligatorio",
+        "destinationRequired": "El lugar de destino es obligatorio",
+        "samePlace": "El origen y el destino tienen que ser distintos",
+        "amountPositive": "El importe tiene que ser mayor que cero",
+        "dateRequired": "La fecha es obligatoria"
+      }
+    },
     "containerKinds": {
       "bank": "Cuenta bancaria",
       "wallet": "Billetera",

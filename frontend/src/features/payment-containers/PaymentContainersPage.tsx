@@ -8,7 +8,7 @@ import {
   usePaymentContainers,
   useUpdatePaymentContainer,
 } from '@/hooks/usePaymentContainers';
-import { useCreatePlaceTransfer, usePlaceTransfers } from '@/hooks/usePlaceTransfers';
+import { useCancelPlaceTransfer, useCreatePlaceTransfer, usePlaceTransfers } from '@/hooks/usePlaceTransfers';
 import {
   useCreatePaymentInstrument,
   usePaymentInstruments,
@@ -39,6 +39,7 @@ export function PaymentContainersPage() {
   const updateInstrument = useUpdatePaymentInstrument();
   const transfersQuery = usePlaceTransfers();
   const createTransfer = useCreatePlaceTransfer();
+  const cancelTransfer = useCancelPlaceTransfer();
 
   const containers = useMemo(() => containersQuery.data?.payment_containers ?? [], [containersQuery.data?.payment_containers]);
   const instruments = useMemo(() => instrumentsQuery.data?.payment_instruments ?? [], [instrumentsQuery.data?.payment_instruments]);
@@ -122,6 +123,8 @@ export function PaymentContainersPage() {
         <PlaceTransferHistory
           transfers={transfersQuery.data?.place_transfers ?? []}
           isLoading={transfersQuery.isLoading}
+          cancelingTransferId={cancelTransfer.variables ?? null}
+          onCancelTransfer={(id) => cancelTransfer.mutate(id)}
         />
       </div>
 

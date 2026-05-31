@@ -38,3 +38,32 @@ func TestCreatePlaceTransfersMigrations(t *testing.T) {
 		}
 	}
 }
+
+func TestSavingsGoalsUsePlacesMigration(t *testing.T) {
+	tests := map[string][]string{
+		"027_savings_goals_use_places.up.sql": {
+			"ADD COLUMN IF NOT EXISTS saved_container_id UUID NULL REFERENCES payment_containers(id) ON DELETE SET NULL",
+			"ADD COLUMN IF NOT EXISTS container_id UUID NULL REFERENCES payment_containers(id) ON DELETE SET NULL",
+			"idx_savings_goals_saved_container_id",
+			"idx_savings_goal_transactions_container_id",
+			"Does not backfill from saved_in",
+		},
+		"027_savings_goals_use_places.down.sql": {
+			"DROP INDEX IF EXISTS idx_savings_goal_transactions_container_id",
+			"DROP INDEX IF EXISTS idx_savings_goals_saved_container_id",
+			"DROP COLUMN IF EXISTS container_id",
+			"DROP COLUMN IF EXISTS saved_container_id",
+		},
+	}
+	for name, fragments := range tests {
+		content, err := os.ReadFile(name)
+		if err != nil {
+			t.Fatalf("read migration %s: %v", name, err)
+		}
+		for _, fragment := range fragments {
+			if !strings.Contains(string(content), fragment) {
+				t.Fatalf("%s missing fragment %q", name, fragment)
+			}
+		}
+	}
+}

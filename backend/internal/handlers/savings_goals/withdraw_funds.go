@@ -9,18 +9,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // WithdrawFundsRequest represents the request to withdraw funds from a savings goal
 type WithdrawFundsRequest struct {
 	Amount      float64 `json:"amount" binding:"required,gt=0"`
 	Description *string `json:"description,omitempty"`
+	ContainerID *string `json:"container_id,omitempty"`
 	Date        *string `json:"date,omitempty"` // Format: YYYY-MM-DD, defaults to today
 }
 
 // WithdrawFunds handles POST /api/savings-goals/:id/withdraw-funds
-func WithdrawFunds(db *pgxpool.Pool) gin.HandlerFunc {
+func WithdrawFunds(db dbBeginner) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context
 		accountID, exists := middleware.GetAccountID(c)
@@ -65,6 +65,14 @@ func WithdrawFunds(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		ctx := c.Request.Context()
+		if _, err := validateOptionalContainer(ctx, db, accountID, req.ContainerID); err != nil {
+			if err.Error() == "invalid-savings-place" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to validate savings place"})
+			return
+		}
 
 		// First, we need to check the goal's deadline before starting the transaction
 		// to validate the transaction date
@@ -109,8 +117,9 @@ func WithdrawFunds(db *pgxpool.Pool) gin.HandlerFunc {
 		var currentAmount, targetAmount float64
 		var name string
 		var deadline *time.Time
-		checkQuery := `SELECT name, current_amount, target_amount, deadline FROM savings_goals WHERE id = $1 AND account_id = $2`
-		err = tx.QueryRow(ctx, checkQuery, goalID, accountID).Scan(&name, &currentAmount, &targetAmount, &deadline)
+		var goalContainerID *string
+		checkQuery := `SELECT name, current_amount, target_amount, deadline, saved_container_id FROM savings_goals WHERE id = $1 AND account_id = $2`
+		err = tx.QueryRow(ctx, checkQuery, goalID, accountID).Scan(&name, &currentAmount, &targetAmount, &deadline, &goalContainerID)
 
 		if err == pgx.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": "meta de ahorro no encontrada o no pertenece a esta cuenta"})
@@ -134,17 +143,21 @@ func WithdrawFunds(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		// Create transaction record
+		transactionContainerID := req.ContainerID
+		if transactionContainerID == nil {
+			transactionContainerID = goalContainerID
+		}
 		var transactionID uuid.UUID
 		var createdAt time.Time
 		insertTxnQuery := `
 			INSERT INTO savings_goal_transactions (
-				savings_goal_id, amount, transaction_type, description, date
-			) VALUES ($1, $2, 'withdrawal', $3, $4)
+				savings_goal_id, amount, transaction_type, description, date, container_id
+			) VALUES ($1, $2, 'withdrawal', $3, $4, $5)
 			RETURNING id, created_at
 		`
 
 		err = tx.QueryRow(ctx, insertTxnQuery,
-			goalID, req.Amount, req.Description, transactionDateStr,
+			goalID, req.Amount, req.Description, transactionDateStr, transactionContainerID,
 		).Scan(&transactionID, &createdAt)
 
 		if err != nil {
@@ -212,6 +225,7 @@ func WithdrawFunds(db *pgxpool.Pool) gin.HandlerFunc {
 				"amount":           -req.Amount, // Negative for display
 				"transaction_type": "withdrawal",
 				"description":      req.Description,
+				"container_id":     transactionContainerID,
 				"date":             transactionDateStr,
 				"created_at":       createdAt.Format(time.RFC3339),
 			},

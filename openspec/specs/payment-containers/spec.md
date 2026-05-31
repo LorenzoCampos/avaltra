@@ -71,6 +71,20 @@ The system MUST provide CRUD management for containers and instruments, includin
 - THEN existing transaction history SHALL remain readable
 - AND new selection lists SHALL exclude the inactive instrument
 
+### Requirement: Transfer Section Consistency and Localized Copy
+The transfer management section in payment containers MUST use the same visual-management pattern as adjacent sections and MUST use localized copy keys for labels, actions, statuses, and correction guidance.
+
+#### Scenario: Transfer section matches management pattern
+- GIVEN a user opens payment container management
+- WHEN transfer history and actions are rendered
+- THEN transfer rows SHALL follow the same management layout conventions used by nearby sections
+- AND transfer actions/statuses SHALL be presented with localized copy
+
+#### Scenario: Correction guidance is explicit
+- GIVEN a transfer row is shown as canceled or cancelable
+- WHEN the user reviews available actions
+- THEN the UI SHALL communicate that correction is cancel plus recreate
+
 ### Requirement: Transaction Form Selection Behavior
 Expense and income forms SHALL provide a primary place/container selector only. Expense flows SHOULD phrase context as source place; income flows SHOULD phrase context as destination place. Instrument selectors MUST NOT appear in primary UX. Submission MUST require an active place, and backend validation MUST enforce this requirement (frontend-only checks are insufficient).
 
@@ -106,7 +120,7 @@ Activity/list/detail views MUST prefer normalized place/container labels. When p
 - AND no empty payment-context placeholder SHALL be shown
 
 ### Requirement: Mini Breakdown by Money Location
-Dashboard/home MUST expose a compact breakdown of money by container/location for v1. The breakdown SHOULD support container type grouping and MUST tolerate partial unmigrated data. The breakdown MUST include place-transfer inflows and outflows so moved money is reflected in source and destination container balances.
+Dashboard/home MUST expose a compact breakdown of money by container/location for v1. The breakdown SHOULD support container type grouping and MUST tolerate partial unmigrated data. The breakdown MUST include active place-transfer inflows and outflows so moved money is reflected in source and destination container balances. Canceled transfers MUST be excluded from money-by-container calculations.
 
 #### Scenario: Mixed migrated and unmigrated data
 - GIVEN some transactions have normalized links and some do not
@@ -115,7 +129,7 @@ Dashboard/home MUST expose a compact breakdown of money by container/location fo
 - AND unmapped amounts SHALL be included in an explicit unknown/unassigned bucket
 
 #### Scenario: Transfer updates source and destination containers
-- GIVEN a transfer of amount A from place S to place D in the active account
+- GIVEN an active transfer of amount A from place S to place D in the active account
 - WHEN money-by-container is recalculated
 - THEN place S SHALL decrease by A and place D SHALL increase by A
 - AND net account money-by-container sum SHALL remain balanced
@@ -125,6 +139,11 @@ Dashboard/home MUST expose a compact breakdown of money by container/location fo
 - WHEN dashboard totals are calculated
 - THEN income and expense totals SHALL remain unchanged by those transfers
 - AND P&L SHALL remain unchanged by transfer-only activity
+
+#### Scenario: Canceled transfer is excluded from mini breakdown
+- GIVEN a previously active transfer was canceled
+- WHEN money-by-container is recalculated
+- THEN the canceled transfer SHALL contribute zero movement to both involved places
 
 ### Requirement: Importer Backward Compatibility
 Importer flows MUST preserve legacy alias handling, and SHOULD map incoming context to a place/container when a deterministic match exists. If deterministic place mapping is unavailable, importer SHALL preserve legacy compatibility behavior without breaking ingestion.

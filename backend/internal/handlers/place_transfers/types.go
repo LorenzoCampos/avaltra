@@ -39,3 +39,9 @@ type PlaceTransferResponse struct {
 	CreatedAt                time.Time `json:"created_at"`
 	UpdatedAt                time.Time `json:"updated_at"`
 }
+
+type CancelPlaceTransferResponse struct {
+	ID         string    `json:"id"`
+	Status     string    `json:"status"`
+	CanceledAt time.Time `json:"canceled_at"`
+}

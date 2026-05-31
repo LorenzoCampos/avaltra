@@ -49,6 +49,7 @@ func TestSetupRoutesRegistersPaymentContextManagementEndpoints(t *testing.T) {
 		"PATCH /api/payment-instruments/:id/deactivate": false,
 		"GET /api/place-transfers":                      false,
 		"POST /api/place-transfers":                     false,
+		"PATCH /api/place-transfers/:id/cancel":         false,
 	}
 
 	for _, route := range srv.router.Routes() {

@@ -40,13 +40,27 @@ The system MUST support same-currency transfers only in v1. Currency conversion 
 - AND a currency-mismatch-not-supported error SHALL be returned
 
 ### Requirement: Balance and Reporting Effects
-For a persisted transfer, the system MUST decrease source place balance and MUST increase destination place balance by the same amount. Transfer operations MUST NOT change income totals, expense totals, or P&L totals.
+For a persisted active transfer, the system MUST decrease source place balance and MUST increase destination place balance by the same amount. Canceled transfers MUST NOT affect money-by-container balances. Transfer operations (active or canceled) MUST NOT change income totals, expense totals, or P&L totals.
 
 #### Scenario: Money moves between places only
-- GIVEN a valid transfer of amount A between two active places
+- GIVEN a valid active transfer of amount A between two active places
 - WHEN dashboard balances are calculated
 - THEN source balance SHALL decrease by A and destination balance SHALL increase by A
 - AND account-level income/expense/P&L totals SHALL remain unchanged
+
+#### Scenario: Canceled transfer has no balance effect
+- GIVEN a transfer of amount A that was later canceled
+- WHEN money-by-container and totals are recalculated
+- THEN source and destination balances SHALL NOT include that canceled transfer effect
+- AND income/expense/P&L totals SHALL remain unchanged
+
+### Requirement: Transfer Correction Policy
+The system MUST define transfer correction as cancel-and-recreate. The system MUST NOT support edit-in-place for transfer amount, source, destination, or date in this change.
+
+#### Scenario: User needs to correct a wrong transfer
+- GIVEN a user identifies a wrong transfer
+- WHEN the user follows transfer correction guidance
+- THEN the system SHALL require canceling the wrong transfer and creating a new transfer
 
 ### Requirement: Missing Place Validation
 The system MUST reject transfer creation when source place or destination place is missing or inactive.

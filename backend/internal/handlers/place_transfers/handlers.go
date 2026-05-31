@@ -10,6 +10,7 @@ import (
 
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 func CreatePlaceTransfer(db querier) gin.HandlerFunc {
@@ -89,6 +90,39 @@ func ListPlaceTransfers(db querier) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"place_transfers": transfers, "count": len(transfers)})
+	}
+}
+
+func CancelPlaceTransfer(db querier) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		accountID, ok := middleware.GetAccountID(c)
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Header X-Account-ID es requerido"})
+			return
+		}
+
+		transferID := strings.TrimSpace(c.Param("id"))
+		if transferID == "" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Transferencia entre lugares no encontrada"})
+			return
+		}
+
+		var response CancelPlaceTransferResponse
+		err := db.QueryRow(c.Request.Context(), `UPDATE place_transfers
+			SET deleted_at = COALESCE(deleted_at, NOW()), updated_at = NOW()
+			WHERE id = $1 AND account_id = $2
+			RETURNING id, 'canceled', deleted_at`, transferID, accountID).
+			Scan(&response.ID, &response.Status, &response.CanceledAt)
+		if errors.Is(err, pgx.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Transferencia entre lugares no encontrada"})
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error cancelando transferencia entre lugares", "details": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, response)
 	}
 }
 

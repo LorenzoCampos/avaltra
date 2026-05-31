@@ -199,7 +199,7 @@ func TestQueryMoneyByContainerIncludesSignedTransferLegs(t *testing.T) {
 	}
 	defer mock.Close()
 
-	mock.ExpectQuery(`FROM incomes i[\s\S]*UNION ALL[\s\S]*FROM expenses e[\s\S]*UNION ALL[\s\S]*pt\.source_container_id[\s\S]*-SUM\(pt\.amount\)[\s\S]*FROM place_transfers pt[\s\S]*UNION ALL[\s\S]*pt\.destination_container_id[\s\S]*SUM\(pt\.amount\)[\s\S]*FROM place_transfers pt`).
+	mock.ExpectQuery(`FROM incomes i[\s\S]*UNION ALL[\s\S]*FROM expenses e[\s\S]*UNION ALL[\s\S]*pt\.source_container_id[\s\S]*-SUM\(pt\.amount\)[\s\S]*FROM place_transfers pt[\s\S]*pt\.deleted_at IS NULL[\s\S]*UNION ALL[\s\S]*pt\.destination_container_id[\s\S]*SUM\(pt\.amount\)[\s\S]*FROM place_transfers pt[\s\S]*pt\.deleted_at IS NULL`).
 		WithArgs(dashboardTestAccountID).
 		WillReturnRows(mock.NewRows([]string{"container_id", "container_name", "container_type", "total"}).
 			AddRow(stringPtr("source-place"), stringPtr("Source place"), stringPtr("cash"), 500.0).
@@ -221,6 +221,30 @@ func TestQueryMoneyByContainerIncludesSignedTransferLegs(t *testing.T) {
 	}
 	if rows[1].ContainerID == nil || *rows[1].ContainerID != "destination-place" || rows[1].Total != 300 {
 		t.Fatalf("destination row = %+v, want total after transfer in", rows[1])
+	}
+}
+
+func TestQueryMoneyByContainerExcludesCanceledTransfers(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	mock.ExpectQuery(`FROM place_transfers pt[\s\S]*WHERE pt\.account_id = \$1 AND pt\.deleted_at IS NULL[\s\S]*FROM place_transfers pt[\s\S]*WHERE pt\.account_id = \$1 AND pt\.deleted_at IS NULL`).
+		WithArgs(dashboardTestAccountID).
+		WillReturnRows(mock.NewRows([]string{"container_id", "container_name", "container_type", "total"}))
+
+	rows, err := queryMoneyByContainer(context.Background(), mock, dashboardTestAccountID)
+	if err != nil {
+		t.Fatalf("queryMoneyByContainer() error = %v", err)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
+	}
+
+	if len(rows) != 0 {
+		t.Fatalf("len(rows) = %d, want 0 canceled transfer movements", len(rows))
 	}
 }
 

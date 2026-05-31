@@ -209,6 +209,7 @@ func (s *Server) setupRoutes() {
 		{
 			placeTransfersRoutes.GET("", placeTransfersHandler.ListPlaceTransfers(s.db.Pool))
 			placeTransfersRoutes.POST("", placeTransfersHandler.CreatePlaceTransfer(s.db.Pool))
+			placeTransfersRoutes.PATCH("/:id/cancel", placeTransfersHandler.CancelPlaceTransfer(s.db.Pool))
 		}
 
 		// Rutas de categorías de gastos (protegidas - requieren auth + account)

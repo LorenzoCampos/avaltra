@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v5"
 )
 
@@ -97,7 +98,7 @@ func TestListPlaceTransfersReturnsActiveAccountTransfers(t *testing.T) {
 	}
 	defer mock.Close()
 
-	mock.ExpectQuery(`FROM place_transfers pt`).
+	mock.ExpectQuery(`FROM place_transfers pt[\s\S]*pt\.account_id = \$1 AND pt\.deleted_at IS NULL`).
 		WithArgs(testAccountID).
 		WillReturnRows(mockTransferRows(createdAt).AddRow(testTransferID, testAccountID, testSourcePlaceID, "Caja", testDestPlaceID, "Banco", 123.45, "ARS", transferDate("2026-05-29"), nil, createdAt, createdAt))
 
@@ -122,6 +123,82 @@ func TestListPlaceTransfersReturnsActiveAccountTransfers(t *testing.T) {
 	}
 }
 
+func TestCancelPlaceTransferScenarios(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	canceledAt := time.Date(2026, time.May, 30, 12, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name       string
+		transferID string
+		mockRows   *pgxmock.Rows
+		mockErr    error
+		wantStatus int
+		wantError  string
+	}{
+		{
+			name:       "active transfer is soft canceled",
+			transferID: testTransferID,
+			mockRows:   pgxmock.NewRows([]string{"id", "status", "deleted_at"}).AddRow(testTransferID, "canceled", canceledAt),
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "already canceled transfer returns idempotent success",
+			transferID: testTransferID,
+			mockRows:   pgxmock.NewRows([]string{"id", "status", "deleted_at"}).AddRow(testTransferID, "canceled", canceledAt),
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "missing or cross-account transfer returns not found",
+			transferID: testTransferID,
+			mockErr:    pgx.ErrNoRows,
+			wantStatus: http.StatusNotFound,
+			wantError:  "Transferencia entre lugares no encontrada",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatalf("pgxmock.NewPool() error = %v", err)
+			}
+			defer mock.Close()
+
+			expectation := mock.ExpectQuery(`UPDATE place_transfers[\s\S]*SET deleted_at = COALESCE\(deleted_at, NOW\(\)\), updated_at = NOW\(\)[\s\S]*WHERE id = \$1 AND account_id = \$2[\s\S]*RETURNING id, 'canceled', deleted_at`).
+				WithArgs(tt.transferID, testAccountID)
+			if tt.mockErr != nil {
+				expectation.WillReturnError(tt.mockErr)
+			} else {
+				expectation.WillReturnRows(tt.mockRows)
+			}
+
+			recorder := httptest.NewRecorder()
+			router := transferTestRouter(CancelPlaceTransfer(mock))
+			req := httptest.NewRequest(http.MethodPatch, "/place-transfers/"+tt.transferID+"/cancel", nil)
+
+			router.ServeHTTP(recorder, req)
+
+			if recorder.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d, body = %s", recorder.Code, tt.wantStatus, recorder.Body.String())
+			}
+			if tt.wantError != "" {
+				assertErrorResponse(t, recorder.Body.Bytes(), tt.wantError)
+			} else {
+				var response CancelPlaceTransferResponse
+				if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+					t.Fatalf("json.Unmarshal() error = %v", err)
+				}
+				if response.ID != tt.transferID || response.Status != "canceled" || !response.CanceledAt.Equal(canceledAt) {
+					t.Fatalf("response = %#v, want canceled transfer outcome", response)
+				}
+			}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Fatalf("mock expectations: %v", err)
+			}
+		})
+	}
+}
+
 func transferTestRouter(handler gin.HandlerFunc) *gin.Engine {
 	router := gin.New()
 	router.Use(func(c *gin.Context) {
@@ -130,6 +207,7 @@ func transferTestRouter(handler gin.HandlerFunc) *gin.Engine {
 	})
 	router.POST("/place-transfers", handler)
 	router.GET("/place-transfers", handler)
+	router.PATCH("/place-transfers/:id/cancel", handler)
 	return router
 }
 

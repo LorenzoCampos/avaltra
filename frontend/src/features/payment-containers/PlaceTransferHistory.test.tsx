@@ -24,12 +24,34 @@ const transfer = (overrides: Partial<PlaceTransfer> = {}): PlaceTransfer => ({
 
 describe('place transfer history', () => {
   it('renders visible transfer history with source, destination, amount, and note', () => {
-    const html = renderToStaticMarkup(React.createElement(PlaceTransferHistory, { transfers: [transfer()], isLoading: false }));
+    const html = renderToStaticMarkup(React.createElement(PlaceTransferHistory, { transfers: [transfer()], isLoading: false, onCancelTransfer: () => undefined }));
 
     expect(html).toContain('Main bank account');
     expect(html).toContain('Wallet');
     expect(html).toContain('ARS');
     expect(html).toContain('1,250.50');
     expect(html).toContain('Rent split');
+    expect(html).toContain('Anular transferencia');
+    expect(html).toContain('Anulala y después creá una transferencia nueva');
+  });
+
+  it('keeps canceled transfers out of the default active history', () => {
+    const html = renderToStaticMarkup(React.createElement(PlaceTransferHistory, {
+      transfers: [transfer({ id: 'canceled-transfer', source_container_name: 'Canceled source', canceled_at: '2026-05-31T00:00:00Z' })],
+      isLoading: false,
+      onCancelTransfer: () => undefined,
+    }));
+
+    expect(html).not.toContain('Canceled source');
+    expect(html).toContain('Todavía no hay transferencias activas.');
+  });
+
+  it('uses cancel/anular copy without hard-delete wording', () => {
+    const html = renderToStaticMarkup(React.createElement(PlaceTransferHistory, { transfers: [transfer()], isLoading: false, onCancelTransfer: () => undefined }));
+
+    expect(html).toContain('Anular transferencia');
+    expect(html.toLowerCase()).not.toContain('eliminar');
+    expect(html.toLowerCase()).not.toContain('borrar');
+    expect(html.toLowerCase()).not.toContain('delete');
   });
 });

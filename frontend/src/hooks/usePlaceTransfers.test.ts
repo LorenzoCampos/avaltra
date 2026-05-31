@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CreatePlaceTransferRequest } from '@/types/placeTransfer';
 import {
+  cancelPlaceTransfer,
   createPlaceTransfer,
   getPlaceTransferInvalidationKeys,
   getPlaceTransfersQueryKey,
@@ -11,6 +12,7 @@ import {
 const apiMock = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
+  patch: vi.fn(),
 }));
 
 vi.mock('@/api/axios', () => ({
@@ -21,6 +23,7 @@ describe('place transfer API helpers', () => {
   beforeEach(() => {
     apiMock.get.mockReset();
     apiMock.post.mockReset();
+    apiMock.patch.mockReset();
   });
 
   it('scopes query keys and invalidations to active account data', () => {
@@ -45,5 +48,17 @@ describe('place transfer API helpers', () => {
 
     expect(apiMock.post).toHaveBeenCalledWith('/place-transfers', request);
     expect(apiMock.post.mock.calls[0]?.[1]).not.toHaveProperty('exchange_rate');
+  });
+
+  it('patches the cancel endpoint and returns the canceled outcome', async () => {
+    apiMock.patch.mockResolvedValueOnce({ data: { id: 'transfer-1', status: 'canceled', canceled_at: '2026-05-31T00:00:00Z' } });
+
+    await expect(cancelPlaceTransfer('transfer-1')).resolves.toEqual({
+      id: 'transfer-1',
+      status: 'canceled',
+      canceled_at: '2026-05-31T00:00:00Z',
+    });
+
+    expect(apiMock.patch).toHaveBeenCalledWith('/place-transfers/transfer-1/cancel');
   });
 });

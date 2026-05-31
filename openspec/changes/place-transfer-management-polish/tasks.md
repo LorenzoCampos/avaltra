@@ -9,11 +9,11 @@
 | Chained PRs recommended | Yes |
 | Suggested split | PR 1 (backend cancel/reporting) → PR 2 (frontend UX/i18n) |
 | Delivery strategy | ask-on-risk |
-| Chain strategy | pending |
+| Chain strategy | stacked-to-main |
 
 Decision needed before apply: Yes
 Chained PRs recommended: Yes
-Chain strategy: pending
+Chain strategy: stacked-to-main
 400-line budget risk: High
 
 ### Suggested Work Units
@@ -37,20 +37,20 @@ Chain strategy: pending
 
 ## Phase 3: Frontend Integration / UX
 
-- [ ] 3.1 Add `cancelPlaceTransfer` + `useCancelPlaceTransfer` in `frontend/src/hooks/usePlaceTransfers.ts` and invalidate transfer/container/dashboard query keys.
-- [ ] 3.2 Update `frontend/src/features/payment-containers/PaymentContainersPage.tsx` to wire `onCancelTransfer` into transfer history flow.
-- [ ] 3.3 Update `frontend/src/features/payment-containers/PlaceTransferHistory.tsx` to add cancel action (pending/disabled states), hide canceled rows by default, and show correction guidance: cancel + recreate.
-- [ ] 3.4 Update `frontend/src/features/payment-containers/PlaceTransferForm.tsx` and `frontend/src/i18n/locales/en/navigation.json`, `frontend/src/i18n/locales/es/navigation.json` to use localized transfer copy and avoid delete/eliminar/borrar semantics.
-- [ ] 3.5 Adjust `frontend/src/types/placeTransfer.ts` only as needed for cancel response typing while preserving active-only list contract.
+- [x] 3.1 Add `cancelPlaceTransfer` + `useCancelPlaceTransfer` in `frontend/src/hooks/usePlaceTransfers.ts` and invalidate transfer/container/dashboard query keys.
+- [x] 3.2 Update `frontend/src/features/payment-containers/PaymentContainersPage.tsx` to wire `onCancelTransfer` into transfer history flow.
+- [x] 3.3 Update `frontend/src/features/payment-containers/PlaceTransferHistory.tsx` to add cancel action (pending/disabled states), hide canceled rows by default, and show correction guidance: cancel + recreate.
+- [x] 3.4 Update `frontend/src/features/payment-containers/PlaceTransferForm.tsx` and `frontend/src/i18n/locales/en/navigation.json`, `frontend/src/i18n/locales/es/navigation.json` to use localized transfer copy and avoid delete/eliminar/borrar semantics.
+- [x] 3.5 Adjust `frontend/src/types/placeTransfer.ts` only as needed for cancel response typing while preserving active-only list contract.
 
 ## Phase 4: Testing / Verification
 
 - [x] 4.1 Add table-driven Go tests in `backend/internal/handlers/place_transfers/handlers_test.go` for cancel success, idempotent recancel, and cross-account `404`.
 - [x] 4.2 Extend `backend/internal/handlers/dashboard/summary_test.go` to verify canceled transfers are excluded from money-by-container and transfer activity keeps income/expense/P&L unchanged.
-- [ ] 4.3 Add/extend frontend tests under `frontend/src/hooks` and `frontend/src/features/payment-containers` for cancel mutation invalidation, active-only history rendering, and correction-copy visibility.
-- [ ] 4.4 Add UI copy assertions ensuring cancel wording is used (no delete/eliminar/borrar text) in transfer management components.
+- [x] 4.3 Add/extend frontend tests under `frontend/src/hooks` and `frontend/src/features/payment-containers` for cancel mutation invalidation, active-only history rendering, and correction-copy visibility.
+- [x] 4.4 Add UI copy assertions ensuring cancel wording is used (no delete/eliminar/borrar text) in transfer management components.
 
 ## Phase 5: Cleanup / Documentation
 
-- [ ] 5.1 Update inline comments/docs near transfer management components and handlers to codify correction policy: cancel then recreate (no edit-in-place).
-- [ ] 5.2 Run targeted backend/frontend test suites for touched files and record pass/fail output in phase handoff notes.
+- [x] 5.1 Update inline comments/docs near transfer management components and handlers to codify correction policy: cancel then recreate (no edit-in-place).
+- [x] 5.2 Run targeted backend/frontend test suites for touched files and record pass/fail output in phase handoff notes.

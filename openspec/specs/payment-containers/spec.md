@@ -120,7 +120,7 @@ Activity/list/detail views MUST prefer normalized place/container labels. When p
 - AND no empty payment-context placeholder SHALL be shown
 
 ### Requirement: Mini Breakdown by Money Location
-Dashboard/home MUST expose a compact breakdown of money by container/location for v1. The breakdown SHOULD support container type grouping and MUST tolerate partial unmigrated data. The breakdown MUST include active place-transfer inflows and outflows so moved money is reflected in source and destination container balances. Canceled transfers MUST be excluded from money-by-container calculations.
+Dashboard/home MUST expose a compact breakdown of money by container/location for v1. The breakdown SHOULD support container type grouping and MUST tolerate partial unmigrated data. The breakdown MUST include active place-transfer inflows and outflows so moved money is reflected in source and destination container balances. The breakdown MUST include migration-forward savings deposits/withdrawals with exact place attribution. Savings movement without place linkage (historical pre-migration) MUST be included only in an explicit unassigned historical savings bucket. Canceled transfers MUST be excluded from money-by-container calculations.
 
 #### Scenario: Mixed migrated and unmigrated data
 - GIVEN some transactions have normalized links and some do not
@@ -139,6 +139,17 @@ Dashboard/home MUST expose a compact breakdown of money by container/location fo
 - WHEN dashboard totals are calculated
 - THEN income and expense totals SHALL remain unchanged by those transfers
 - AND P&L SHALL remain unchanged by transfer-only activity
+
+#### Scenario: Attributed savings movement updates place balances
+- GIVEN a migration-forward savings deposit or withdrawal with exact place attribution
+- WHEN money-by-container is recalculated
+- THEN the attributed savings movement SHALL affect that place balance by the recorded direction and amount
+
+#### Scenario: Historical savings without place stays unassigned
+- GIVEN savings movement was recorded before place attribution existed
+- WHEN money-by-container is recalculated
+- THEN the movement SHALL NOT be assigned to any specific place
+- AND it SHALL be reported in unassigned historical savings movement
 
 #### Scenario: Canceled transfer is excluded from mini breakdown
 - GIVEN a previously active transfer was canceled

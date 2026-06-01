@@ -5,7 +5,10 @@ import type { SavingsGoal, AddFundsRequest } from '@/types/savings';
 import { addFundsSchema, type AddFundsSchema } from '@/schemas/savings.schema';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { XIcon } from 'lucide-react';
+import { usePaymentContainers } from '@/hooks/usePaymentContainers';
+import { buildSavingsMovementStoragePayload } from '../savingsPlaceStorage';
 
 interface ContributionFormProps {
   goal: SavingsGoal;
@@ -24,6 +27,7 @@ export const ContributionForm = ({
 }: ContributionFormProps) => {
   const { t } = useTranslation('savings');
   const today = new Date().toISOString().split('T')[0];
+  const { data: containersData, isLoading: isLoadingContainers } = usePaymentContainers({ enabled: true });
   
   const {
     register,
@@ -35,6 +39,7 @@ export const ContributionForm = ({
       amount: 0,
       description: '',
       date: today,
+      container_id: goal.saved_container_id ?? '',
     },
   });
 
@@ -46,10 +51,16 @@ export const ContributionForm = ({
   };
 
   const handleFormSubmit = (data: AddFundsSchema) => {
-    onSubmit(data);
+    onSubmit({ ...data, ...buildSavingsMovementStoragePayload(data.container_id) });
   };
 
   const maxWithdraw = type === 'withdraw' ? goal.current_amount : undefined;
+  const placeOptions = (containersData?.payment_containers ?? [])
+    .filter((container) => container.is_active || container.id === goal.saved_container_id)
+    .map((container) => ({
+      label: container.is_active ? container.name : `${container.name} (${t('form.inactivePlaceLabel')})`,
+      value: container.id,
+    }));
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
@@ -126,6 +137,15 @@ export const ContributionForm = ({
               error={errors.date?.message}
             />
           </div>
+
+          {/* Place Selector */}
+          <Select
+            label={t('contribution.placeLabel')}
+            options={[{ label: t('contribution.unassignedPlaceOption'), value: '' }, ...placeOptions]}
+            error={errors.container_id?.message}
+            disabled={isLoadingContainers}
+            {...register('container_id')}
+          />
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">

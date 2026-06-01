@@ -45,13 +45,13 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Frontend Savings UX and Contracts
 
-- [ ] 4.1 Replace free-text location input with optional place selector in `frontend/src/features/savings/SavingsForm.tsx` and `ContributionForm.tsx`; include unassigned option.
-- [ ] 4.2 Update `frontend/src/features/savings/SavingsCard.tsx` to show assigned place name or explicit unassigned/legacy messaging.
-- [ ] 4.3 Update contracts in `frontend/src/schemas/savings.schema.ts`, `frontend/src/types/savings.ts`, and `frontend/src/hooks/useSavings.ts` for new container fields and transaction `container_id`.
-- [ ] 4.4 Update copy in `frontend/src/i18n/locales/*/savings.json` for selector labels, unassigned messaging, and compatibility wording.
+- [x] 4.1 Replace free-text location input with optional place selector in `frontend/src/features/savings/SavingsForm.tsx` and `ContributionForm.tsx`; include unassigned option.
+- [x] 4.2 Update `frontend/src/features/savings/SavingsCard.tsx` to show assigned place name or explicit unassigned/legacy messaging.
+- [x] 4.3 Update contracts in `frontend/src/schemas/savings.schema.ts`, `frontend/src/types/savings.ts`, and `frontend/src/hooks/useSavings.ts` for new container fields and transaction `container_id`.
+- [x] 4.4 Update copy in `frontend/src/i18n/locales/*/savings.json` for selector labels, unassigned messaging, and compatibility wording.
 
 ## Phase 5: Testing / Verification
 
 - [x] 5.1 Add table-driven handler tests in `backend/internal/handlers/savings_goals/*_test.go` for valid place, invalid place, explicit unassigned goal, and no-guess legacy compatibility.
 - [x] 5.2 Extend `backend/internal/handlers/dashboard/summary_test.go` for assigned savings movement, historical null unassigned bucket, and P&L neutrality scenarios.
-- [ ] 5.3 Add/extend frontend Vitest/RTL tests around `SavingsForm`, `ContributionForm`, `SavingsCard`, and `useSavings` for selector behavior, payloads, and unassigned UI state.
+- [x] 5.3 Add/extend frontend Vitest/RTL tests around `SavingsForm`, `ContributionForm`, `SavingsCard`, and `useSavings` for selector behavior, payloads, and unassigned UI state.

@@ -39,9 +39,9 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Dashboard Money-by-Container Integration
 
-- [ ] 3.1 Extend `backend/internal/handlers/dashboard/summary.go` `queryMoneyByContainer` to include assigned savings transaction legs (deposit negative, withdrawal positive) only when `container_id` is non-null.
-- [ ] 3.2 Add explicit unassigned historical savings bucket handling for null-linked savings movements without mapping from legacy text.
-- [ ] 3.3 Verify dashboard totals logic in `summary.go` keeps income, expense, and P&L unchanged by savings attribution movement.
+- [x] 3.1 Extend `backend/internal/handlers/dashboard/summary.go` `queryMoneyByContainer` to include assigned savings transaction legs (deposit negative, withdrawal positive) only when `container_id` is non-null.
+- [x] 3.2 Add explicit unassigned historical savings bucket handling for null-linked savings movements without mapping from legacy text.
+- [x] 3.3 Verify dashboard totals logic in `summary.go` keeps income, expense, and P&L unchanged by savings attribution movement.
 
 ## Phase 4: Frontend Savings UX and Contracts
 
@@ -53,5 +53,5 @@ Chain strategy: stacked-to-main
 ## Phase 5: Testing / Verification
 
 - [x] 5.1 Add table-driven handler tests in `backend/internal/handlers/savings_goals/*_test.go` for valid place, invalid place, explicit unassigned goal, and no-guess legacy compatibility.
-- [ ] 5.2 Extend `backend/internal/handlers/dashboard/summary_test.go` for assigned savings movement, historical null unassigned bucket, and P&L neutrality scenarios.
+- [x] 5.2 Extend `backend/internal/handlers/dashboard/summary_test.go` for assigned savings movement, historical null unassigned bucket, and P&L neutrality scenarios.
 - [ ] 5.3 Add/extend frontend Vitest/RTL tests around `SavingsForm`, `ContributionForm`, `SavingsCard`, and `useSavings` for selector behavior, payloads, and unassigned UI state.

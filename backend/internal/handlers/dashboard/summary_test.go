@@ -248,6 +248,101 @@ func TestQueryMoneyByContainerExcludesCanceledTransfers(t *testing.T) {
 	}
 }
 
+func TestQueryMoneyByContainerIncludesSignedSavingsLegs(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	mock.ExpectQuery(`sgt\.container_id AS container_id[\s\S]*CASE[\s\S]*WHEN sgt\.transaction_type = 'deposit' THEN -sgt\.amount[\s\S]*WHEN sgt\.transaction_type = 'withdrawal' THEN sgt\.amount[\s\S]*FROM savings_goal_transactions sgt[\s\S]*LEFT JOIN payment_containers pc ON sgt\.container_id = pc\.id[\s\S]*WHERE sg\.account_id = \$1`).
+		WithArgs(dashboardTestAccountID).
+		WillReturnRows(mock.NewRows([]string{"container_id", "container_name", "container_type", "total"}).
+			AddRow(stringPtr("wallet-1"), stringPtr("Wallet"), stringPtr("wallet"), 800.0).
+			AddRow(stringPtr("bank-1"), stringPtr("Bank"), stringPtr("bank"), 250.0).
+			AddRow(nil, nil, nil, 75.0))
+
+	rows, err := queryMoneyByContainer(context.Background(), mock, dashboardTestAccountID)
+	if err != nil {
+		t.Fatalf("queryMoneyByContainer() error = %v", err)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
+	}
+
+	if len(rows) != 3 {
+		t.Fatalf("len(rows) = %d, want 3 rows with assigned and unassigned savings movement", len(rows))
+	}
+	if rows[0].ContainerID == nil || *rows[0].ContainerID != "wallet-1" || rows[0].Total != 800 {
+		t.Fatalf("deposit-adjusted wallet row = %+v, want total 800", rows[0])
+	}
+	if rows[1].ContainerID == nil || *rows[1].ContainerID != "bank-1" || rows[1].Total != 250 {
+		t.Fatalf("withdrawal-adjusted bank row = %+v, want total 250", rows[1])
+	}
+	if rows[2].ContainerID != nil || rows[2].Total != 75 {
+		t.Fatalf("unassigned savings row = %+v, want nil container with total 75", rows[2])
+	}
+}
+
+func TestGetSummaryAppliesSavingsDeltasOnlyToMoneyByContainer(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	originalUpcomingRecurringLoader := loadUpcomingRecurringExpenses
+	originalNextMonthRecurringExpenseTotalLoader := loadNextMonthRecurringExpenseTotal
+	loadUpcomingRecurringExpenses = func(_ dashboardQuerier, _ context.Context, _ interface{}, _ time.Time) (UpcomingRecurringSummary, error) {
+		return UpcomingRecurringSummary{}, nil
+	}
+	loadNextMonthRecurringExpenseTotal = func(_ dashboardQuerier, _ context.Context, _ interface{}, _ time.Time) (float64, error) {
+		return 0, nil
+	}
+	defer func() {
+		loadUpcomingRecurringExpenses = originalUpcomingRecurringLoader
+		loadNextMonthRecurringExpenseTotal = originalNextMonthRecurringExpenseTotalLoader
+	}()
+
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("pgxmock.NewPool() error = %v", err)
+	}
+	defer mock.Close()
+
+	expectDashboardSummaryQueriesWithMoneyByContainerRows(
+		mock,
+		"2026-05",
+		1200,
+		500,
+		100,
+		25,
+		3000,
+		1200,
+		700,
+		100,
+		mock.NewRows([]string{"container_id", "container_name", "container_type", "total"}).
+			AddRow(stringPtr("wallet-1"), stringPtr("Wallet"), stringPtr("wallet"), 800.0).
+			AddRow(stringPtr("bank-1"), stringPtr("Bank"), stringPtr("bank"), 250.0).
+			AddRow(nil, nil, nil, 75.0),
+	)
+
+	body := performDashboardSummaryRequest(t, dashboardTestRouter(GetSummary(mock)), "2026-05")
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("mock expectations: %v", err)
+	}
+
+	var response DashboardSummaryResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+
+	if response.TotalIncome != 1200 || response.TotalExpenses != 500 || response.AvailableBalance != 625 || response.CurrentAvailableBalance != 1200 {
+		t.Fatalf("totals = income %v expenses %v available %v current %v, want savings-neutral income/expense with existing balance logic 1200/500/625/1200",
+			response.TotalIncome, response.TotalExpenses, response.AvailableBalance, response.CurrentAvailableBalance)
+	}
+
+	assertMoneyByContainerTotal(t, response.MoneyByContainer, "wallet-1", 800)
+	assertMoneyByContainerTotal(t, response.MoneyByContainer, "bank-1", 250)
+	assertUnassignedMoneyByContainerTotal(t, response.MoneyByContainer, 75)
+}
+
 func TestNextCalendarMonthWindow(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -544,6 +639,21 @@ func assertMoneyByContainerTotal(t *testing.T, items []MoneyByContainer, contain
 	}
 
 	t.Fatalf("money_by_container missing container %s in %+v", containerID, items)
+}
+
+func assertUnassignedMoneyByContainerTotal(t *testing.T, items []MoneyByContainer, want float64) {
+	t.Helper()
+
+	for _, item := range items {
+		if item.IsUnassigned {
+			if item.ContainerID != nil || item.Total != want {
+				t.Fatalf("unassigned money_by_container = %+v, want nil container and total %v", item, want)
+			}
+			return
+		}
+	}
+
+	t.Fatalf("money_by_container missing unassigned bucket in %+v", items)
 }
 
 func performDashboardSummaryRequest(t *testing.T, router *gin.Engine, month string) []byte {

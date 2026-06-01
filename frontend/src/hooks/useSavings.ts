@@ -13,6 +13,11 @@ import type {
   FundsOperationResponse,
 } from '@/types/savings';
 
+type ApiError = { response?: { data?: { error?: string } } };
+
+const getApiErrorMessage = (error: unknown, fallback: string) =>
+  (error as ApiError)?.response?.data?.error || (error as Error).message || fallback;
+
 export const useSavings = (isActive: 'true' | 'false' | 'all' = 'true') => {
   const queryClient = useQueryClient();
   const { activeAccountId } = useAccountStore();
@@ -32,7 +37,10 @@ export const useSavings = (isActive: 'true' | 'false' | 'all' = 'true') => {
       });
       // Normalize response: backend returns snake_case, we need camelCase
       console.log('🔍 Savings API Response:', response.data);
-      const backendData = response.data as any;
+      const backendData = response.data as SavingsGoalsListResponse & {
+        savings_goals?: SavingsGoal[];
+        total_count?: number;
+      };
       const normalized = {
         goals: backendData.savings_goals || backendData.goals || [],
         count: backendData.total_count || backendData.count || 0,
@@ -106,6 +114,9 @@ export const useSavings = (isActive: 'true' | 'false' | 'all' = 'true') => {
           current_amount: 0,
           currency: 'ARS', // Will be corrected by server response
           saved_in: newGoal.saved_in || null,
+          saved_container_id: newGoal.saved_container_id ?? null,
+          saved_container_name: null,
+          storage_status: newGoal.saved_container_id ? 'assigned' : 'unassigned',
           deadline: newGoal.deadline || null,
           progress_percentage: 0,
           required_monthly_savings: null,
@@ -134,7 +145,7 @@ export const useSavings = (isActive: 'true' | 'false' | 'all' = 'true') => {
         );
       }
       toast.error('Failed to create savings goal', {
-        description: (err as any)?.response?.data?.error || (err as Error).message,
+        description: getApiErrorMessage(err, 'Failed to create savings goal'),
       });
     },
     onSuccess: () => {
@@ -186,7 +197,7 @@ export const useSavings = (isActive: 'true' | 'false' | 'all' = 'true') => {
         );
       }
       toast.error('Failed to update savings goal', {
-        description: (err as any)?.response?.data?.error || (err as Error).message,
+        description: getApiErrorMessage(err, 'Failed to update savings goal'),
       });
     },
     onSuccess: () => {
@@ -237,7 +248,7 @@ export const useSavings = (isActive: 'true' | 'false' | 'all' = 'true') => {
         );
       }
       toast.error('Failed to delete savings goal', {
-        description: (err as any)?.response?.data?.error || (err as Error).message,
+        description: getApiErrorMessage(err, 'Failed to delete savings goal'),
       });
     },
     onSuccess: () => {
@@ -303,7 +314,7 @@ export const useSavings = (isActive: 'true' | 'false' | 'all' = 'true') => {
         );
       }
       toast.error('Failed to add funds', {
-        description: (err as any)?.response?.data?.error || (err as Error).message,
+        description: getApiErrorMessage(err, 'Failed to add funds'),
       });
     },
     onSuccess: (data) => {
@@ -371,7 +382,7 @@ export const useSavings = (isActive: 'true' | 'false' | 'all' = 'true') => {
         );
       }
       toast.error('Failed to withdraw funds', {
-        description: (err as any)?.response?.data?.error || (err as Error).message,
+        description: getApiErrorMessage(err, 'Failed to withdraw funds'),
       });
     },
     onSuccess: (data) => {

@@ -35,6 +35,7 @@ export const createSavingsGoalSchema = z.object({
     .max(255, 'Saved in must be less than 255 characters')
     .trim()
     .optional(),
+  saved_container_id: z.string().nullable().optional(),
 });
 
 export type CreateSavingsGoalSchema = z.infer<typeof createSavingsGoalSchema>;
@@ -75,6 +76,7 @@ export const updateSavingsGoalSchema = z.object({
     .trim()
     .nullable()
     .optional(),
+  saved_container_id: z.string().nullable().optional(),
 });
 
 export type UpdateSavingsGoalSchema = z.infer<typeof updateSavingsGoalSchema>;
@@ -94,6 +96,7 @@ export const addFundsSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
     .optional(),
+  container_id: z.string().nullable().optional(),
 });
 
 export type AddFundsSchema = z.infer<typeof addFundsSchema>;
@@ -113,6 +116,7 @@ export const withdrawFundsSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
     .optional(),
+  container_id: z.string().nullable().optional(),
 });
 
 export type WithdrawFundsSchema = z.infer<typeof withdrawFundsSchema>;

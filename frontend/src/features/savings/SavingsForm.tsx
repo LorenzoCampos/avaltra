@@ -11,9 +11,14 @@ import {
 } from '@/schemas/savings.schema';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import { ArrowLeftIcon } from 'lucide-react';
+import { usePaymentContainers } from '@/hooks/usePaymentContainers';
+import { buildSavingsGoalStoragePayload } from './savingsPlaceStorage';
+
+type ApiError = { response?: { data?: { error?: string } } };
 
 export const SavingsForm = () => {
   const { t } = useTranslation('savings');
@@ -24,6 +29,7 @@ export const SavingsForm = () => {
   const { activeAccount, activeAccountId } = useAccountStore();
   const { useSavingsGoal, createSavingsGoal, updateSavingsGoal, isCreating, isUpdating } =
     useSavings();
+  const { data: containersData, isLoading: isLoadingContainers } = usePaymentContainers({ enabled: !!activeAccountId });
 
   // Fetch goal data if editing
   const {
@@ -46,11 +52,17 @@ export const SavingsForm = () => {
       target_amount: 0,
       description: '',
       deadline: '',
-      saved_in: '',
+      saved_container_id: null,
     },
   });
 
   const deadlineValue = watch('deadline');
+  const placeOptions = (containersData?.payment_containers ?? [])
+    .filter((container) => container.is_active || container.id === goalData?.saved_container_id)
+    .map((container) => ({
+      label: container.is_active ? container.name : `${container.name} (${t('form.inactivePlaceLabel')})`,
+      value: container.id,
+    }));
 
   // Populate form when editing
   useEffect(() => {
@@ -60,7 +72,7 @@ export const SavingsForm = () => {
         target_amount: goalData.target_amount,
         description: goalData.description || '',
         deadline: goalData.deadline || '',
-        saved_in: goalData.saved_in || '',
+        saved_container_id: goalData.saved_container_id ?? '',
       });
     }
   }, [goalData, isEditMode, reset]);
@@ -71,7 +83,7 @@ export const SavingsForm = () => {
       ...data,
       description: data.description || undefined,
       deadline: data.deadline || undefined,
-      saved_in: data.saved_in || undefined,
+      ...buildSavingsGoalStoragePayload(data.saved_container_id),
     };
 
     if (isEditMode && goalId) {
@@ -140,7 +152,7 @@ export const SavingsForm = () => {
               {t('form.errorLoadingGoal')}
             </h3>
             <p className="text-red-600 dark:text-red-400 mb-4">
-              {(goalError as any)?.response?.data?.error ||
+              {(goalError as ApiError)?.response?.data?.error ||
                 (goalError as Error).message ||
                 t('form.errorGeneric')}
             </p>
@@ -260,20 +272,25 @@ export const SavingsForm = () => {
               </p>
             </div>
 
-            {/* Saved In */}
+            {/* Savings Place */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('form.savedInLabel')}
+                {t('form.savedPlaceLabel')}
               </label>
-              <Input
-                type="text"
-                placeholder={t('form.savedInPlaceholder')}
-                {...register('saved_in')}
-                error={errors.saved_in?.message}
+              <Select
+                options={[{ label: t('form.unassignedPlaceOption'), value: '' }, ...placeOptions]}
+                {...register('saved_container_id')}
+                error={errors.saved_container_id?.message}
+                disabled={isLoadingContainers}
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {t('form.savedInHelp')}
+                {t('form.savedPlaceHelp')}
               </p>
+              {isEditMode && goalData?.saved_in && !goalData.saved_container_id && (
+                <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                  {t('form.legacySavedInHelp', { value: goalData.saved_in })}
+                </p>
+              )}
             </div>
 
             {/* Info Box */}

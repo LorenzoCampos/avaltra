@@ -10,6 +10,9 @@ export interface SavingsGoal {
   current_amount: number;
   currency: Currency;
   saved_in: string | null;
+  saved_container_id: string | null;
+  saved_container_name: string | null;
+  storage_status: 'assigned' | 'unassigned';
   deadline: string | null; // YYYY-MM-DD
   progress_percentage: number; // 0-100
   required_monthly_savings: number | null;
@@ -25,6 +28,7 @@ export interface CreateSavingsGoalRequest {
   description?: string;
   deadline?: string; // YYYY-MM-DD
   saved_in?: string;
+  saved_container_id?: string | null;
 }
 
 // Request body for updating an existing savings goal
@@ -34,6 +38,7 @@ export interface UpdateSavingsGoalRequest {
   description?: string;
   deadline?: string | null; // YYYY-MM-DD, null to remove
   saved_in?: string | null; // null to remove
+  saved_container_id?: string | null;
 }
 
 // Request body for adding funds to a goal
@@ -41,6 +46,7 @@ export interface AddFundsRequest {
   amount: number;
   description?: string;
   date?: string; // YYYY-MM-DD, default: today
+  container_id?: string | null;
 }
 
 // Request body for withdrawing funds from a goal
@@ -48,6 +54,7 @@ export interface WithdrawFundsRequest {
   amount: number;
   description?: string;
   date?: string; // YYYY-MM-DD, default: today
+  container_id?: string | null;
 }
 
 // Response for GET /savings-goals (list)
@@ -79,6 +86,7 @@ export interface FundsOperationResponse {
     description: string;
     date: string;
     type: 'add' | 'withdraw';
+    container_id: string | null;
   };
 }
 

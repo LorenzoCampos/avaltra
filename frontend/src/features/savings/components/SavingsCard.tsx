@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { EditIcon, TrashIcon, PlusIcon, MinusIcon, CalendarIcon, MapPinIcon } from 'lucide-react';
 import { useDeleteAnimation } from '@/hooks/useDeleteAnimation';
+import { getSavingsStorageDisplay } from '../savingsPlaceStorage';
 
 interface SavingsCardProps {
   goal: SavingsGoal;
@@ -45,6 +46,7 @@ export const SavingsCard = ({ goal, onDelete, onAddFunds, onWithdrawFunds }: Sav
   const daysRemaining = getDaysRemaining();
   const isOverdue = daysRemaining !== null && daysRemaining < 0;
   const isComplete = goal.progress_percentage >= 100;
+  const storageDisplay = getSavingsStorageDisplay(goal);
 
   return (
     <Card
@@ -134,18 +136,20 @@ export const SavingsCard = ({ goal, onDelete, onAddFunds, onWithdrawFunds }: Sav
             </div>
           )}
 
-          {/* Saved In */}
-          {goal.saved_in && (
-            <div className="flex items-center gap-2">
-              <MapPinIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{t('card.savedIn')}</p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                  {goal.saved_in}
-                </p>
-              </div>
+          {/* Savings Place */}
+          <div className="flex items-center gap-2">
+            <MapPinIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t(storageDisplay.labelKey)}</p>
+              <p className={`text-sm font-semibold truncate ${
+                storageDisplay.status === 'unassigned'
+                  ? 'text-amber-700 dark:text-amber-400'
+                  : 'text-gray-900 dark:text-gray-100'
+              }`}>
+                {storageDisplay.value ?? t('card.unassignedPlaceValue')}
+              </p>
             </div>
-          )}
+          </div>
 
           {/* Required Monthly Savings */}
           {goal.required_monthly_savings && !isComplete && (

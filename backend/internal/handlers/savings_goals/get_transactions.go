@@ -4,10 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/LorenzoCampos/avaltra/internal/middleware"
 )
 
 // GetTransactionsResponse represents the response for transactions endpoint
@@ -17,7 +16,7 @@ type GetTransactionsResponse struct {
 }
 
 // GetTransactions handles GET /api/savings-goals/:id/transactions
-func GetTransactions(db *pgxpool.Pool) gin.HandlerFunc {
+func GetTransactions(db dbQuerier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context
 		accountID, exists := middleware.GetAccountID(c)
@@ -103,7 +102,7 @@ func GetTransactions(db *pgxpool.Pool) gin.HandlerFunc {
 		// Build transactions query with type filter
 		transactionsQuery := `
 			SELECT 
-				id, amount, transaction_type, description, 
+				id, amount, transaction_type, description, container_id,
 				date::TEXT, created_at::TEXT
 			FROM savings_goal_transactions
 			WHERE savings_goal_id = $1`
@@ -136,7 +135,7 @@ func GetTransactions(db *pgxpool.Pool) gin.HandlerFunc {
 
 			err := rows.Scan(
 				&txn.ID, &txn.Amount, &txn.TransactionType,
-				&description, &txn.Date, &txn.CreatedAt,
+				&description, &txn.ContainerID, &txn.Date, &txn.CreatedAt,
 			)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse transaction"})

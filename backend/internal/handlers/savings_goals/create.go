@@ -4,20 +4,20 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateSavingsGoalRequest represents the request to create a savings goal
 type CreateSavingsGoalRequest struct {
-	Name         string  `json:"name" binding:"required,min=1,max=255"`
-	Description  *string `json:"description,omitempty"`
-	TargetAmount float64 `json:"target_amount" binding:"required,gt=0"`
-	SavedIn      *string `json:"saved_in,omitempty" binding:"omitempty,max=255"`
-	Deadline     *string `json:"deadline,omitempty"` // Format: YYYY-MM-DD
+	Name             string  `json:"name" binding:"required,min=1,max=255"`
+	Description      *string `json:"description,omitempty"`
+	TargetAmount     float64 `json:"target_amount" binding:"required,gt=0"`
+	SavedIn          *string `json:"saved_in,omitempty" binding:"omitempty,max=255"`
+	SavedContainerID *string `json:"saved_container_id,omitempty"`
+	Deadline         *string `json:"deadline,omitempty"` // Format: YYYY-MM-DD
 }
 
 // SavingsGoalResponse represents a savings goal
@@ -30,6 +30,9 @@ type SavingsGoalResponse struct {
 	CurrentAmount          float64  `json:"current_amount"`
 	Currency               string   `json:"currency"`
 	SavedIn                *string  `json:"saved_in,omitempty"`
+	SavedContainerID       *string  `json:"saved_container_id"`
+	SavedContainerName     *string  `json:"saved_container_name"`
+	StorageStatus          string   `json:"storage_status"`
 	Deadline               *string  `json:"deadline,omitempty"`
 	ProgressPercentage     float64  `json:"progress_percentage"`
 	RequiredMonthlySavings *float64 `json:"required_monthly_savings,omitempty"`
@@ -74,7 +77,7 @@ func calculateRequiredMonthlySavings(currentAmount, targetAmount float64, deadli
 }
 
 // CreateSavingsGoal handles POST /api/savings-goals
-func CreateSavingsGoal(db *pgxpool.Pool) gin.HandlerFunc {
+func CreateSavingsGoal(db dbQuerier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context (set by AccountMiddleware)
 		accountID, exists := middleware.GetAccountID(c)
@@ -91,6 +94,15 @@ func CreateSavingsGoal(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		ctx := c.Request.Context()
+		savedContainerName, err := validateOptionalContainer(ctx, db, accountID, req.SavedContainerID)
+		if err != nil {
+			if err.Error() == "invalid-savings-place" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to validate savings place"})
+			return
+		}
 
 		// Validate deadline (if provided, must be future date)
 		var deadlineDate *time.Time
@@ -112,7 +124,7 @@ func CreateSavingsGoal(db *pgxpool.Pool) gin.HandlerFunc {
 
 		// Get account currency (savings goal inherits currency from account)
 		var currency string
-		err := db.QueryRow(ctx, `SELECT currency FROM accounts WHERE id = $1`, accountID).Scan(&currency)
+		err = db.QueryRow(ctx, `SELECT currency FROM accounts WHERE id = $1`, accountID).Scan(&currency)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get account currency"})
 			return
@@ -139,14 +151,14 @@ func CreateSavingsGoal(db *pgxpool.Pool) gin.HandlerFunc {
 		insertQuery := `
 			INSERT INTO savings_goals (
 				account_id, name, description, target_amount, 
-				current_amount, currency, saved_in, deadline, is_active
-			) VALUES ($1, $2, $3, $4, 0, $5, $6, $7, true)
+				current_amount, currency, saved_in, saved_container_id, deadline, is_active
+			) VALUES ($1, $2, $3, $4, 0, $5, $6, $7, $8, true)
 			RETURNING id, created_at, updated_at
 		`
 
 		err = db.QueryRow(ctx, insertQuery,
 			accountID, req.Name, req.Description, req.TargetAmount,
-			currency, req.SavedIn, deadlineDate,
+			currency, req.SavedIn, req.SavedContainerID, deadlineDate,
 		).Scan(&goalID, &createdAt, &updatedAt)
 
 		if err != nil {
@@ -181,6 +193,9 @@ func CreateSavingsGoal(db *pgxpool.Pool) gin.HandlerFunc {
 			CurrentAmount:          0,
 			Currency:               currency,
 			SavedIn:                req.SavedIn,
+			SavedContainerID:       req.SavedContainerID,
+			SavedContainerName:     savedContainerName,
+			StorageStatus:          storageStatus(req.SavedContainerID),
 			Deadline:               req.Deadline,
 			ProgressPercentage:     0,
 			RequiredMonthlySavings: requiredMonthlySavings,

@@ -4,25 +4,25 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/LorenzoCampos/avaltra/internal/middleware"
 	"github.com/LorenzoCampos/avaltra/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 // UpdateSavingsGoalRequest represents the request to update a savings goal
 type UpdateSavingsGoalRequest struct {
-	Name         *string  `json:"name,omitempty" binding:"omitempty,min=1,max=255"`
-	Description  *string  `json:"description,omitempty"`
-	TargetAmount *float64 `json:"target_amount,omitempty" binding:"omitempty,gt=0"`
-	SavedIn      *string  `json:"saved_in,omitempty" binding:"omitempty,max=255"`
-	Deadline     *string  `json:"deadline,omitempty"` // Format: YYYY-MM-DD or empty string to clear
-	IsActive     *bool    `json:"is_active,omitempty"`
+	Name             *string        `json:"name,omitempty" binding:"omitempty,min=1,max=255"`
+	Description      *string        `json:"description,omitempty"`
+	TargetAmount     *float64       `json:"target_amount,omitempty" binding:"omitempty,gt=0"`
+	SavedIn          *string        `json:"saved_in,omitempty" binding:"omitempty,max=255"`
+	SavedContainerID optionalString `json:"saved_container_id,omitempty"`
+	Deadline         *string        `json:"deadline,omitempty"` // Format: YYYY-MM-DD or empty string to clear
+	IsActive         *bool          `json:"is_active,omitempty"`
 }
 
 // UpdateSavingsGoal handles PUT /api/savings-goals/:id
-func UpdateSavingsGoal(db *pgxpool.Pool) gin.HandlerFunc {
+func UpdateSavingsGoal(db dbQuerier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get account_id from context
 		accountID, exists := middleware.GetAccountID(c)
@@ -46,6 +46,16 @@ func UpdateSavingsGoal(db *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		ctx := c.Request.Context()
+		if req.SavedContainerID.Set {
+			if _, err := validateOptionalContainer(ctx, db, accountID, req.SavedContainerID.Value); err != nil {
+				if err.Error() == "invalid-savings-place" {
+					c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+					return
+				}
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to validate savings place"})
+				return
+			}
+		}
 
 		// Check if goal exists and belongs to this account
 		var existingGoal struct {
@@ -112,32 +122,39 @@ func UpdateSavingsGoal(db *pgxpool.Pool) gin.HandlerFunc {
 				description = COALESCE($2, description),
 				target_amount = COALESCE($3, target_amount),
 				saved_in = COALESCE($4, saved_in),
+				saved_container_id = CASE
+					WHEN $5::boolean THEN $6::uuid
+					ELSE saved_container_id
+				END,
 				deadline = CASE 
-					WHEN $5::boolean THEN NULL
-					WHEN $6::date IS NOT NULL THEN $6::date
+					WHEN $7::boolean THEN NULL
+					WHEN $8::date IS NOT NULL THEN $8::date
 					ELSE deadline
 				END,
-				is_active = COALESCE($7, is_active),
+				is_active = COALESCE($9, is_active),
 				updated_at = NOW()
-			WHERE id = $8 AND account_id = $9
-			RETURNING id, account_id, name, description, target_amount, 
-			          current_amount, currency, saved_in, deadline, 
-			          is_active, created_at, updated_at
+			WHERE id = $10 AND account_id = $11
+			RETURNING id, account_id, name, description, target_amount,
+			          current_amount, currency, saved_in, saved_container_id,
+			          (SELECT name FROM payment_containers WHERE id = savings_goals.saved_container_id) AS saved_container_name,
+			          deadline, is_active, created_at, updated_at
 		`
 
 		var goal SavingsGoalResponse
-		var description, savedIn *string
+		var description, savedIn, savedContainerID, savedContainerName *string
 		var deadline *time.Time
 		var createdAt, updatedAt time.Time
 
 		err = db.QueryRow(ctx, updateQuery,
 			req.Name, req.Description, req.TargetAmount, req.SavedIn,
+			req.SavedContainerID.Set, req.SavedContainerID.Value,
 			clearDeadline, deadlineDate, req.IsActive,
 			goalID, accountID,
 		).Scan(
 			&goal.ID, &goal.AccountID, &goal.Name, &description,
 			&goal.TargetAmount, &goal.CurrentAmount, &goal.Currency,
-			&savedIn, &deadline, &goal.IsActive, &createdAt, &updatedAt,
+			&savedIn, &savedContainerID, &savedContainerName, &deadline,
+			&goal.IsActive, &createdAt, &updatedAt,
 		)
 
 		if err != nil {
@@ -148,6 +165,9 @@ func UpdateSavingsGoal(db *pgxpool.Pool) gin.HandlerFunc {
 		// Set optional fields
 		goal.Description = description
 		goal.SavedIn = savedIn
+		goal.SavedContainerID = savedContainerID
+		goal.SavedContainerName = savedContainerName
+		goal.StorageStatus = storageStatus(savedContainerID)
 
 		if deadline != nil {
 			deadlineStr := deadline.Format("2006-01-02")
